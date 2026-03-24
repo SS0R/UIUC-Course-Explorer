@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -476,7 +476,7 @@
     </div>
     <div class="nav-right">
       <span class="nav-semester" id="nav-semester">Spring 2026</span>
-      <button class="theme-btn" id="theme-btn">☀ Light</button>
+      <button class="theme-btn" id="theme-btn">🌙 Dark</button>
     </div>
   </nav>
 
@@ -657,6 +657,27 @@
     return name.split(',')[0].trim().toLowerCase();
   }
 
+  function lookupGpa(subject, number, ln) {
+    // Exact match first
+    const exact = gpaMap[`${subject} ${number} ${ln}`];
+    if (exact) return exact;
+    // Fallback: compound last names (e.g. "bahreini esfahani") may only appear
+    // as the first token ("bahreini") in the GPA dataset, or vice versa.
+    const tokens = ln.split(' ');
+    if (tokens.length > 1) {
+      // Try just the first word
+      const first = gpaMap[`${subject} ${number} ${tokens[0]}`];
+      if (first) return first;
+    } else {
+      // ln is a single word — look for any gpaMap key that starts with it
+      const prefix = `${subject} ${number} ${ln} `;
+      for (const k of Object.keys(gpaMap)) {
+        if (k.startsWith(prefix)) return gpaMap[k];
+      }
+    }
+    return null;
+  }
+
   // ─────────────────────────────────────────────────────────────────────────
   // LOAD & PROCESS DATA
   // ─────────────────────────────────────────────────────────────────────────
@@ -778,12 +799,13 @@
         });
       });
       // Find best GPA data for any instructor
+      const [subj, num] = key.split(' ');
       let bestGpa = null, totalStudents = 0;
       lastNameSet.forEach(ln => {
-        const gk = `${key} ${ln}`;
-        if (gpaMap[gk]) {
-          totalStudents += gpaMap[gk].students;
-          if (!bestGpa || gpaMap[gk].students > bestGpa.students) bestGpa = gpaMap[gk];
+        const gData = lookupGpa(subj, num, ln);
+        if (gData) {
+          totalStudents += gData.students;
+          if (!bestGpa || gData.students > bestGpa.students) bestGpa = gData;
         }
       });
       c._gpa = bestGpa ? bestGpa.gpa : null;
@@ -983,10 +1005,15 @@
   // ─────────────────────────────────────────────────────────────────────────
   // INSTRUCTOR TABLE
   // ─────────────────────────────────────────────────────────────────────────
+  const LECTURE_TYPES = new Set(['LEC', 'LCD', 'ONL', 'OLC', 'PKG']);
+
   function buildInstrTable(c) {
-    // Collect unique instructor names across sections
+    // Collect unique instructor names from lecture-type sections only (exclude DIS/LAB TAs)
     const instrMap = {}; // last name → full display name(s)
-    c.sections.forEach(s => {
+    const lectureSections = c.sections.filter(s => LECTURE_TYPES.has(s.typeCode));
+    // Fall back to all sections if no lecture-type sections exist
+    const sectionsToUse = lectureSections.length > 0 ? lectureSections : c.sections;
+    sectionsToUse.forEach(s => {
       s.instructors.forEach(instr => {
         const ln = extractLastName(instr);
         if (!instrMap[ln]) instrMap[ln] = instr;
@@ -1003,7 +1030,7 @@
 
     tbody.innerHTML = rows.map(([ln, displayName]) => {
       const gk = `${c.subject} ${c.number} ${ln}`;
-      const gData = gpaMap[gk];
+      const gData = lookupGpa(c.subject, c.number, ln);
       let gpaCell, studCell;
 
       if (gData) {
@@ -1035,7 +1062,8 @@
       return;
     }
     openGpaRow = gk;
-    const gData = gpaMap[gk];
+    const [subj, num] = gk.split(' ');
+    const gData = lookupGpa(subj, num, ln);
     if (!gData) return;
 
     const dist = gData.dist;
