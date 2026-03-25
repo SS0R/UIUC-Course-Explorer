@@ -160,9 +160,17 @@
     .search-go:hover { opacity: 0.88; transform: translateY(-50%) scale(1.04); }
 
     /* ── CHIPS ── */
-    .filter-row {
+    .filter-groups {
+      display: flex; flex-direction: column; gap: 10px;
+      align-items: center; margin-bottom: 44px;
+    }
+    .filter-group {
       display: flex; flex-wrap: wrap; gap: 7px;
-      justify-content: center; max-width: 620px; margin-bottom: 44px;
+      align-items: center; justify-content: center; max-width: 820px;
+    }
+    .filter-label {
+      font-size: 0.68rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.07em; color: var(--muted); white-space: nowrap; margin-right: 2px;
     }
     .chip {
       background: var(--surface);
@@ -172,9 +180,21 @@
       font-size: 0.76rem; font-family: 'DM Mono', monospace;
       padding: 5px 14px; cursor: pointer;
       transition: all 0.16s; user-select: none;
+      position: relative;
     }
     .chip:hover { border-color: var(--orange); color: var(--orange); }
     .chip.active { background: var(--orange); border-color: var(--orange); color: #fff; }
+    .chip.chip-disabled { opacity: 0.35; cursor: not-allowed; }
+    .chip.chip-disabled[data-tip]:hover::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%; transform: translateX(-50%);
+      background: #222; color: #fff;
+      padding: 4px 10px; border-radius: 6px;
+      white-space: nowrap; font-size: 0.7rem;
+      pointer-events: none; z-index: 10;
+    }
 
     /* ── LOADING BAR ── */
     #load-bar {
@@ -370,12 +390,22 @@
       color: var(--muted); margin-bottom: 12px; letter-spacing: 0.08em;
     }
     .grade-bars { display: flex; gap: 4px; align-items: flex-end; height: 60px; }
-    .grade-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+    .grade-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; position: relative; }
+    .grade-bar-wrap:hover .grade-tip { display: block; }
+    .grade-tip {
+      display: none; position: absolute; bottom: calc(100% - 16px);
+      left: 50%; transform: translateX(-50%);
+      background: var(--text); color: var(--surface);
+      font-family: 'DM Mono', monospace; font-size: 0.6rem;
+      padding: 3px 6px; border-radius: 4px; white-space: nowrap;
+      pointer-events: none; z-index: 10;
+    }
     .grade-bar {
       width: 100%; min-height: 2px; border-radius: 3px 3px 0 0;
       background: var(--orange); opacity: 0.85;
       transition: height 0.4s ease;
     }
+    .grade-bar-wrap:hover .grade-bar { opacity: 1; }
     .grade-lbl { font-family: 'DM Mono', monospace; font-size: 0.56rem; color: var(--muted); }
     .grade-avg {
       margin-top: 10px; font-family: 'DM Mono', monospace;
@@ -446,6 +476,7 @@
 
     /* ── EMPTY / ERROR ── */
     .state-msg { text-align: center; padding: 64px 20px; color: var(--muted); }
+    .section-divider { padding: 10px 4px 6px; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); border-top: 1px solid var(--border); margin-top: 8px; }
     .state-msg .icon { font-size: 2.4rem; margin-bottom: 14px; }
     .state-msg p { font-size: 0.86rem; line-height: 1.6; }
 
@@ -487,7 +518,10 @@
   <div class="detail-panel" id="detail-panel">
     <div class="panel-topbar">
       <span class="panel-code-label" id="panel-code"></span>
-      <button class="panel-close" onclick="closePanel()">✕ Close</button>
+      <div style="display:flex;gap:10px;align-items:center">
+        <a id="panel-ce-link" href="#" target="_blank" rel="noopener" style="font-size:0.72rem;color:var(--orange);text-decoration:none;font-family:'DM Mono',monospace">Course Explorer ↗</a>
+        <button class="panel-close" onclick="closePanel()">✕ Close</button>
+      </div>
     </div>
     <div class="panel-body">
 
@@ -499,7 +533,6 @@
       <div class="panel-section">
         <div class="psec-label">Description</div>
         <div class="panel-desc" id="panel-desc"></div>
-        <div id="panel-crossref"></div>
       </div>
 
       <div class="panel-section">
@@ -550,14 +583,32 @@
         </div>
       </div>
 
-      <div class="filter-row" id="filter-row">
-        <span class="chip active" onclick="setFilter(this,'all')">All</span>
-        <span class="chip" onclick="setFilter(this,'1')">100-level</span>
-        <span class="chip" onclick="setFilter(this,'2')">200-level</span>
-        <span class="chip" onclick="setFilter(this,'3')">300-level</span>
-        <span class="chip" onclick="setFilter(this,'4')">400-level</span>
-        <span class="chip" onclick="setFilter(this,'5')">500-level</span>
-        <span class="chip" onclick="setFilter(this,'gened')">Gen Ed</span>
+      <div class="filter-groups" id="filter-groups">
+        <div class="filter-group">
+          <span class="filter-label">Level</span>
+          <span class="chip active" id="chip-all" onclick="clearAllFilters()">All</span>
+          <span class="chip" id="chip-l1" onclick="toggleLevel('1')">100</span>
+          <span class="chip" id="chip-l2" onclick="toggleLevel('2')">200</span>
+          <span class="chip" id="chip-l3" onclick="toggleLevel('3')">300</span>
+          <span class="chip" id="chip-l4" onclick="toggleLevel('4')">400</span>
+          <span class="chip" id="chip-l5" onclick="toggleLevel('5')">500+</span>
+        </div>
+        <div class="filter-group" id="gened-filter-group" style="display:none">
+          <span class="filter-label">Gen Ed</span>
+        </div>
+        <div class="filter-group" id="credit-filter-group" style="display:none">
+          <span class="filter-label">Credit Hours</span>
+        </div>
+        <div class="filter-group" id="other-filter-group">
+          <span class="filter-label">Other</span>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Sort</span>
+          <span class="chip active" id="sort-alpha"    onclick="setSort('alpha')">A→Z</span>
+          <span class="chip"        id="sort-gpa"      onclick="setSort('gpa')">Avg GPA ↓</span>
+          <span class="chip"        id="sort-pct_a"    onclick="setSort('pct_a')">% 4.0 ↓</span>
+          <span class="chip"        id="sort-random"   onclick="setSort('random')">Random</span>
+        </div>
       </div>
     </section>
 
@@ -585,8 +636,14 @@
   let gpaMap      = {};   // key = "SUBJECT NUMBER LASTNAME" → { gpa, students, dist }
   let courseKeys  = [];   // ordered list of keys
   let filtered    = [];
-  let activeFilter = 'all';
+  let filteredPrereq = [];
+  let activeLevels  = new Set();
+  let activeGeneds  = new Set();
+  let activeCredits = new Set();
+  let activeOther   = new Set();
+  let activeSortVal = 'alpha';
   let activePanelCourse = null;
+  let prevPanelCourse   = null;
   let openGpaRow  = null;
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -638,6 +695,8 @@
   // ─────────────────────────────────────────────────────────────────────────
   // GPA HELPERS
   // ─────────────────────────────────────────────────────────────────────────
+  const SUBJECT_CODES = new Set(['AAS','ABE','ACCY','ACE','ACES','ADV','AE','AFAS','AFRO','AFST','AGCM','AGED','AHS','AIS','ALEC','ANSC','ANTH','ARAB','ARCH','ART','ARTD','ARTE','ARTF','ARTH','ARTJ','ARTS','ASRM','ASST','ASTR','ATMS','BADM','BASQ','BCOG','BCS','BDI','BIOC','BIOE','BIOP','BSE','BTW','BUS','CB','CDB','CEE','CHBE','CHEM','CHIN','CHP','CI','CIC','CLCV','CLE','CMN','CPSC','CS','CSE','CW','CWL','CZCH','DANC','DTX','EALC','ECE','ECON','EDPR','EDUC','EIL','ENG','ENGL','ENSU','ENVS','EPOL','EPSY','ERAM','ES','ESE','ESL','ETMA','EURO','EXP','FAA','FIN','FR','FSHN','GC','GEOL','GER','GGIS','GLBL','GMC','GRK','GRKM','GSD','GWS','HBSE','HDFS','HEBR','HIST','HK','HNDI','HORT','HT','HUM','IB','IE','INFO','IS','ITAL','JAPN','JOUR','JS','KOR','LA','LAS','LAST','LAT','LAW','LCTL','LEAD','LER','LING','LLS','MACS','MATH','MBA','MCB','MDIA','MDVL','ME','MICR','MILS','MIP','MSE','MUS','MUSC','MUSE','NE','NEUR','NPRE','NRES','NS','NUTR','PATH','PERS','PHIL','PHYS','PLPA','POL','PORT','PS','PSM','PSYC','QUEC','REES','REL','RHET','RST','RUSS','SAME','SBC','SCAN','SE','SHS','SLAV','SLCL','SOC','SOCW','SPAN','SPED','STAT','SWAH','TAM','TE','THEA','TMGT','TRST','TURK','UKR','UP','VCM','VM','WLOF','WRIT']);
+
   const GRADE_COLS = ['A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','F'];
   const GRADE_POINTS = { 'A+':4.0,'A':4.0,'A-':3.67,'B+':3.33,'B':3.0,'B-':2.67,
                          'C+':2.33,'C':2.0,'C-':1.67,'D+':1.33,'D':1.0,'D-':0.67,'F':0.0 };
@@ -811,15 +870,41 @@
       c._gpa = bestGpa ? bestGpa.gpa : null;
       c._gpaStudents = totalStudents;
       c._lastNames = [...lastNameSet];
+      // Aggregate grade distribution across all instructors for this course
+      let totalA = 0, totalGraded = 0;
+      lastNameSet.forEach(ln => {
+        const gData = lookupGpa(subj, num, ln);
+        if (gData && gData.dist) {
+          totalA += gData.dist['A+'] || 0;
+          totalA += gData.dist['A']  || 0;
+          GRADE_COLS.forEach(g => { totalGraded += gData.dist[g] || 0; });
+        }
+      });
+      c._pctA = totalGraded > 0 ? totalA / totalGraded : null;
     });
 
     setLoadBar(1.0);
     filtered = [...courseKeys];
+    buildGenEdChips();
+    buildCreditChips();
+    buildOtherChips();
+    updateHalfChipState();
     renderGrid();
 
     setTimeout(() => { document.getElementById('load-bar').style.opacity = '0'; }, 600);
     document.getElementById('load-status').style.display = 'none';
     document.getElementById('courses-grid').style.display = 'grid';
+  }
+
+  function linkifyDesc(text) {
+    // HTML-escape first to prevent XSS
+    const escaped = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    // Replace known course codes (e.g. "CS 225", "MATH 241") with clickable spans
+    return escaped.replace(/\b([A-Z]{2,5})\s+(\d{3,4})\b/g, (match, subj, num) => {
+      if (!SUBJECT_CODES.has(subj)) return match;
+      const key = subj + ' ' + num;
+      return `<span class="crossref" style="cursor:pointer" onclick="openPanel('${key}')">${key}</span>`;
+    });
   }
 
   function decodeHtml(str) {
@@ -846,36 +931,283 @@
     applyFilter();
   }
 
-  let activeFilterVal = 'all';
-
-  function setFilter(el, val) {
-    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    el.classList.add('active');
-    activeFilterVal = val;
+  function setSort(val) {
+    activeSortVal = val;
+    document.querySelectorAll('[id^="sort-"]').forEach(c => c.classList.remove('active'));
+    document.getElementById('sort-' + val).classList.add('active');
     applyFilter();
+  }
+
+  function sortKeys(keys) {
+    const nullsLast = (a, b, fn) => {
+      const av = fn(a), bv = fn(b);
+      if (av === null && bv === null) return 0;
+      if (av === null) return 1;
+      if (bv === null) return -1;
+      return bv - av; // descending
+    };
+    const copy = [...keys];
+    if (activeSortVal === 'gpa')      copy.sort((a, b) => nullsLast(a, b, k => courseMap[k]._gpa));
+    else if (activeSortVal === 'pct_a')    copy.sort((a, b) => nullsLast(a, b, k => courseMap[k]._pctA));
+    else if (activeSortVal === 'students') copy.sort((a, b) => nullsLast(a, b, k => courseMap[k]._gpaStudents));
+    else if (activeSortVal === 'sections') copy.sort((a, b) => courseMap[b].sections.length - courseMap[a].sections.length);
+    else if (activeSortVal === 'random') copy.sort(() => Math.random() - 0.5);
+    // 'alpha' keeps original order (courseKeys is already sorted A→Z)
+    return copy;
+  }
+
+  function updateChipAllState() {
+    const anyActive = activeLevels.size > 0 || activeGeneds.size > 0 || activeCredits.size > 0 || activeOther.size > 0;
+    document.getElementById('chip-all').classList.toggle('active', !anyActive);
+  }
+
+  function clearAllFilters() {
+    activeLevels.clear();
+    activeGeneds.clear();
+    activeCredits.clear();
+    activeOther.clear();
+    document.querySelectorAll('#chip-l1,#chip-l2,#chip-l3,#chip-l4,#chip-l5').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('#gened-filter-group .chip').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('#credit-filter-group .chip').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('#other-filter-group .chip').forEach(c => c.classList.remove('active'));
+    updateHalfChipState();
+    updateChipAllState();
+    applyFilter();
+  }
+
+  function toggleLevel(val) {
+    const chip = document.getElementById('chip-l' + val);
+    if (activeLevels.has(val)) {
+      activeLevels.delete(val);
+      chip.classList.remove('active');
+    } else {
+      activeLevels.add(val);
+      chip.classList.add('active');
+    }
+    updateChipAllState();
+    applyFilter();
+  }
+
+  function toggleGened(val) {
+    const chip = document.querySelector(`#gened-filter-group [data-gened="${CSS.escape(val)}"]`);
+    if (activeGeneds.has(val)) {
+      activeGeneds.delete(val);
+      if (chip) chip.classList.remove('active');
+    } else {
+      activeGeneds.add(val);
+      if (chip) chip.classList.add('active');
+    }
+    updateChipAllState();
+    applyFilter();
+  }
+
+  const GENED_FILTERS = [
+    { label: 'Advanced Composition',        match: s => s.includes('Advanced Composition') },
+    { label: 'Composition I',               match: s => s.includes('Composition I') },
+    { label: 'Cultural Studies',            match: s => s.includes('Cultural Studies') },
+    { label: 'Humanities & the Arts',       match: s => s.includes('Humanities') },
+    { label: 'Natural Sciences & Tech',     match: s => s.includes('Nat Sci') },
+    { label: 'Quantitative Reasoning',      match: s => s.includes('Quantitative Reasoning') },
+    { label: 'Social & Behavioral Sciences',match: s => s.includes('Soc & Beh') || s.includes('Social & Beh') },
+  ];
+
+  function courseMatchesGened(c, label) {
+    const gf = GENED_FILTERS.find(g => g.label === label);
+    return gf ? gf.match(c.gened) : false;
+  }
+
+  function intCreditsSelected() {
+    return [...activeCredits].filter(s => s !== 'half');
+  }
+
+  function updateHalfChipState() {
+    const halfChip = document.querySelector('[data-credit="half"]');
+    if (!halfChip) return;
+    const disabled = intCreditsSelected().length === 0;
+    halfChip.classList.toggle('chip-disabled', disabled);
+    if (disabled) {
+      halfChip.dataset.tip = 'Select a credit hour first';
+    } else {
+      delete halfChip.dataset.tip;
+    }
+    if (disabled && activeCredits.has('half')) {
+      activeCredits.delete('half');
+      halfChip.classList.remove('active');
+    }
+  }
+
+  function toggleCredit(val) {
+    const chip = document.querySelector(`[data-credit="${val}"]`);
+    if (val === 'half' && intCreditsSelected().length === 0) return;
+    if (activeCredits.has(val)) {
+      activeCredits.delete(val);
+      if (chip) chip.classList.remove('active');
+    } else {
+      activeCredits.add(val);
+      if (chip) chip.classList.add('active');
+    }
+    updateHalfChipState();
+    updateChipAllState();
+    applyFilter();
+  }
+
+  function creditBuckets(credits) {
+    if (!credits) return [];
+    const out = new Set();
+    // "X OR Y OR Z"
+    if (/\bOR\b/i.test(credits)) {
+      credits.split(/\s+OR\s+/i).forEach(part => {
+        const n = parseFloat(part);
+        if (!isNaN(n) && Number.isInteger(n)) out.add(n >= 5 ? '5+' : String(Math.max(0, n)));
+      });
+      return [...out];
+    }
+    // "X TO Y"
+    const range = credits.match(/^([\d.]+)\s+TO\s+([\d.]+)$/i);
+    if (range) {
+      const lo = Math.ceil(parseFloat(range[1]));
+      const hi = Math.floor(parseFloat(range[2]));
+      for (let i = lo; i <= hi; i++) out.add(i >= 5 ? '5+' : String(Math.max(0, i)));
+      return [...out];
+    }
+    // Single value — only integer credits get a bucket
+    const n = parseFloat(credits);
+    if (!isNaN(n) && Number.isInteger(n)) out.add(n >= 5 ? '5+' : String(Math.max(0, n)));
+    return [...out];
+  }
+
+  function isHalfCredit(credits) {
+    return /\b\d+\.5\b/.test(credits || '');
+  }
+
+  // Returns the integer bucket(s) that correspond to the X in each X.5 value
+  function halfIntBuckets(credits) {
+    const out = new Set();
+    for (const m of (credits || '').matchAll(/\b(\d+)\.5\b/g)) {
+      const n = parseInt(m[1]);
+      out.add(n >= 5 ? '5+' : String(n));
+    }
+    return [...out];
+  }
+
+  function buildCreditChips() {
+    const intBuckets = ['0','1','2','3','4','5+'];
+    const used = new Set();
+    let anyHalf = false;
+    Object.values(courseMap).forEach(c => {
+      creditBuckets(c.credits).forEach(b => used.add(b));
+      if (isHalfCredit(c.credits)) anyHalf = true;
+    });
+    const group = document.getElementById('credit-filter-group');
+    intBuckets.filter(b => used.has(b)).forEach(b => {
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.dataset.credit = b;
+      chip.textContent = b + ' hr';
+      chip.onclick = () => toggleCredit(b);
+      group.appendChild(chip);
+    });
+    group.style.display = '';
+  }
+
+  function toggleOther(val) {
+    const chip = document.querySelector(`#other-filter-group [data-other="${val}"]`);
+    if (activeOther.has(val)) {
+      activeOther.delete(val);
+      if (chip) chip.classList.remove('active');
+    } else {
+      activeOther.add(val);
+      if (chip) chip.classList.add('active');
+    }
+    updateChipAllState();
+    applyFilter();
+  }
+
+  function buildOtherChips() {
+    const group = document.getElementById('other-filter-group');
+
+    // 0.5 hr chip (still tied to credit hour selection)
+    const halfChip = document.createElement('span');
+    halfChip.className = 'chip';
+    halfChip.dataset.credit = 'half';
+    halfChip.textContent = 'Include 0.5 hr';
+    halfChip.onclick = () => toggleCredit('half');
+    group.appendChild(halfChip);
+
+    // No prerequisites chip
+    const npreqChip = document.createElement('span');
+    npreqChip.className = 'chip';
+    npreqChip.dataset.other = 'no_prereq';
+    npreqChip.textContent = 'No Prerequisites';
+    npreqChip.onclick = () => toggleOther('no_prereq');
+    group.appendChild(npreqChip);
+  }
+
+  function buildGenEdChips() {
+    const group = document.getElementById('gened-filter-group');
+    GENED_FILTERS.forEach(({ label }) => {
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.dataset.gened = label;
+      chip.textContent = label;
+      chip.onclick = () => toggleGened(label);
+      group.appendChild(chip);
+    });
+    group.style.display = '';
   }
 
   function applyFilter() {
     const q = document.getElementById('search-input').value.trim().toUpperCase();
 
-    filtered = courseKeys.filter(key => {
+    filtered = [];
+    filteredPrereq = [];
+
+    courseKeys.forEach(key => {
       const c = courseMap[key];
-      // text match
-      if (q) {
-        const matchSubj   = c.subject.includes(q);
-        const matchFull   = key.includes(q);
-        const matchName   = c.name.toUpperCase().includes(q);
-        const matchDesc   = c.desc.toUpperCase().includes(q);
-        if (!matchSubj && !matchFull && !matchName && !matchDesc) return false;
+
+      // level filter
+      if (activeLevels.size > 0 && !activeLevels.has(String(c.number).charAt(0))) return;
+
+      // credit hour filter
+      if (activeCredits.size > 0) {
+        const intSel = intCreditsSelected();
+        const halfSel = activeCredits.has('half');
+        const buckets = creditBuckets(c.credits);
+        const intMatch = intSel.some(sel => buckets.includes(sel));
+        const halfMatch = halfSel && isHalfCredit(c.credits) && halfIntBuckets(c.credits).some(b => intSel.includes(b));
+        if (!intMatch && !halfMatch) return;
       }
-      // chip filter
-      if (activeFilterVal === 'all') return true;
-      if (activeFilterVal === 'gened') return c.gened.length > 0;
-      // level: first digit of course number
-      const lvl = String(c.number).charAt(0);
-      return lvl === activeFilterVal;
+
+      // other filters
+      if (activeOther.has('no_prereq') && /prerequisite/i.test(c.desc)) return;
+
+      // gen ed filter — course must satisfy ALL selected gen eds
+      if (activeGeneds.size > 0) {
+        const match = [...activeGeneds].every(g => courseMatchesGened(c, g));
+        if (!match) return;
+      }
+
+      if (q) {
+        // Direct: exact subject code match OR key equals/starts-with query (course code)
+        const matchSubj = c.subject === q;
+        const matchFull = key === q || key.startsWith(q + ' ');
+        const matchName = c.name.toUpperCase().includes(q);
+        const matchDesc = c.desc.toUpperCase().includes(q);
+        if (!matchSubj && !matchFull && !matchName && !matchDesc) return;
+        // Name is only a direct match when query isn't a known subject code
+        const nameIsDirect = matchName && !SUBJECT_CODES.has(q);
+        if (matchSubj || matchFull || nameIsDirect) {
+          filtered.push(key);
+        } else {
+          filteredPrereq.push(key);
+        }
+      } else {
+        filtered.push(key);
+      }
     });
 
+    filtered = sortKeys(filtered);
+    filteredPrereq = sortKeys(filteredPrereq);
     renderGrid();
   }
 
@@ -889,13 +1221,37 @@
     return 'b-red';
   }
 
+  function renderCourseCard(key, i) {
+    const c = courseMap[key];
+    const gpaStr = c._gpa !== null ? c._gpa.toFixed(2) : '—';
+    const gpaClass = gpaColorClass(c._gpa);
+    const pctAStr = c._pctA !== null ? (c._pctA * 100).toFixed(1) + '%' : '—';
+    const credBadge = c.credits ? `<span class="badge b-neutral">${c.credits} hr</span>` : '';
+    const sectionCount = c.sections.length;
+
+    const genedBadges = GENED_FILTERS.filter(g => g.match(c.gened)).map(g => `<span class="badge b-blue">${g.label}</span>`).join('');
+
+    return `<div class="course-card" style="animation-delay:${Math.min(i,30)*0.025}s" onclick="openPanel('${key}')">
+      <div class="card-code">${c.subject} ${c.number}</div>
+      <div class="card-name">${c.name}</div>
+      <div class="card-desc">${c.desc || 'No description available.'}</div>
+      <div class="card-footer">
+        <span class="badge ${gpaClass}">GPA ${gpaStr}</span>
+        <span class="badge b-neutral">4.0: ${pctAStr}</span>
+        ${credBadge}
+        <span class="badge b-section-count">${sectionCount} section${sectionCount !== 1 ? 's' : ''}</span>
+        ${genedBadges}
+      </div>
+    </div>`;
+  }
+
   function renderGrid() {
     const grid = document.getElementById('courses-grid');
-    const count = filtered.length;
+    const total = filtered.length + filteredPrereq.length;
     document.getElementById('results-count').textContent =
-      `${count.toLocaleString()} course${count !== 1 ? 's' : ''}`;
+      `${total.toLocaleString()} course${total !== 1 ? 's' : ''}`;
 
-    if (!count) {
+    if (!total) {
       grid.innerHTML = `<div class="state-msg" style="grid-column:1/-1">
         <div class="icon">🔍</div>
         <p>No courses match your search.<br/>Try a different subject, number, or keyword.</p>
@@ -903,48 +1259,29 @@
       return;
     }
 
-    // Render in batches for performance (large dataset)
     const BATCH = 120;
-    const show = filtered.slice(0, BATCH);
-
-    grid.innerHTML = show.map((key, i) => {
-      const c = courseMap[key];
-      const gpaStr = c._gpa !== null ? c._gpa.toFixed(2) : '—';
-      const gpaClass = gpaColorClass(c._gpa);
-      const credBadge = c.credits ? `<span class="badge b-neutral">${c.credits} hr</span>` : '';
-      const sectionCount = c.sections.length;
-
-      // Gen Ed short labels
-      let genedBadges = '';
-      if (c.gened) {
-        if (c.gened.includes('Nat Sci'))      genedBadges += `<span class="badge b-blue">Nat Sci</span>`;
-        if (c.gened.includes('Humanities'))   genedBadges += `<span class="badge b-blue">Humanities</span>`;
-        if (c.gened.includes('Soc Sci') || c.gened.includes('Soc & Beh'))
-          genedBadges += `<span class="badge b-blue">Soc Sci</span>`;
-        if (c.gened.includes('Cultural Studies'))
-          genedBadges += `<span class="badge b-blue">Cultural Studies</span>`;
-        if (!genedBadges && c.gened.length > 0)
-          genedBadges = `<span class="badge b-blue">Gen Ed</span>`;
-      }
-
-      return `<div class="course-card" style="animation-delay:${Math.min(i,30)*0.025}s" onclick="openPanel('${key}')">
-        <div class="card-code">${c.subject} ${c.number}</div>
-        <div class="card-name">${c.name}</div>
-        <div class="card-desc">${c.desc || 'No description available.'}</div>
-        <div class="card-footer">
-          <span class="badge ${gpaClass}">GPA ${gpaStr}</span>
-          ${credBadge}
-          <span class="badge b-section-count">${sectionCount} section${sectionCount !== 1 ? 's' : ''}</span>
-          ${genedBadges}
-        </div>
-      </div>`;
-    }).join('');
+    const showDirect = filtered.slice(0, BATCH);
+    let html = showDirect.map((key, i) => renderCourseCard(key, i)).join('');
 
     if (filtered.length > BATCH) {
-      grid.innerHTML += `<div class="state-msg" style="grid-column:1/-1; padding:30px 20px;">
+      html += `<div class="state-msg" style="grid-column:1/-1; padding:30px 20px;">
         <p>Showing first ${BATCH} of ${filtered.length.toLocaleString()} results. Refine your search to narrow down.</p>
       </div>`;
     }
+
+    if (filteredPrereq.length > 0) {
+      const q = document.getElementById('search-input').value.trim();
+      html += `<div class="section-divider" style="grid-column:1/-1">Courses with "${q}" in description</div>`;
+      const showPrereq = filteredPrereq.slice(0, BATCH);
+      html += showPrereq.map((key, i) => renderCourseCard(key, filtered.length + i)).join('');
+      if (filteredPrereq.length > BATCH) {
+        html += `<div class="state-msg" style="grid-column:1/-1; padding:30px 20px;">
+          <p>Showing first ${BATCH} of ${filteredPrereq.length.toLocaleString()} description matches.</p>
+        </div>`;
+      }
+    }
+
+    grid.innerHTML = html;
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -952,36 +1289,53 @@
   // ─────────────────────────────────────────────────────────────────────────
   function openPanel(key) {
     const c = courseMap[key];
-    if (!c) return;
+    const from = activePanelCourse;
+
+    if (!c) {
+      prevPanelCourse   = from;
+      activePanelCourse = null;
+      openGpaRow = null;
+      document.getElementById('panel-code').textContent  = key;
+      document.getElementById('panel-title').textContent = 'Not offered this semester';
+      document.getElementById('panel-meta').innerHTML    = '';
+      document.getElementById('panel-desc').innerHTML    =
+        `<span style="color:var(--muted);font-size:0.85rem">${key} is not in the Spring 2026 course catalog.</span>`;
+      document.getElementById('panel-crossref').innerHTML = from
+        ? `<span class="crossref" style="cursor:pointer;margin-top:8px;display:inline-block" onclick="openPanel('${from}')">← Back to ${from}</span>`
+        : '';
+      document.getElementById('grade-sheet-container').innerHTML = '';
+      document.getElementById('instr-tbody').innerHTML =
+        '<tr><td colspan="4" style="color:var(--muted);font-size:0.8rem;padding:12px">No data available</td></tr>';
+      document.getElementById('sec-legend').innerHTML = '';
+      document.getElementById('view-list').innerHTML  = '';
+      document.getElementById('view-cal').innerHTML   = '';
+      document.getElementById('detail-panel').classList.add('open');
+      document.getElementById('overlay').classList.add('open');
+      return;
+    }
+
+    prevPanelCourse   = from;
     activePanelCourse = key;
     openGpaRow = null;
 
     document.getElementById('panel-code').textContent  = `${c.subject} ${c.number}`;
     document.getElementById('panel-title').textContent = c.name;
+    document.getElementById('panel-ce-link').href =
+      `https://courses.illinois.edu/schedule/2026/spring/${c.subject}/${c.number}`;
 
     // meta
     const gpaStr = c._gpa !== null ? c._gpa.toFixed(2) : '—';
+    const pctAStr = c._pctA !== null ? (c._pctA * 100).toFixed(1) + '%' : '—';
     document.getElementById('panel-meta').innerHTML =
       `<span class="badge ${gpaColorClass(c._gpa)}">Avg GPA ${gpaStr}</span>
+       <span class="badge b-neutral">4.0: ${pctAStr}</span>
        ${c.credits ? `<span class="badge b-neutral">${c.credits} credit hours</span>` : ''}
-       ${c.gened ? '<span class="badge b-blue">Gen Ed</span>' : ''}`;
+       ${GENED_FILTERS.filter(g => g.match(c.gened)).map(g => `<span class="badge b-blue">${g.label}</span>`).join('')}`;
 
     // description + cross-refs
     const descEl = document.getElementById('panel-desc');
-    descEl.textContent = c.desc || 'No description available.';
+    descEl.innerHTML = linkifyDesc(c.desc || 'No description available.');
     // Detect "Same as X" / "See X" patterns and make them clickable
-    const xrefEl = document.getElementById('panel-crossref');
-    xrefEl.innerHTML = '';
-    const xrefMatches = c.desc.match(/(?:Same as|See)\s+([A-Z]{2,5}\s+\d{2,4})/g) || [];
-    xrefMatches.forEach(m => {
-      const courseRef = m.replace(/^(Same as|See)\s+/,'');
-      const btn = document.createElement('span');
-      btn.className = 'crossref';
-      btn.textContent = `→ ${courseRef}`;
-      btn.style.cursor = 'pointer'; btn.style.marginRight = '6px';
-      btn.onclick = () => { closePanel(); setTimeout(() => openPanel(courseRef), 350); };
-      xrefEl.appendChild(btn);
-    });
 
     // instructors
     buildInstrTable(c);
@@ -1074,7 +1428,8 @@
       const n = dist[g] || 0;
       const h = Math.round((n / maxCount) * 56);
       const pct = total > 0 ? ((n/total)*100).toFixed(1) : '0.0';
-      return `<div class="grade-bar-wrap" title="${g}: ${n} (${pct}%)">
+      return `<div class="grade-bar-wrap">
+        <div class="grade-tip">${pct}%</div>
         <div class="grade-bar" style="height:${h}px"></div>
         <div class="grade-lbl">${g}</div>
       </div>`;
@@ -1097,14 +1452,6 @@
     const map = { LEC:'LEC', DIS:'DIS', LAB:'LAB', ONL:'ONL', LCD:'LCD' };
     return `sdot-${map[typeCode] || 'OTH'}`;
   }
-  function statusClass(s) {
-    if (!s) return '';
-    const lower = s.toLowerCase();
-    if (lower.includes('open') || lower === 'open') return 'spill-open';
-    if (lower.includes('closed')) return 'spill-closed';
-    if (lower.includes('waitlist')) return 'spill-waitlist';
-    return '';
-  }
 
   function renderSections(c) {
     // Legend — unique type codes
@@ -1125,9 +1472,8 @@
       const roomStr = s.building
         ? `${s.room} ${s.building}`.trim() : (s.room || '');
       const instrStr = s.instructors.slice(0,2).join('; ') + (s.instructors.length > 2 ? ' +more' : '');
-      const isClosed = (s.status || '').toLowerCase().includes('closed');
 
-      return `<div class="sec-row ${isClosed ? 'sec-closed' : ''}">
+      return `<div class="sec-row">
         <div class="sec-dot ${dotClass(s.typeCode)}"></div>
         <div class="sec-info">
           <div class="sec-type-num">${s.typeCode} · ${s.section}</div>
@@ -1135,7 +1481,6 @@
           ${roomStr ? `<div class="sec-room">${roomStr}</div>` : ''}
         </div>
         <div class="sec-instr" title="${s.instructors.join('; ')}">${instrStr || '—'}</div>
-        <span class="spill ${statusClass(s.status)}">${s.status || '—'}</span>
       </div>`;
     };
 
