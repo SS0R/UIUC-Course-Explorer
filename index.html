@@ -1398,8 +1398,9 @@
 
     document.getElementById('panel-code').textContent  = `${c.subject} ${c.number}`;
     document.getElementById('panel-title').textContent = c.name;
+    const semNameMap = { sp: 'spring', su: 'summer', fa: 'fall', wi: 'winter' };
     document.getElementById('panel-ce-link').href =
-      `https://courses.illinois.edu/schedule/2026/spring/${c.subject}/${c.number}`;
+      `https://courses.illinois.edu/schedule/${yearSelect.value}/${semNameMap[semSelect.value]}/${c.subject}/${c.number}`;
 
     // meta
     const gpaStr = c._gpa !== null ? c._gpa.toFixed(2) : '—';
