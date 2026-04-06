@@ -88,12 +88,22 @@
       background: rgba(255,255,255,0.10);
       border: 1px solid rgba(255,255,255,0.18);
       color: #fff; border-radius: 8px;
-      padding: 6px 13px; font-size: 0.75rem;
+      padding: 6px 10px; font-size: 0.75rem;
       font-family: 'DM Mono', monospace; cursor: pointer;
       transition: background 0.2s;
     }
     .theme-btn:hover { background: rgba(255,255,255,0.18); }
     [data-theme="light"] .theme-btn { color: #fff; }
+    .sem-select {
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #fff; border-radius: 8px;
+      padding: 6px 10px; font-size: 0.75rem;
+      font-family: 'DM Mono', monospace; cursor: pointer;
+      transition: background 0.2s; appearance: none;
+    }
+    .sem-select:hover { background: rgba(255,255,255,0.18); }
+    .sem-select option { background: var(--blue); color: #fff; }
 
     /* ── LAYOUT ── */
     .container { max-width: 1140px; margin: 0 auto; padding: 0 24px; }
@@ -506,8 +516,14 @@
       UIUC Course Explorer
     </div>
     <div class="nav-right">
-      <span class="nav-semester" id="nav-semester">Spring 2026</span>
-      <button class="theme-btn" id="theme-btn">🌙 Dark</button>
+      <select class="sem-select" id="sem-select">
+        <option value="sp">Spring</option>
+        <option value="su">Summer</option>
+        <option value="fa">Fall</option>
+        <option value="wi">Winter</option>
+      </select>
+      <select class="sem-select" id="year-select"></select>
+      <button class="theme-btn" id="theme-btn">Dark</button>
     </div>
   </nav>
 
@@ -571,7 +587,7 @@
     <section class="hero">
       <div class="hero-kicker">University of Illinois Urbana-Champaign</div>
       <h1>Find your next <em>course.</em></h1>
-      <p class="hero-sub">Search courses by subject, number, or keyword. Includes GPA history from real grade data.</p>
+      <p class="hero-sub">Includes GPA history from real grade data.</p>
 
       <div class="search-outer">
         <div class="search-box">
@@ -583,7 +599,7 @@
         </div>
       </div>
 
-      <div class="filter-groups" id="filter-groups">
+      <div class="filter-groups" id="filter-groups" style="display:none">
         <div class="filter-group">
           <span class="filter-label">Level</span>
           <span class="chip active" id="chip-all" onclick="clearAllFilters()">All</span>
@@ -626,8 +642,59 @@
   // ─────────────────────────────────────────────────────────────────────────
   // DATA SOURCES — both fetched directly from GitHub
   // ─────────────────────────────────────────────────────────────────────────
-  const CATALOG_URL = 'https://raw.githubusercontent.com/wadefagen/datasets/refs/heads/main/course-catalog/data/2026-sp.csv';
-  const GPA_URL     = 'https://raw.githubusercontent.com/wadefagen/datasets/refs/heads/main/gpa/uiuc-gpa-dataset.csv';
+  const GPA_URL = 'https://raw.githubusercontent.com/wadefagen/datasets/refs/heads/main/gpa/uiuc-gpa-dataset.csv';
+
+  // ── Semester selector setup ──
+  const yearSelect = document.getElementById('year-select');
+  const semSelect  = document.getElementById('sem-select');
+  const CURRENT_YEAR = 2026;
+  for (let y = CURRENT_YEAR; y >= 2018; y--) {
+    const opt = document.createElement('option');
+    opt.value = y; opt.textContent = y;
+    yearSelect.appendChild(opt);
+  }
+  semSelect.value  = 'fa';
+  yearSelect.value = '2026';
+
+  function getCatalogURL() {
+    return `https://raw.githubusercontent.com/wadefagen/datasets/refs/heads/main/course-catalog/data/${yearSelect.value}-${semSelect.value}.csv`;
+  }
+
+  function onSemesterChange() {
+    courseMap = {}; gpaMap = {}; courseKeys = []; filtered = []; filteredPrereq = [];
+    activeLevels.clear(); activeGeneds.clear(); activeCredits.clear(); activeOther.clear();
+    activeSortVal = 'alpha';
+    document.getElementById('search-input').value = '';
+    // Reset level chips
+    document.querySelectorAll('#chip-l1,#chip-l2,#chip-l3,#chip-l4,#chip-l5').forEach(c => c.classList.remove('active'));
+    document.getElementById('chip-all').classList.add('active');
+    // Reset sort chips
+    document.querySelectorAll('[id^="sort-"]').forEach(c => c.classList.remove('active'));
+    document.getElementById('sort-alpha').classList.add('active');
+    // Reset dynamic chip groups back to just their label
+    document.getElementById('gened-filter-group').innerHTML  = '<span class="filter-label">Gen Ed</span>';
+    document.getElementById('credit-filter-group').innerHTML = '<span class="filter-label">Credit Hours</span>';
+    document.getElementById('other-filter-group').innerHTML  = '<span class="filter-label">Other</span>';
+    document.getElementById('filter-groups').style.display = 'none';
+    document.getElementById('courses-grid').style.display = 'none';
+    document.getElementById('courses-grid').innerHTML = '';
+    document.getElementById('load-status').style.display = '';
+    document.getElementById('load-status').textContent = 'Loading course data…';
+    loadData();
+  }
+
+  // Resize a <select> to fit its selected option text
+  const _sizer = document.createElement('span');
+  _sizer.style.cssText = 'position:absolute;visibility:hidden;font:0.75rem "DM Mono",monospace;padding:0 10px;white-space:nowrap;pointer-events:none;';
+  document.body.appendChild(_sizer);
+  function resizeSelect(sel) {
+    _sizer.textContent = sel.options[sel.selectedIndex].text;
+    sel.style.width = (_sizer.offsetWidth + 2) + 'px';
+  }
+  document.fonts.ready.then(() => { resizeSelect(semSelect); resizeSelect(yearSelect); });
+
+  semSelect.addEventListener('change', () => { resizeSelect(semSelect);  onSemesterChange(); });
+  yearSelect.addEventListener('change', () => { resizeSelect(yearSelect); onSemesterChange(); });
 
   // ─────────────────────────────────────────────────────────────────────────
   // STATE
@@ -652,7 +719,7 @@
   document.getElementById('theme-btn').addEventListener('click', () => {
     const isDark = document.documentElement.dataset.theme === 'dark';
     document.documentElement.dataset.theme = isDark ? 'light' : 'dark';
-    document.getElementById('theme-btn').textContent = isDark ? '🌙 Dark' : '☀ Light';
+    document.getElementById('theme-btn').textContent = isDark ? 'Dark' : 'Light';
   });
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -747,7 +814,7 @@
     let catalogText, gpaText;
     try {
       const [catRes, gpaRes] = await Promise.all([
-        fetch(CATALOG_URL),
+        fetch(getCatalogURL()),
         fetch(GPA_URL)
       ]);
       setLoadBar(0.5);
@@ -893,6 +960,7 @@
 
     setTimeout(() => { document.getElementById('load-bar').style.opacity = '0'; }, 600);
     document.getElementById('load-status').style.display = 'none';
+    document.getElementById('filter-groups').style.display = '';
     document.getElementById('courses-grid').style.display = 'grid';
   }
 
@@ -1141,6 +1209,14 @@
     npreqChip.textContent = 'No Prerequisites';
     npreqChip.onclick = () => toggleOther('no_prereq');
     group.appendChild(npreqChip);
+
+    // Exclude X99 seminars chip
+    const noX99Chip = document.createElement('span');
+    noX99Chip.className = 'chip';
+    noX99Chip.dataset.other = 'no_x99';
+    noX99Chip.textContent = 'Exclude Seminars';
+    noX99Chip.onclick = () => toggleOther('no_x99');
+    group.appendChild(noX99Chip);
   }
 
   function buildGenEdChips() {
@@ -1180,6 +1256,7 @@
 
       // other filters
       if (activeOther.has('no_prereq') && /prerequisite/i.test(c.desc)) return;
+      if (activeOther.has('no_x99') && /seminar/i.test(c.name)) return;
 
       // gen ed filter — course must satisfy ALL selected gen eds
       if (activeGeneds.size > 0) {
@@ -1191,12 +1268,13 @@
         // Direct: exact subject code match OR key equals/starts-with query (course code)
         const matchSubj = c.subject === q;
         const matchFull = key === q || key.startsWith(q + ' ');
+        const matchNum  = /^\d+$/.test(q) && String(c.number).includes(q);
         const matchName = c.name.toUpperCase().includes(q);
         const matchDesc = c.desc.toUpperCase().includes(q);
-        if (!matchSubj && !matchFull && !matchName && !matchDesc) return;
+        if (!matchSubj && !matchFull && !matchNum && !matchName && !matchDesc) return;
         // Name is only a direct match when query isn't a known subject code
         const nameIsDirect = matchName && !SUBJECT_CODES.has(q);
-        if (matchSubj || matchFull || nameIsDirect) {
+        if (matchSubj || matchFull || matchNum || nameIsDirect) {
           filtered.push(key);
         } else {
           filteredPrereq.push(key);
