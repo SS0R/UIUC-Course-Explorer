@@ -328,6 +328,13 @@
       transition: background 0.18s;
     }
     .panel-close:hover { background: rgba(255,255,255,0.22); }
+    .panel-back {
+      background: none; border: none;
+      color: rgba(255,255,255,0.6); font-size: 0.72rem; cursor: pointer;
+      font-family: 'DM Mono', monospace; padding: 0;
+      transition: color 0.15s;
+    }
+    .panel-back:hover { color: #fff; }
 
     .panel-body { padding: 0; }
     .panel-hero {
@@ -533,7 +540,10 @@
   <!-- DETAIL PANEL -->
   <div class="detail-panel" id="detail-panel">
     <div class="panel-topbar">
-      <span class="panel-code-label" id="panel-code"></span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="panel-back" id="panel-back" onclick="goBack()" style="display:none">← Back</button>
+        <span class="panel-code-label" id="panel-code"></span>
+      </div>
       <div style="display:flex;gap:10px;align-items:center">
         <a id="panel-ce-link" href="#" target="_blank" rel="noopener" style="font-size:0.72rem;color:var(--orange);text-decoration:none;font-family:'DM Mono',monospace">Course Explorer ↗</a>
         <button class="panel-close" onclick="closePanel()">✕ Close</button>
@@ -551,7 +561,7 @@
         <div class="panel-desc" id="panel-desc"></div>
       </div>
 
-      <div class="panel-section">
+      <div class="panel-section" id="panel-section-instr">
         <div class="psec-label">Instructors &amp; GPA History</div>
         <table class="instr-table">
           <thead>
@@ -567,7 +577,7 @@
         <div id="grade-sheet-container"></div>
       </div>
 
-      <div class="panel-section">
+      <div class="panel-section" id="panel-section-sections">
         <div class="psec-label">Sections</div>
         <div class="legend" id="sec-legend"></div>
         <div class="view-toggle">
@@ -710,8 +720,9 @@
   let activeOther   = new Set();
   let activeSortVal = 'alpha';
   let activePanelCourse = null;
-  let prevPanelCourse   = null;
+  let panelHistory      = [];
   let openGpaRow  = null;
+  const semNameMap = { sp: 'spring', su: 'summer', fa: 'fall', wi: 'winter' };
 
   // ─────────────────────────────────────────────────────────────────────────
   // THEME
@@ -1232,6 +1243,21 @@
     group.style.display = '';
   }
 
+  function hasPrereq(c) {
+    if (/prerequisite/i.test(c.desc)) return true;
+    // Follow "See SUBJ NUM" / "Same as SUBJ NUM" cross-references
+    const refs = [];
+    const refRe = /\b([A-Z]{2,5})\s+(\d{3,4})\b/g;
+    let m;
+    while ((m = refRe.exec(c.desc)) !== null) {
+      refs.push(m[1] + ' ' + m[2]);
+    }
+    return refs.some(ref => {
+      const linked = courseMap[ref];
+      return linked && /prerequisite/i.test(linked.desc);
+    });
+  }
+
   function applyFilter() {
     const q = document.getElementById('search-input').value.trim().toUpperCase();
 
@@ -1255,7 +1281,7 @@
       }
 
       // other filters
-      if (activeOther.has('no_prereq') && /prerequisite/i.test(c.desc)) return;
+      if (activeOther.has('no_prereq') && hasPrereq(c)) return;
       if (activeOther.has('no_x99') && /seminar/i.test(c.name)) return;
 
       // gen ed filter — course must satisfy ALL selected gen eds
@@ -1365,40 +1391,45 @@
   // ─────────────────────────────────────────────────────────────────────────
   // DETAIL PANEL
   // ─────────────────────────────────────────────────────────────────────────
+  function updateBackBtn() {
+    document.getElementById('panel-back').style.display = panelHistory.length > 0 ? '' : 'none';
+  }
+
+  function goBack() {
+    if (!panelHistory.length) return;
+    activePanelCourse = null; // prevent pushing current onto history
+    renderPanel(panelHistory.pop());
+  }
+
   function openPanel(key) {
+    if (activePanelCourse) panelHistory.push(activePanelCourse);
+    renderPanel(key);
+  }
+
+  function renderPanel(key) {
     const c = courseMap[key];
-    const from = activePanelCourse;
+    activePanelCourse = key;
+    openGpaRow = null;
+    updateBackBtn();
 
     if (!c) {
-      prevPanelCourse   = from;
-      activePanelCourse = null;
-      openGpaRow = null;
       document.getElementById('panel-code').textContent  = key;
       document.getElementById('panel-title').textContent = 'Not offered this semester';
       document.getElementById('panel-meta').innerHTML    = '';
       document.getElementById('panel-desc').innerHTML    =
-        `<span style="color:var(--muted);font-size:0.85rem">${key} is not in the Spring 2026 course catalog.</span>`;
-      document.getElementById('panel-crossref').innerHTML = from
-        ? `<span class="crossref" style="cursor:pointer;margin-top:8px;display:inline-block" onclick="openPanel('${from}')">← Back to ${from}</span>`
-        : '';
+        `<span style="color:var(--muted);font-size:0.85rem">${key} is not in the ${semNameMap[semSelect.value].charAt(0).toUpperCase() + semNameMap[semSelect.value].slice(1)} ${yearSelect.value} course catalog.</span>`;
       document.getElementById('grade-sheet-container').innerHTML = '';
-      document.getElementById('instr-tbody').innerHTML =
-        '<tr><td colspan="4" style="color:var(--muted);font-size:0.8rem;padding:12px">No data available</td></tr>';
-      document.getElementById('sec-legend').innerHTML = '';
-      document.getElementById('view-list').innerHTML  = '';
-      document.getElementById('view-cal').innerHTML   = '';
+      document.getElementById('panel-section-instr').style.display    = 'none';
+      document.getElementById('panel-section-sections').style.display = 'none';
       document.getElementById('detail-panel').classList.add('open');
       document.getElementById('overlay').classList.add('open');
       return;
     }
 
-    prevPanelCourse   = from;
-    activePanelCourse = key;
-    openGpaRow = null;
-
+    document.getElementById('panel-section-instr').style.display    = '';
+    document.getElementById('panel-section-sections').style.display = '';
     document.getElementById('panel-code').textContent  = `${c.subject} ${c.number}`;
     document.getElementById('panel-title').textContent = c.name;
-    const semNameMap = { sp: 'spring', su: 'summer', fa: 'fall', wi: 'winter' };
     document.getElementById('panel-ce-link').href =
       `https://courses.illinois.edu/schedule/${yearSelect.value}/${semNameMap[semSelect.value]}/${c.subject}/${c.number}`;
 
@@ -1433,6 +1464,8 @@
     document.body.style.overflow = '';
     document.getElementById('grade-sheet-container').innerHTML = '';
     openGpaRow = null;
+    activePanelCourse = null;
+    panelHistory = [];
   }
 
   // ─────────────────────────────────────────────────────────────────────────
