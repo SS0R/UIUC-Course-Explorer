@@ -336,6 +336,64 @@
     }
     .panel-back:hover { color: #fff; }
 
+    /* ── GEN ED PLANNER ── */
+    .planner-panel {
+      position: fixed; top: 0; left: 0; bottom: 0;
+      width: min(680px, 100vw);
+      background: var(--surface);
+      border-right: 1px solid var(--border2);
+      z-index: 201; overflow-y: auto;
+      transform: translateX(-100%);
+      transition: transform 0.32s cubic-bezier(0.4,0,0.2,1);
+    }
+    .planner-panel.open { transform: translateX(0); }
+    .planner-body { padding: 24px; }
+    .planner-sub { color: var(--text2); font-size: 0.85rem; margin-bottom: 20px; line-height: 1.5; }
+    .planner-gened-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .planner-run-btn {
+      background: var(--orange); color: #fff; border: none; border-radius: 8px;
+      padding: 9px 22px; font-size: 0.8rem; font-family: 'DM Mono', monospace;
+      cursor: pointer; transition: opacity 0.2s; letter-spacing: 0.05em;
+    }
+    .planner-run-btn:hover { opacity: 0.88; }
+    .planner-results { margin-top: 28px; }
+    .planner-combo {
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: var(--radius); padding: 16px 18px; margin-bottom: 14px;
+    }
+    .planner-combo-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px;
+    }
+    .planner-combo-label {
+      font-family: 'DM Mono', monospace; font-size: 0.7rem;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .planner-combo-gpa {
+      font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--green);
+    }
+    .planner-course-row {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 10px 0; border-top: 1px solid var(--border);
+      cursor: pointer; transition: background 0.15s; border-radius: 6px;
+    }
+    .planner-course-row:hover { background: var(--surface3); padding-left: 6px; }
+    .planner-course-code {
+      font-family: 'DM Mono', monospace; font-size: 0.78rem;
+      color: var(--orange-text); white-space: nowrap; min-width: 72px;
+    }
+    [data-theme="dark"] .planner-course-code { color: var(--orange); }
+    .planner-course-name { font-size: 0.84rem; color: var(--text); flex: 1; }
+    .planner-course-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+    .planner-no-results { color: var(--muted); font-size: 0.85rem; text-align: center; padding: 30px 0; }
+    .planner-open-btn {
+      background: var(--surface); border: 1px solid var(--border2);
+      color: var(--text2); border-radius: 20px; font-size: 0.76rem;
+      font-family: 'DM Mono', monospace; padding: 5px 14px; cursor: pointer;
+      transition: all 0.16s;
+    }
+    .planner-open-btn:hover { border-color: var(--orange); color: var(--orange); }
+
     .panel-body { padding: 0; }
     .panel-hero {
       padding: 22px 24px 18px;
@@ -534,6 +592,21 @@
     </div>
   </nav>
 
+  <!-- GEN ED PLANNER -->
+  <div class="overlay" id="planner-overlay" onclick="closePlanner()"></div>
+  <div class="planner-panel" id="planner-panel">
+    <div class="panel-topbar">
+      <span style="font-family:'DM Mono',monospace;font-size:0.8rem;color:rgba(255,255,255,0.85);letter-spacing:0.05em">Gen Ed Planner</span>
+      <button class="panel-close" onclick="closePlanner()">✕ Close</button>
+    </div>
+    <div class="planner-body">
+      <p class="planner-sub">Select the gen eds you still need to complete. We'll find the best course combinations to knock them out in as few classes as possible.</p>
+      <div class="planner-gened-chips" id="planner-gened-chips"></div>
+      <button class="planner-run-btn" onclick="runPlanner()">Find Combinations</button>
+      <div class="planner-results" id="planner-results"></div>
+    </div>
+  </div>
+
   <!-- DETAIL OVERLAY -->
   <div class="overlay" id="overlay" onclick="closePanel()"></div>
 
@@ -610,6 +683,9 @@
       </div>
 
       <div class="filter-groups" id="filter-groups" style="display:none">
+        <div class="filter-group" id="gened-filter-group" style="display:none">
+          <span class="filter-label">Gen Ed</span>
+        </div>
         <div class="filter-group">
           <span class="filter-label">Level</span>
           <span class="chip active" id="chip-all" onclick="clearAllFilters()">All</span>
@@ -619,11 +695,13 @@
           <span class="chip" id="chip-l4" onclick="toggleLevel('4')">400</span>
           <span class="chip" id="chip-l5" onclick="toggleLevel('5')">500+</span>
         </div>
-        <div class="filter-group" id="gened-filter-group" style="display:none">
-          <span class="filter-label">Gen Ed</span>
-        </div>
         <div class="filter-group" id="credit-filter-group" style="display:none">
           <span class="filter-label">Credit Hours</span>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Format</span>
+          <span class="chip" id="chip-online"   onclick="toggleFormat('online')">Has Online Section</span>
+          <span class="chip" id="chip-inperson" onclick="toggleFormat('inperson')">Has In-Person Section</span>
         </div>
         <div class="filter-group" id="other-filter-group">
           <span class="filter-label">Other</span>
@@ -634,6 +712,9 @@
           <span class="chip"        id="sort-gpa"      onclick="setSort('gpa')">Avg GPA ↓</span>
           <span class="chip"        id="sort-pct_a"    onclick="setSort('pct_a')">% 4.0 ↓</span>
           <span class="chip"        id="sort-random"   onclick="setSort('random')">Random</span>
+        </div>
+        <div class="filter-group">
+          <button class="planner-open-btn" onclick="openPlanner()">Gen Ed Planner</button>
         </div>
       </div>
     </section>
@@ -672,7 +753,7 @@
 
   function onSemesterChange() {
     courseMap = {}; gpaMap = {}; courseKeys = []; filtered = []; filteredPrereq = [];
-    activeLevels.clear(); activeGeneds.clear(); activeCredits.clear(); activeOther.clear();
+    activeLevels.clear(); activeGeneds.clear(); activeCredits.clear(); activeOther.clear(); activeFormats.clear();
     activeSortVal = 'alpha';
     document.getElementById('search-input').value = '';
     // Reset level chips
@@ -718,6 +799,7 @@
   let activeGeneds  = new Set();
   let activeCredits = new Set();
   let activeOther   = new Set();
+  let activeFormats = new Set();
   let activeSortVal = 'alpha';
   let activePanelCourse = null;
   let panelHistory      = [];
@@ -1036,7 +1118,7 @@
   }
 
   function updateChipAllState() {
-    const anyActive = activeLevels.size > 0 || activeGeneds.size > 0 || activeCredits.size > 0 || activeOther.size > 0;
+    const anyActive = activeLevels.size > 0 || activeGeneds.size > 0 || activeCredits.size > 0 || activeOther.size > 0 || activeFormats.size > 0;
     document.getElementById('chip-all').classList.toggle('active', !anyActive);
   }
 
@@ -1045,11 +1127,27 @@
     activeGeneds.clear();
     activeCredits.clear();
     activeOther.clear();
+    activeFormats.clear();
     document.querySelectorAll('#chip-l1,#chip-l2,#chip-l3,#chip-l4,#chip-l5').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('#gened-filter-group .chip').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('#credit-filter-group .chip').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('#other-filter-group .chip').forEach(c => c.classList.remove('active'));
+    document.getElementById('chip-online').classList.remove('active');
+    document.getElementById('chip-inperson').classList.remove('active');
     updateHalfChipState();
+    updateChipAllState();
+    applyFilter();
+  }
+
+  function toggleFormat(val) {
+    const chip = document.getElementById('chip-' + val);
+    if (activeFormats.has(val)) {
+      activeFormats.delete(val);
+      chip.classList.remove('active');
+    } else {
+      activeFormats.add(val);
+      chip.classList.add('active');
+    }
     updateChipAllState();
     applyFilter();
   }
@@ -1285,6 +1383,10 @@
       // other filters
       if (activeOther.has('no_prereq') && hasPrereq(c)) return;
       if (activeOther.has('no_x99') && /seminar/i.test(c.name)) return;
+
+      // format filters
+      if (activeFormats.has('online')   && !c.sections.some(s => s.typeCode === 'ONL')) return;
+      if (activeFormats.has('inperson') && !c.sections.some(s => s.typeCode !== 'ONL')) return;
 
       // gen ed filter — course must satisfy ALL selected gen eds
       if (activeGeneds.size > 0) {
@@ -1620,6 +1722,178 @@
     document.getElementById('vtbtn-cal').classList.toggle('active',  v === 'cal');
     document.getElementById('view-list').style.display = v === 'list' ? 'block' : 'none';
     document.getElementById('view-cal').style.display  = v === 'cal'  ? 'block' : 'none';
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // GEN ED PLANNER
+  // ─────────────────────────────────────────────────────────────────────────
+  let plannerNeeded = new Set();
+
+  function openPlanner() {
+    // Build chips if not yet built
+    const container = document.getElementById('planner-gened-chips');
+    if (!container.children.length) {
+      GENED_FILTERS.forEach(({ label }) => {
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.textContent = label;
+        chip.onclick = () => {
+          if (plannerNeeded.has(label)) {
+            plannerNeeded.delete(label);
+            chip.classList.remove('active');
+          } else {
+            plannerNeeded.add(label);
+            chip.classList.add('active');
+          }
+        };
+        container.appendChild(chip);
+      });
+    }
+    document.getElementById('planner-overlay').classList.add('open');
+    document.getElementById('planner-panel').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closePlanner() {
+    document.getElementById('planner-overlay').classList.remove('open');
+    document.getElementById('planner-panel').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function popcount(x) {
+    let n = 0;
+    while (x) { n += x & 1; x >>= 1; }
+    return n;
+  }
+
+  function findCombos(neededLabels, topK = 5) {
+    const n = neededLabels.length;
+    if (n === 0) return [];
+    const fullMask = (1 << n) - 1;
+
+    // Build candidates: courses covering at least one needed gen ed
+    const candidates = [];
+    courseKeys.forEach(key => {
+      const c = courseMap[key];
+      let mask = 0;
+      neededLabels.forEach((label, i) => {
+        const gf = GENED_FILTERS.find(g => g.label === label);
+        if (gf && gf.match(c.gened)) mask |= (1 << i);
+      });
+      if (mask > 0) candidates.push({ key, mask, gpa: c._gpa || 0 });
+    });
+
+    // Group by mask, keep top 6 per unique mask by GPA
+    const byMask = {};
+    candidates.forEach(c => {
+      if (!byMask[c.mask]) byMask[c.mask] = [];
+      byMask[c.mask].push(c);
+    });
+    const pruned = [];
+    Object.values(byMask).forEach(group => {
+      group.sort((a, b) => b.gpa - a.gpa);
+      pruned.push(...group.slice(0, 6));
+    });
+
+    // Sort: most gen eds covered first, then GPA desc
+    pruned.sort((a, b) => {
+      const pa = popcount(a.mask), pb = popcount(b.mask);
+      return pb !== pa ? pb - pa : b.gpa - a.gpa;
+    });
+
+    // DFS set cover — collect up to topK*4 then trim
+    const results = [];
+    const COLLECT = topK * 4;
+
+    function dfs(idx, covered, combo) {
+      if (covered === fullMask) {
+        results.push(combo.map(c => c.key));
+        return results.length >= COLLECT;
+      }
+      if (idx >= pruned.length || combo.length >= 6) return false;
+      // Pruning: can remaining candidates cover all uncovered bits?
+      let canCover = 0;
+      for (let i = idx; i < pruned.length; i++) canCover |= pruned[i].mask;
+      if ((covered | canCover) !== fullMask) return false;
+
+      for (let i = idx; i < pruned.length; i++) {
+        const c = pruned[i];
+        if ((covered | c.mask) === covered) continue; // adds nothing
+        combo.push(c);
+        if (dfs(i + 1, covered | c.mask, combo)) return true;
+        combo.pop();
+      }
+      return false;
+    }
+
+    dfs(0, 0, []);
+
+    // Score and sort: min courses first, then avg GPA desc
+    const scored = results.map(keys => {
+      const courses = keys.map(k => ({ key: k, ...courseMap[k], gpa: courseMap[k]._gpa || 0 }));
+      const avgGpa = courses.reduce((s, c) => s + c.gpa, 0) / courses.length;
+      return { courses, avgGpa };
+    });
+    scored.sort((a, b) =>
+      a.courses.length !== b.courses.length
+        ? a.courses.length - b.courses.length
+        : b.avgGpa - a.avgGpa
+    );
+
+    // Deduplicate (same set of keys regardless of order)
+    const seen = new Set();
+    const deduped = [];
+    for (const s of scored) {
+      const sig = [...s.courses.map(c => c.key)].sort().join('|');
+      if (!seen.has(sig)) { seen.add(sig); deduped.push(s); }
+      if (deduped.length >= topK) break;
+    }
+    return deduped;
+  }
+
+  function runPlanner() {
+    const needed = [...plannerNeeded];
+    const resultsEl = document.getElementById('planner-results');
+    if (needed.length === 0) {
+      resultsEl.innerHTML = '<p class="planner-no-results">Select at least one gen ed above.</p>';
+      return;
+    }
+    resultsEl.innerHTML = '<p class="planner-no-results">Searching…</p>';
+    // Defer so the UI updates before the computation
+    setTimeout(() => {
+      const combos = findCombos(needed);
+      if (!combos.length) {
+        resultsEl.innerHTML = '<p class="planner-no-results">No combinations found for the selected gen eds this semester.</p>';
+        return;
+      }
+      let html = '';
+      combos.forEach((combo, ci) => {
+        const avgGpaStr = combo.avgGpa > 0 ? 'Avg GPA ' + combo.avgGpa.toFixed(2) : 'No GPA data';
+        html += `<div class="planner-combo">
+          <div class="planner-combo-header">
+            <span class="planner-combo-label">Combo ${ci + 1} &nbsp;·&nbsp; ${combo.courses.length} course${combo.courses.length > 1 ? 's' : ''}</span>
+            <span class="planner-combo-gpa">${avgGpaStr}</span>
+          </div>`;
+        combo.courses.forEach(c => {
+          // Which gen eds does this course cover?
+          const covered = GENED_FILTERS.filter(g => needed.includes(g.label) && g.match(c.gened))
+            .map(g => `<span class="badge b-blue" style="font-size:0.67rem">${g.label}</span>`).join('');
+          const gpaStr = c._gpa ? c._gpa.toFixed(2) : '—';
+          html += `<div class="planner-course-row" onclick="closePlanner();openPanel('${c.subject} ${c.number}')">
+            <div>
+              <div class="planner-course-code">${c.subject} ${c.number}</div>
+              <div style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted)">GPA ${gpaStr}</div>
+            </div>
+            <div>
+              <div class="planner-course-name">${c.name}</div>
+              <div class="planner-course-meta">${covered}</div>
+            </div>
+          </div>`;
+        });
+        html += `</div>`;
+      });
+      resultsEl.innerHTML = html;
+    }, 0);
   }
 
   // ─────────────────────────────────────────────────────────────────────────
