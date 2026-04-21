@@ -1382,6 +1382,14 @@
     noX99Chip.textContent = 'Exclude Seminars';
     noX99Chip.onclick = () => toggleOther('no_x99');
     group.appendChild(noX99Chip);
+
+    // Exclude Internships chip
+    const noInternshipChip = document.createElement('span');
+    noInternshipChip.className = 'chip';
+    noInternshipChip.dataset.other = 'no_internship';
+    noInternshipChip.textContent = 'Exclude Internships';
+    noInternshipChip.onclick = () => toggleOther('no_internship');
+    group.appendChild(noInternshipChip);
   }
 
   function buildGenEdChips() {
@@ -1437,6 +1445,7 @@
       // other filters
       if (activeOther.has('no_prereq') && hasPrereq(c)) return;
       if (activeOther.has('no_x99') && /seminar/i.test(c.name)) return;
+      if (activeOther.has('no_internship') && /internship/i.test(c.name)) return;
 
       // format filters
       if (activeFormats.has('online')   && !c.sections.some(s => s.typeCode === 'ONL')) return;
