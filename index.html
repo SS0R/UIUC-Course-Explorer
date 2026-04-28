@@ -563,6 +563,17 @@
     .sec-time { font-weight: 500; font-size: 0.81rem; }
     .sec-room { color: var(--text2); font-size: 0.76rem; }
     .sec-instr { color: var(--muted); font-size: 0.73rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+    .sec-status {
+      width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0;
+      background: #b8b8b8; box-shadow: 0 0 0 1px rgba(0,0,0,0.08) inset;
+      transition: background 0.2s;
+    }
+    .sec-status-open       { background: #2ecc71; }
+    .sec-status-restricted { background: #f1c40f; }
+    .sec-status-closed     { background: #e74c3c; }
+    .sec-status-unknown    { background: #b8b8b8; }
+    .sec-status-loading    { background: #b8b8b8; animation: secStatusPulse 1.1s ease-in-out infinite; }
+    @keyframes secStatusPulse { 0%,100% { opacity: 0.35; } 50% { opacity: 1; } }
     .spill {
       font-family: 'DM Mono', monospace; font-size: 0.6rem;
       padding: 2px 8px; border-radius: 20px; white-space: nowrap;
@@ -1732,14 +1743,83 @@
     return `sdot-${map[typeCode] || 'OTH'}`;
   }
 
+  // Live enrollment status from courses.illinois.edu/cisapp/explorer
+  // The API doesn't send CORS headers, so requests go through a same-origin proxy.
+  // Default: a Cloudflare Pages Function at /api/illinois/<rest of path> (see functions/api/illinois/[[path]].js).
+  // Swap to any other proxy URL (e.g. a *.workers.dev URL) by changing this constant.
+  const STATUS_PROXY_URL = '/api/illinois/';
+  const statusCache = new Map();      // key: `${year}/${sem}/${subj}/${num}/${crn}` → 'open'|'restricted'|'closed'|'unknown'
+  const statusRawCache = new Map();   // same key → raw status string for tooltip
+  let statusFetchVersion = 0;         // bumped on every renderSections — discards stale fetches
+
+  function classifyEnrollmentStatus(raw) {
+    if (!raw) return 'unknown';
+    const v = raw.toLowerCase();
+    if (v.includes('closed') || v.includes('waitlist')) return 'closed';
+    if (v.includes('restricted')) return 'restricted';
+    if (v.includes('open')) return 'open';
+    return 'unknown';
+  }
+
+  async function fetchSectionStatus(year, sem, subj, num, crn) {
+    const key = `${year}/${sem}/${subj}/${num}/${crn}`;
+    if (statusCache.has(key)) {
+      return { cls: statusCache.get(key), raw: statusRawCache.get(key) };
+    }
+    const path = `schedule/${year}/${sem}/${subj}/${num}/${crn}.xml`;
+    const url = STATUS_PROXY_URL + path;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    const m = text.match(/<enrollmentStatus>([^<]+)<\/enrollmentStatus>/);
+    const raw = m ? m[1].trim() : '';
+    const cls = classifyEnrollmentStatus(raw);
+    statusCache.set(key, cls);
+    statusRawCache.set(key, raw);
+    return { cls, raw };
+  }
+
+  function loadSectionStatuses(c) {
+    const myVersion = ++statusFetchVersion;
+    const year = yearSelect.value;
+    const sem = semNameMap[semSelect.value];
+    const root = document.getElementById('view-list');
+    if (!root) return;
+
+    c.sections.forEach(s => {
+      if (!s.crn) return;
+      const dot = root.querySelector(`.sec-status[data-crn="${s.crn}"]`);
+      if (!dot) return;
+
+      fetchSectionStatus(year, sem, c.subject, c.number, s.crn)
+        .then(({ cls, raw }) => {
+          if (myVersion !== statusFetchVersion) return; // panel changed — abandon
+          dot.classList.remove('sec-status-loading');
+          dot.classList.add(`sec-status-${cls}`);
+          dot.title = raw ? `Status: ${raw}` : 'Status: unknown';
+        })
+        .catch(() => {
+          if (myVersion !== statusFetchVersion) return;
+          dot.classList.remove('sec-status-loading');
+          dot.classList.add('sec-status-unknown');
+          dot.title = 'Status unavailable (proxy unreachable)';
+        });
+    });
+  }
+
   function renderSections(c) {
     // Legend — unique type codes
     const typeSeen = {};
     c.sections.forEach(s => { typeSeen[s.typeCode] = s.typeName; });
     const typeColors = { LEC:'var(--lec)', DIS:'var(--dis)', LAB:'var(--lab)', ONL:'var(--onl)', LCD:'var(--lec)' };
-    document.getElementById('sec-legend').innerHTML = Object.entries(typeSeen).map(([code, name]) =>
+    const typeLegend = Object.entries(typeSeen).map(([code, name]) =>
       `<div class="leg-item"><div class="leg-dot" style="background:${typeColors[code]||'var(--other)'}"></div>${name || code}</div>`
     ).join('');
+    const statusLegend =
+      `<div class="leg-item"><div class="leg-dot" style="background:#2ecc71;border-radius:50%"></div>Open</div>` +
+      `<div class="leg-item"><div class="leg-dot" style="background:#f1c40f;border-radius:50%"></div>Restricted</div>` +
+      `<div class="leg-item"><div class="leg-dot" style="background:#e74c3c;border-radius:50%"></div>Closed / Waitlisted</div>`;
+    document.getElementById('sec-legend').innerHTML = typeLegend + statusLegend;
 
     // List view
     const nonTBA = c.sections.filter(s => !s.isTBA);
@@ -1760,6 +1840,7 @@
           ${roomStr ? `<div class="sec-room">${roomStr}</div>` : ''}
         </div>
         <div class="sec-instr" title="${s.instructors.join('; ')}">${instrStr || '—'}</div>
+        <div class="sec-status sec-status-loading" data-crn="${s.crn || ''}" title="Checking live status…"></div>
       </div>`;
     };
 
@@ -1770,6 +1851,8 @@
     }
 
     document.getElementById('view-list').innerHTML = html || '<p style="color:var(--muted);font-size:0.82rem">No sections found.</p>';
+
+    loadSectionStatuses(c);
 
     document.getElementById('view-cal').innerHTML = `<div class="cal-stub">
       <strong>CALENDAR VIEW</strong>
