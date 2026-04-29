@@ -1263,7 +1263,9 @@
   // Pull "Prerequisite: ... ." (or "Prerequisites: ...") out of a description.
   function extractPrereqSentence(desc) {
     if (!desc) return null;
-    const m = desc.match(/Prerequisite[s]?:\s*([^.]*)\./i);
+    // Stop at ". " (period + space) or period at end-of-string, not just any period.
+    // This preserves periods inside URLs like http://math.illinois.edu/ALEKS/
+    const m = desc.match(/Prerequisite[s]?:\s*(.+?)(?=\.\s|\.$|$)/i);
     return m ? m[1].trim() : null;
   }
 
@@ -2183,8 +2185,14 @@
   // ─────────────────────────────────────────────────────────────────────────
   // GEN ED PLANNER
   // ─────────────────────────────────────────────────────────────────────────
-  let plannerNeeded = new Set();
+  let plannerNeeded = new Map();   // label → count (1 or 2)
   let plannerChipsBuilt = false;
+  const DOUBLEABLE_GENEDS = new Set([
+    'Humanities & the Arts',
+    'Natural Sciences & Tech',
+    'Quantitative Reasoning',
+    'Social & Behavioral Sciences'
+  ]);
 
   function toggleNavDropdown(e) {
     const logo = document.getElementById('nav-logo');
@@ -2209,14 +2217,15 @@
       const chip = document.createElement('span');
       chip.className = 'chip';
       chip.textContent = label;
+      const maxCount = DOUBLEABLE_GENEDS.has(label) ? 2 : 1;
+      chip.title = maxCount === 2 ? 'Click to require 1 course; click again to require 2.' : '';
       chip.onclick = () => {
-        if (plannerNeeded.has(label)) {
-          plannerNeeded.delete(label);
-          chip.classList.remove('active');
-        } else {
-          plannerNeeded.add(label);
-          chip.classList.add('active');
-        }
+        const cur = plannerNeeded.get(label) || 0;
+        const next = (cur + 1) > maxCount ? 0 : cur + 1;
+        if (next === 0) plannerNeeded.delete(label);
+        else plannerNeeded.set(label, next);
+        chip.classList.toggle('active', next > 0);
+        chip.textContent = next === 2 ? `${label} ×2` : label;
       };
       container.appendChild(chip);
     });
@@ -2249,67 +2258,101 @@
     return n;
   }
 
-  function findCombos(neededLabels, topK = 5) {
-    const n = neededLabels.length;
-    if (n === 0) return [];
-    const fullMask = (1 << n) - 1;
+  function findCombos(needsByCategory, topK = 5) {
+    // needsByCategory: Map<label, count>. Each course matching a category fills 1 slot of it per use.
+    const labels = [...needsByCategory.keys()];
+    const totalSlots = [...needsByCategory.values()].reduce((a, b) => a + b, 0);
+    if (totalSlots === 0) return [];
 
-    // Build candidates: courses covering at least one needed gen ed
-    const candidates = [];
+    // Per-category max count (so we know how many candidates of each signature to keep)
+    const maxCount = Math.max(...needsByCategory.values());
+
+    // Build candidates: each course → set of needed categories it matches
+    const rawCandidates = [];
     courseKeys.forEach(key => {
       const c = courseMap[key];
-      let mask = 0;
-      neededLabels.forEach((label, i) => {
+      const cats = labels.filter(label => {
         const gf = GENED_FILTERS.find(g => g.label === label);
-        if (gf && gf.match(c.gened)) mask |= (1 << i);
+        return gf && gf.match(c.gened);
       });
-      if (mask > 0) candidates.push({ key, mask, gpa: c._gpa || 0 });
+      if (cats.length > 0) rawCandidates.push({ key, cats, gpa: c._gpa || 0 });
     });
 
-    // Group by mask, keep top 6 per unique mask by GPA
-    const byMask = {};
-    candidates.forEach(c => {
-      if (!byMask[c.mask]) byMask[c.mask] = [];
-      byMask[c.mask].push(c);
+    // Group by category signature; keep top N per signature by GPA. Two courses with the
+    // exact same matching set are interchangeable for coverage, so pruning by signature
+    // shrinks the search space by orders of magnitude without losing reachable combos.
+    const KEEP_PER_SIG = Math.max(maxCount + 2, 6);
+    const bySig = new Map();
+    rawCandidates.forEach(c => {
+      const sig = c.cats.slice().sort().join('|');
+      if (!bySig.has(sig)) bySig.set(sig, []);
+      bySig.get(sig).push(c);
     });
-    const pruned = [];
-    Object.values(byMask).forEach(group => {
-      group.sort((a, b) => b.gpa - a.gpa);
-      pruned.push(...group.slice(0, 6));
-    });
+    const candidates = [];
+    for (const arr of bySig.values()) {
+      arr.sort((a, b) => b.gpa - a.gpa);
+      candidates.push(...arr.slice(0, KEEP_PER_SIG));
+    }
 
-    // Sort: most gen eds covered first, then GPA desc
-    pruned.sort((a, b) => {
-      const pa = popcount(a.mask), pb = popcount(b.mask);
-      return pb !== pa ? pb - pa : b.gpa - a.gpa;
-    });
+    // Sort: courses matching more distinct needed categories first, then by GPA
+    candidates.sort((a, b) =>
+      b.cats.length !== a.cats.length ? b.cats.length - a.cats.length : b.gpa - a.gpa
+    );
 
-    // DFS set cover — collect up to topK*4 then trim
+    // Precompute, for each remaining-from-index window, count of candidates touching each label.
+    // suffixCount[i][label] = number of candidates in candidates[i..] that match `label`.
+    const suffixCount = new Array(candidates.length + 1);
+    suffixCount[candidates.length] = new Map(labels.map(l => [l, 0]));
+    for (let i = candidates.length - 1; i >= 0; i--) {
+      const m = new Map(suffixCount[i + 1]);
+      candidates[i].cats.forEach(cat => m.set(cat, (m.get(cat) || 0) + 1));
+      suffixCount[i] = m;
+    }
+
     const results = [];
-    const COLLECT = topK * 4;
+    const COLLECT = topK * 3;
+    const MAX_ITER = 80000;
+    // Combo cap: at minimum 6, but allow up to roughly totalSlots when many requirements selected.
+    const COMBO_MAX = Math.max(6, Math.min(10, totalSlots));
+    let iter = 0;
+    let aborted = false;
 
-    function dfs(idx, covered, combo) {
-      if (covered === fullMask) {
+    function remaining(needs) {
+      let total = 0;
+      for (const v of needs.values()) total += v;
+      return total;
+    }
+
+    function dfs(idx, needs, combo) {
+      if (aborted) return true;
+      if (++iter > MAX_ITER) { aborted = true; return true; }
+
+      if (remaining(needs) === 0) {
         results.push(combo.map(c => c.key));
         return results.length >= COLLECT;
       }
-      if (idx >= pruned.length || combo.length >= 6) return false;
-      // Pruning: can remaining candidates cover all uncovered bits?
-      let canCover = 0;
-      for (let i = idx; i < pruned.length; i++) canCover |= pruned[i].mask;
-      if ((covered | canCover) !== fullMask) return false;
+      if (idx >= candidates.length || combo.length >= COMBO_MAX) return false;
 
-      for (let i = idx; i < pruned.length; i++) {
-        const c = pruned[i];
-        if ((covered | c.mask) === covered) continue; // adds nothing
+      // Pruning: each still-needed category must have at least `count` matching candidates remaining
+      const sc = suffixCount[idx];
+      for (const [label, count] of needs) {
+        if (count > 0 && (sc.get(label) || 0) < count) return false;
+      }
+
+      for (let i = idx; i < candidates.length; i++) {
+        const c = candidates[i];
+        const decr = c.cats.filter(cat => (needs.get(cat) || 0) > 0);
+        if (decr.length === 0) continue;
+        const newNeeds = new Map(needs);
+        decr.forEach(cat => newNeeds.set(cat, newNeeds.get(cat) - 1));
         combo.push(c);
-        if (dfs(i + 1, covered | c.mask, combo)) return true;
+        if (dfs(i + 1, newNeeds, combo)) return true;
         combo.pop();
       }
       return false;
     }
 
-    dfs(0, 0, []);
+    dfs(0, new Map(needsByCategory), []);
 
     // Score and sort: min courses first, then avg GPA desc
     const scored = results.map(keys => {
@@ -2335,13 +2378,13 @@
   }
 
   function runPlanner() {
-    const needed = [...plannerNeeded];
+    const needed = new Map(plannerNeeded);
     const statusEl = document.getElementById('planner-status');
     const gridEl   = document.getElementById('planner-combos-grid');
     const barEl    = document.getElementById('planner-results-bar');
     const countEl  = document.getElementById('planner-results-count');
 
-    if (needed.length === 0) {
+    if (needed.size === 0) {
       statusEl.innerHTML = '<p class="planner-no-results">Select at least one gen ed above.</p>';
       gridEl.style.display = 'none';
       barEl.style.display = 'none';
@@ -2374,7 +2417,7 @@
             <span class="badge ${gpaClass}">Avg GPA ${avgGpaStr}</span>
           </div>`;
         combo.courses.forEach(c => {
-          const covered = GENED_FILTERS.filter(g => needed.includes(g.label) && g.match(c.gened))
+          const covered = GENED_FILTERS.filter(g => needed.has(g.label) && g.match(c.gened))
             .map(g => `<span class="badge b-blue">${g.label}</span>`).join('');
           const gpaStr = c._gpa ? c._gpa.toFixed(2) : '—';
           const credBadge = c.credits ? `<span class="badge b-neutral">${c.credits} hr</span>` : '';
