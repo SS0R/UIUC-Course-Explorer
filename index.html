@@ -220,7 +220,7 @@
       font-size: 0.76rem; font-family: 'DM Mono', monospace;
       padding: 5px 14px; cursor: pointer;
       transition: all 0.16s; user-select: none;
-      position: relative;
+      position: relative; white-space: nowrap;
     }
     .chip:hover { border-color: var(--orange); color: var(--orange); }
     .chip.active { background: var(--orange); border-color: var(--orange); color: #fff; }
@@ -756,7 +756,7 @@
       <section class="hero">
         <div class="hero-kicker">University of Illinois Urbana-Champaign</div>
         <h1>Find your <em>gen ed</em> combo.</h1>
-        <p class="hero-sub">Select the requirements you still need. We'll find the best course combinations to knock them out in as few classes as possible.</p>
+        <p class="hero-sub">Select the requirements you still need. We'll find the best course combinations to knock them out in as few classes as possible. Click twice on eligible gen eds to require two courses in that category.</p>
 
         <div class="filter-groups" style="margin-bottom:24px">
           <div class="filter-group" id="planner-gened-chips">
@@ -766,7 +766,6 @@
 
         <div style="display:flex;gap:14px;align-items:center">
           <button class="find-combos-btn" onclick="runPlanner()">FIND COMBOS</button>
-          <button class="back-link" onclick="closePlanner()">← Course Explorer</button>
         </div>
       </section>
 
@@ -791,8 +790,8 @@
         <span class="panel-code-label" id="panel-code"></span>
       </div>
       <div style="display:flex;gap:10px;align-items:center">
-        <button id="panel-prereq-btn" class="panel-prereq-btn" onclick="togglePrereqTree()" style="display:none">Prerequisite Tree</button>
         <a id="panel-ce-link" href="#" target="_blank" rel="noopener" style="font-size:0.72rem;color:var(--orange);text-decoration:none;font-family:'DM Mono',monospace">Course Explorer ↗</a>
+        <button id="panel-prereq-btn" class="panel-prereq-btn" onclick="togglePrereqTree()" style="display:none">Prerequisite Tree</button>
         <button class="panel-close" onclick="closePanel()">✕ Close</button>
       </div>
     </div>
@@ -933,7 +932,8 @@
     return `https://raw.githubusercontent.com/wadefagen/datasets/refs/heads/main/course-catalog/data/${yearSelect.value}-${semSelect.value}.csv`;
   }
 
-  function onSemesterChange() {
+  async function onSemesterChange() {
+    const plannerWasVisible = document.getElementById('planner-view').style.display !== 'none';
     courseMap = {}; gpaMap = {}; courseKeys = []; filtered = []; filteredPrereq = [];
     activeLevels.clear(); activeGeneds.clear(); activeCredits.clear(); activeOther.clear(); activeFormats.clear();
     activeSortVal = 'alpha';
@@ -953,7 +953,8 @@
     document.getElementById('courses-grid').innerHTML = '';
     document.getElementById('load-status').style.display = '';
     document.getElementById('load-status').textContent = 'Loading course data…';
-    loadData();
+    await loadData();
+    if (plannerWasVisible && plannerNeeded.size > 0) runPlanner();
   }
 
   // Resize a <select> to fit its selected option text
@@ -2130,7 +2131,8 @@
     const statusLegend =
       `<div class="leg-item"><div class="leg-dot" style="background:#2ecc71;border-radius:50%"></div>Open</div>` +
       `<div class="leg-item"><div class="leg-dot" style="background:#f1c40f;border-radius:50%"></div>Restricted</div>` +
-      `<div class="leg-item"><div class="leg-dot" style="background:#e74c3c;border-radius:50%"></div>Closed / Waitlisted</div>`;
+      `<div class="leg-item"><div class="leg-dot" style="background:#e74c3c;border-radius:50%"></div>Closed / Waitlisted</div>` +
+      `<div class="leg-item"><div class="leg-dot" style="background:#b8b8b8;border-radius:50%"></div>Unknown</div>`;
     document.getElementById('sec-legend').innerHTML = typeLegend + statusLegend;
 
     // List view
@@ -2309,50 +2311,55 @@
       suffixCount[i] = m;
     }
 
-    const results = [];
-    const COLLECT = topK * 3;
-    const MAX_ITER = 80000;
-    // Combo cap: at minimum 6, but allow up to roughly totalSlots when many requirements selected.
-    const COMBO_MAX = Math.max(6, Math.min(10, totalSlots));
-    let iter = 0;
-    let aborted = false;
+    const COLLECT  = topK * 3;
+    const MAX_ITER = 120000;
+    const COMBO_MAX = Math.max(6, Math.min(12, totalSlots));
+    const results  = [];
+    let   iter     = 0;
+    let   aborted  = false;
 
     function remaining(needs) {
-      let total = 0;
-      for (const v of needs.values()) total += v;
-      return total;
+      let t = 0; for (const v of needs.values()) t += v; return t;
     }
 
-    function dfs(idx, needs, combo) {
-      if (aborted) return true;
-      if (++iter > MAX_ITER) { aborted = true; return true; }
+    // Depth-limited DFS — maxLen is the hard cap for this pass.
+    // Iterative deepening over maxLen guarantees minimum-course combos are found first.
+    function dfs(idx, needs, combo, maxLen) {
+      if (aborted || results.length >= COLLECT) return;
+      if (++iter > MAX_ITER) { aborted = true; return; }
 
       if (remaining(needs) === 0) {
         results.push(combo.map(c => c.key));
-        return results.length >= COLLECT;
+        return;
       }
-      if (idx >= candidates.length || combo.length >= COMBO_MAX) return false;
+      if (combo.length >= maxLen || idx >= candidates.length) return;
 
-      // Pruning: each still-needed category must have at least `count` matching candidates remaining
+      // Pruning: each still-needed category needs at least `count` matching candidates left
       const sc = suffixCount[idx];
       for (const [label, count] of needs) {
-        if (count > 0 && (sc.get(label) || 0) < count) return false;
+        if (count > 0 && (sc.get(label) || 0) < count) return;
       }
 
       for (let i = idx; i < candidates.length; i++) {
+        if (aborted || results.length >= COLLECT) return;
         const c = candidates[i];
         const decr = c.cats.filter(cat => (needs.get(cat) || 0) > 0);
         if (decr.length === 0) continue;
         const newNeeds = new Map(needs);
         decr.forEach(cat => newNeeds.set(cat, newNeeds.get(cat) - 1));
         combo.push(c);
-        if (dfs(i + 1, newNeeds, combo)) return true;
+        dfs(i + 1, newNeeds, combo, maxLen);
         combo.pop();
       }
-      return false;
     }
 
-    dfs(0, new Map(needsByCategory), []);
+    // Iterative deepening: find the minimum combo length that satisfies all requirements
+    for (let maxLen = 1; maxLen <= COMBO_MAX; maxLen++) {
+      iter = 0; aborted = false;
+      const before = results.length;
+      dfs(0, new Map(needsByCategory), [], maxLen);
+      if (results.length > before) break; // found combos at this minimum depth — stop
+    }
 
     // Score and sort: min courses first, then avg GPA desc
     const scored = results.map(keys => {
