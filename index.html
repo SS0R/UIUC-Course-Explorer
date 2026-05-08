@@ -887,6 +887,8 @@
           <span class="filter-label">Format</span>
           <span class="chip" id="chip-online"   onclick="toggleFormat('online')">Has Online Section</span>
           <span class="chip" id="chip-inperson" onclick="toggleFormat('inperson')">Has In-Person Section</span>
+          <span class="chip" id="chip-term-a"   onclick="toggleTerm('A')">Part A (1st 8 weeks)</span>
+          <span class="chip" id="chip-term-b"   onclick="toggleTerm('B')">Part B (2nd 8 weeks)</span>
         </div>
         <div class="filter-group" id="other-filter-group">
           <span class="filter-label">Other</span>
@@ -935,17 +937,25 @@
 
   async function onSemesterChange() {
     const plannerWasVisible = document.getElementById('planner-view').style.display !== 'none';
+
+    // Snapshot filter state before reset
+    const savedLevels  = new Set(activeLevels);
+    const savedGeneds  = new Set(activeGeneds);
+    const savedCredits = new Set(activeCredits);
+    const savedOther   = new Set(activeOther);
+    const savedFormats = new Set(activeFormats);
+    const savedTerm    = new Set(activeTerm);
+    const savedSort    = activeSortVal;
+    const savedSearch  = document.getElementById('search-input').value;
+
     courseMap = {}; gpaMap = {}; courseKeys = []; filtered = []; filteredPrereq = [];
-    activeLevels.clear(); activeGeneds.clear(); activeCredits.clear(); activeOther.clear(); activeFormats.clear();
+    activeLevels.clear(); activeGeneds.clear(); activeCredits.clear(); activeOther.clear(); activeFormats.clear(); activeTerm.clear();
     activeSortVal = 'alpha';
     document.getElementById('search-input').value = '';
-    // Reset level chips
     document.querySelectorAll('#chip-l1,#chip-l2,#chip-l3,#chip-l4,#chip-l5').forEach(c => c.classList.remove('active'));
     document.getElementById('chip-all').classList.add('active');
-    // Reset sort chips
     document.querySelectorAll('[id^="sort-"]').forEach(c => c.classList.remove('active'));
     document.getElementById('sort-alpha').classList.add('active');
-    // Reset dynamic chip groups back to just their label
     document.getElementById('gened-filter-group').innerHTML  = '<span class="filter-label">Gen Ed</span>';
     document.getElementById('credit-filter-group').innerHTML = '<span class="filter-label">Credit Hours</span>';
     document.getElementById('other-filter-group').innerHTML  = '<span class="filter-label">Other</span>';
@@ -955,6 +965,55 @@
     document.getElementById('load-status').style.display = '';
     document.getElementById('load-status').textContent = 'Loading course data…';
     await loadData();
+
+    // Restore filter state
+    document.getElementById('search-input').value = savedSearch;
+
+    savedLevels.forEach(l => {
+      activeLevels.add(l);
+      const chip = document.getElementById(`chip-l${l}`);
+      if (chip) chip.classList.add('active');
+    });
+    if (activeLevels.size > 0) document.getElementById('chip-all').classList.remove('active');
+
+    savedGeneds.forEach(g => {
+      activeGeneds.add(g);
+      const chip = document.querySelector(`#gened-filter-group [data-gened="${g}"]`);
+      if (chip) chip.classList.add('active');
+    });
+
+    savedCredits.forEach(v => {
+      activeCredits.add(v);
+      const chip = document.querySelector(`#credit-filter-group [data-credit="${v}"]`);
+      if (chip) chip.classList.add('active');
+    });
+
+    savedOther.forEach(v => {
+      activeOther.add(v);
+      const chip = document.querySelector(`#other-filter-group [data-other="${v}"]`);
+      if (chip) chip.classList.add('active');
+    });
+
+    savedFormats.forEach(v => {
+      activeFormats.add(v);
+      const chip = document.getElementById(v === 'online' ? 'chip-online' : 'chip-inperson');
+      if (chip) chip.classList.add('active');
+    });
+
+    savedTerm.forEach(v => {
+      activeTerm.add(v);
+      const chip = document.getElementById(`chip-term-${v.toLowerCase()}`);
+      if (chip) chip.classList.add('active');
+    });
+
+    if (savedSort !== 'alpha') {
+      activeSortVal = savedSort;
+      document.querySelectorAll('[id^="sort-"]').forEach(c => c.classList.remove('active'));
+      const sortChip = document.getElementById(`sort-${savedSort}`);
+      if (sortChip) sortChip.classList.add('active');
+    }
+
+    applyFilter();
     if (plannerWasVisible && plannerNeeded.size > 0) runPlanner();
   }
 
@@ -984,6 +1043,7 @@
   let activeCredits = new Set();
   let activeOther   = new Set();
   let activeFormats = new Set();
+  let activeTerm    = new Set();
   let activeSortVal = 'alpha';
   let activePanelCourse = null;
   let panelHistory      = [];
@@ -1184,7 +1244,8 @@
         room:         row['Room']     || '',
         building:     row['Building'] || '',
         status:       row['Enrollment Status'] || 'Unknown',
-        instructors:  instructors
+        instructors:  instructors,
+        partOfTerm:   row['Part of Term'] || '1'
       });
     });
 
@@ -1504,12 +1565,15 @@
     activeCredits.clear();
     activeOther.clear();
     activeFormats.clear();
+    activeTerm.clear();
     document.querySelectorAll('#chip-l1,#chip-l2,#chip-l3,#chip-l4,#chip-l5').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('#gened-filter-group .chip').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('#credit-filter-group .chip').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('#other-filter-group .chip').forEach(c => c.classList.remove('active'));
     document.getElementById('chip-online').classList.remove('active');
     document.getElementById('chip-inperson').classList.remove('active');
+    document.getElementById('chip-term-a').classList.remove('active');
+    document.getElementById('chip-term-b').classList.remove('active');
     updateHalfChipState();
     updateChipAllState();
     applyFilter();
@@ -1712,6 +1776,19 @@
     noInternshipChip.textContent = 'Exclude Internships';
     noInternshipChip.onclick = () => toggleOther('no_internship');
     group.appendChild(noInternshipChip);
+
+  }
+
+  function toggleTerm(val) {
+    const chip = document.getElementById(`chip-term-${val.toLowerCase()}`);
+    if (activeTerm.has(val)) {
+      activeTerm.delete(val);
+      if (chip) chip.classList.remove('active');
+    } else {
+      activeTerm.add(val);
+      if (chip) chip.classList.add('active');
+    }
+    applyFilter();
   }
 
   function buildGenEdChips() {
@@ -1772,6 +1849,9 @@
       // format filters
       if (activeFormats.has('online')   && !c.sections.some(s => s.typeCode === 'ONL')) return;
       if (activeFormats.has('inperson') && !c.sections.some(s => s.typeCode !== 'ONL')) return;
+
+      // part of term filters (A / B) — course must have at least one section matching any selected term
+      if (activeTerm.size > 0 && !c.sections.some(s => activeTerm.has(s.partOfTerm))) return;
 
       // gen ed filter — course must satisfy ALL selected gen eds
       if (activeGeneds.size > 0) {
