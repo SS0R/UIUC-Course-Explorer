@@ -1124,16 +1124,21 @@
     // Exact match first
     const exact = gpaMap[`${subject} ${number} ${ln}`];
     if (exact) return exact;
-    // Fallback: compound last names (e.g. "bahreini esfahani") may only appear
-    // as the first token ("bahreini") in the GPA dataset, or vice versa.
+    const coursePrefix = `${subject} ${number} `;
     const tokens = ln.split(' ');
     if (tokens.length > 1) {
       // Try just the first word
       const first = gpaMap[`${subject} ${number} ${tokens[0]}`];
       if (first) return first;
+      // Prefix match: handles truncation mismatches like "bahreini esfaha" vs "bahreini esfahani"
+      for (const k of Object.keys(gpaMap)) {
+        if (!k.startsWith(coursePrefix)) continue;
+        const gpaLn = k.slice(coursePrefix.length);
+        if (ln.startsWith(gpaLn) || gpaLn.startsWith(ln)) return gpaMap[k];
+      }
     } else {
       // ln is a single word — look for any gpaMap key that starts with it
-      const prefix = `${subject} ${number} ${ln} `;
+      const prefix = `${coursePrefix}${ln} `;
       for (const k of Object.keys(gpaMap)) {
         if (k.startsWith(prefix)) return gpaMap[k];
       }
