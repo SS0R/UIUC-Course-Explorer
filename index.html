@@ -330,20 +330,29 @@
     }
     .overlay.open { display: block; }
     .detail-panel {
-      position: fixed; top: 0; right: 0; bottom: 0;
-      width: min(640px, 100vw);
+      position: fixed;
+      top: 50%; left: 50%;
+      width: min(680px, 92vw);
+      max-height: 88vh;
       background: var(--surface);
-      border-left: 1px solid var(--border2);
-      z-index: 201; overflow-y: auto;
-      transform: translateX(100%);
-      transition: transform 0.32s cubic-bezier(0.4,0,0.2,1);
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      z-index: 201; overflow-y: auto; scrollbar-width: none;
+      transform: translate(-50%, -44%) scale(0.97);
+      opacity: 0; pointer-events: none;
+      transition: transform 0.28s cubic-bezier(0.4,0,0.2,1), opacity 0.28s cubic-bezier(0.4,0,0.2,1);
     }
-    .detail-panel.open { transform: translateX(0); }
+    .detail-panel.open {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1; pointer-events: auto;
+    }
+    .detail-panel::-webkit-scrollbar { display: none; }
 
     .panel-topbar {
       position: sticky; top: 0; z-index: 5;
       background: var(--blue);
       padding: 16px 24px;
+      border-radius: 15px 15px 0 0;
       display: flex; align-items: center; justify-content: space-between;
     }
     .panel-code-label {
@@ -587,23 +596,23 @@
     }
     .panel-prereq-btn:hover { background: rgba(255,255,255,0.22); }
     .prereq-modal {
-      position: fixed; top: 0; bottom: 0; left: 0;
-      right: min(640px, 100vw);
-      z-index: 202;
-      background: var(--bg); display: flex; flex-direction: column;
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(680px, 92vw);
+      height: 88vh;
+      z-index: 203;
+      border-radius: 16px;
+      overflow: hidden;
+      /* transparent strip at top so the detail-panel topbar shows through */
+      background: linear-gradient(to bottom, transparent 56px, var(--bg) 56px);
+      display: flex; flex-direction: column;
+      padding-top: 56px;
+      pointer-events: none;
     }
-    .prereq-topbar {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 14px 22px; border-bottom: 1px solid var(--border);
-      background: var(--surface);
-    }
-    .prereq-title {
-      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.85rem;
-      color: var(--text); letter-spacing: 0.02em;
-    }
-    .prereq-title span { color: var(--orange); font-weight: 600; }
     .prereq-canvas {
       flex: 1; overflow: auto; padding: 40px 20px 60px;
+      pointer-events: auto;
     }
     /* The tree itself — fit-content + auto margins center small trees and let big ones scroll */
     .tree { width: fit-content; margin: 0 auto; }
@@ -719,8 +728,9 @@
     @media (max-width: 600px) {
       .hero { padding: 36px 0 26px; }
       .courses-grid { grid-template-columns: 1fr; }
-      .detail-panel { width: 100vw; }
-      .prereq-modal { right: 0; }
+      .detail-panel { width: 96vw; max-height: 92vh; }
+      .detail-panel { width: 96vw; max-height: 92vh; }
+      .prereq-modal { width: 96vw; height: 92vh; }
     }
   </style>
 </head>
@@ -840,10 +850,6 @@
 
   <!-- PREREQ TREE MODAL -->
   <div id="prereq-modal" class="prereq-modal" style="display:none">
-    <div class="prereq-topbar">
-      <div class="prereq-title">Prerequisite Tree — <span id="prereq-modal-code"></span></div>
-      <button class="panel-close" onclick="closePrereqTree()">✕ Close</button>
-    </div>
     <div class="prereq-canvas" id="prereq-canvas">
       <div class="tree" id="prereq-tree-root"></div>
     </div>
@@ -862,7 +868,7 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
-          <input id="search-input" type="text" placeholder="Try CS, MATH 231, or Algorithms…" autocomplete="off" />
+          <input id="search-input" type="text" placeholder="Try CS, MATH 231, Algorithms, or a professor name…" autocomplete="off" />
           <button class="search-go" onclick="doSearch()">SEARCH</button>
         </div>
       </div>
@@ -1137,11 +1143,30 @@
         if (ln.startsWith(gpaLn) || gpaLn.startsWith(ln)) return gpaMap[k];
       }
     } else {
-      // ln is a single word — look for any gpaMap key that starts with it
+      // ln is a single word — look for any gpaMap key that starts with it (multi-word gpa last name)
       const prefix = `${coursePrefix}${ln} `;
       for (const k of Object.keys(gpaMap)) {
         if (k.startsWith(prefix)) return gpaMap[k];
       }
+      // Prefix match: handles truncation where gpa last name is a truncated version of ln
+      for (const k of Object.keys(gpaMap)) {
+        if (!k.startsWith(coursePrefix)) continue;
+        const gpaLn = k.slice(coursePrefix.length);
+        if (ln.startsWith(gpaLn) || gpaLn.startsWith(ln)) return gpaMap[k];
+      }
+    }
+    return null;
+  }
+
+  // GPA lookup that falls back to "Same As" cross-listed courses when the
+  // primary subject/number has no data for this instructor.
+  function lookupGpaForCourse(c, ln) {
+    const direct = lookupGpa(c.subject, c.number, ln);
+    if (direct) return direct;
+    for (const t of findSameAsTargets(c.desc)) {
+      const [ts, tn] = t.split(' ');
+      const fallback = lookupGpa(ts, tn, ln);
+      if (fallback) return fallback;
     }
     return null;
   }
@@ -1267,11 +1292,10 @@
           lastNameSet.add(extractLastName(instr));
         });
       });
-      // Find best GPA data for any instructor
-      const [subj, num] = key.split(' ');
+      // Find best GPA data for any instructor (with Same As fallback)
       let bestGpa = null, totalStudents = 0;
       lastNameSet.forEach(ln => {
-        const gData = lookupGpa(subj, num, ln);
+        const gData = lookupGpaForCourse(c, ln);
         if (gData) {
           totalStudents += gData.students;
           if (!bestGpa || gData.students > bestGpa.students) bestGpa = gData;
@@ -1283,7 +1307,7 @@
       // Aggregate grade distribution across all instructors for this course
       let totalA = 0, totalGraded = 0;
       lastNameSet.forEach(ln => {
-        const gData = lookupGpa(subj, num, ln);
+        const gData = lookupGpaForCourse(c, ln);
         if (gData && gData.dist) {
           totalA += gData.dist['A+'] || 0;
           totalA += gData.dist['A']  || 0;
@@ -1484,7 +1508,6 @@
   function openPrereqTree() {
     if (!activePanelCourse) return;
     const tree = buildPrereqTree(activePanelCourse);
-    document.getElementById('prereq-modal-code').textContent = activePanelCourse;
     const root = document.getElementById('prereq-tree-root');
     if (!tree.children || tree.children.length === 0) {
       root.innerHTML = `<ul><li><div class="tree-card tree-card-course">
@@ -1496,6 +1519,18 @@
     }
     document.getElementById('prereq-modal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
+
+    // Scroll canvas so the root card is centered horizontally and at the top
+    requestAnimationFrame(() => {
+      const canvas = document.getElementById('prereq-canvas');
+      const rootCard = root.querySelector('.tree-card');
+      if (!rootCard) return;
+      const canvasRect = canvas.getBoundingClientRect();
+      const cardRect = rootCard.getBoundingClientRect();
+      const cardCenterX = cardRect.left + cardRect.width / 2 - canvasRect.left + canvas.scrollLeft;
+      canvas.scrollLeft = cardCenterX - canvas.clientWidth / 2;
+      canvas.scrollTop = 0;
+    });
   }
 
   function closePrereqTree() {
@@ -1865,16 +1900,20 @@
       }
 
       if (q) {
-        // Direct: exact subject code match OR key equals/starts-with query (course code)
+        // When query is a known subject code (e.g. "CS"), skip name/desc matching —
+        // those would catch unrelated courses that merely mention the code in their text.
+        const qIsSubject = SUBJECT_CODES.has(q);
         const matchSubj = c.subject === q;
         const matchFull = key === q || key.startsWith(q + ' ');
         const matchNum  = /^\d+$/.test(q) && String(c.number).includes(q);
-        const matchName = c.name.toUpperCase().includes(q);
-        const matchDesc = c.desc.toUpperCase().includes(q);
-        if (!matchSubj && !matchFull && !matchNum && !matchName && !matchDesc) return;
-        // Name is only a direct match when query isn't a known subject code
-        const nameIsDirect = matchName && !SUBJECT_CODES.has(q);
-        if (matchSubj || matchFull || matchNum || nameIsDirect) {
+        const matchName = !qIsSubject && c.name.toUpperCase().includes(q);
+        const matchDesc = !qIsSubject && c.desc.toUpperCase().includes(q);
+        // Instructor match: skip when query is a subject code (e.g. "CS" matches "Popovics")
+        const matchInstr = !qIsSubject && c.sections.some(s =>
+          s.instructors.some(instr => instr.toUpperCase().includes(q))
+        );
+        if (!matchSubj && !matchFull && !matchNum && !matchName && !matchDesc && !matchInstr) return;
+        if (matchSubj || matchFull || matchNum || matchName || matchInstr) {
           filtered.push(key);
         } else {
           filteredPrereq.push(key);
@@ -2073,7 +2112,7 @@
 
     tbody.innerHTML = rows.map(([ln, displayName]) => {
       const gk = `${c.subject} ${c.number} ${ln}`;
-      const gData = lookupGpa(c.subject, c.number, ln);
+      const gData = lookupGpaForCourse(c, ln);
       let gpaCell, studCell;
 
       if (gData) {
