@@ -462,12 +462,10 @@
     }
     .panel-desc { font-size: 0.86rem; color: var(--text2); line-height: 1.7; }
     .crossref {
-      display: inline-block; margin-top: 8px;
-      font-size: 0.78rem; color: var(--orange-text);
-      background: rgba(255,95,5,0.08);
-      border-radius: 5px; padding: 3px 9px;
+      color: #C84113;
+      font: inherit;
     }
-    [data-theme="dark"] .crossref { color: var(--orange); }
+    [data-theme="dark"] .crossref { color: #C84113; }
 
     /* ── INSTRUCTOR TABLE ── */
     .instr-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
@@ -1331,22 +1329,52 @@
     document.getElementById('courses-grid').style.display = 'grid';
   }
 
+  const COURSE_CODE_RE_G = /\b([A-Z]{2,5})\s+(\d{3,4})\b/g;
+  const COURSE_NUM_SEQUENCE_RE = /^\s*(?:,|\/|\band\b|\bor\b)\s*(\d{3,4})\b/i;
+
+  function findCourseMentions(text) {
+    const mentions = [];
+    let m;
+    COURSE_CODE_RE_G.lastIndex = 0;
+    while ((m = COURSE_CODE_RE_G.exec(text)) !== null) {
+      const subj = m[1];
+      if (!SUBJECT_CODES.has(subj)) continue;
+      const key = subj + ' ' + m[2];
+      mentions.push({ key, start: m.index, end: m.index + m[0].length });
+
+      let cursor = m.index + m[0].length;
+      let next;
+      while ((next = text.slice(cursor).match(COURSE_NUM_SEQUENCE_RE)) !== null) {
+        const full = next[0];
+        const num = next[1];
+        const numStart = cursor + full.lastIndexOf(num);
+        mentions.push({ key: subj + ' ' + num, start: numStart, end: numStart + num.length });
+        cursor += full.length;
+      }
+    }
+    return mentions.sort((a, b) => a.start - b.start);
+  }
+
   function linkifyDesc(text) {
-    // HTML-escape first to prevent XSS
-    const escaped = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    // Replace known course codes (e.g. "CS 225", "MATH 241") with clickable spans
-    return escaped.replace(/\b([A-Z]{2,5})\s+(\d{3,4})\b/g, (match, subj, num) => {
-      if (!SUBJECT_CODES.has(subj)) return match;
-      const key = subj + ' ' + num;
-      return `<span class="crossref" style="cursor:pointer" onclick="openPanel('${key}')">${key}</span>`;
-    });
+    const mentions = findCourseMentions(text);
+    if (!mentions.length) return escapeHtml(text);
+
+    let html = '';
+    let cursor = 0;
+    for (const mention of mentions) {
+      if (mention.start < cursor) continue;
+      html += escapeHtml(text.slice(cursor, mention.start));
+      html += `<span class="crossref" style="cursor:pointer" onclick="openPanel('${mention.key}')">${escapeHtml(text.slice(mention.start, mention.end))}</span>`;
+      cursor = mention.end;
+    }
+    html += escapeHtml(text.slice(cursor));
+    return html;
   }
 
   // ─────────────────────────────────────────────────────────────────────────
   // PREREQUISITE TREE
   // ─────────────────────────────────────────────────────────────────────────
   const PREREQ_MAX_DEPTH = 8;
-  const COURSE_CODE_RE_G = /\b([A-Z]{2,5})\s+(\d{3,4})\b/g;
 
   function escapeHtml(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -1404,12 +1432,9 @@
     if (!trimmed) return null;
 
     const courses = [];
-    let m;
-    COURSE_CODE_RE_G.lastIndex = 0;
-    while ((m = COURSE_CODE_RE_G.exec(trimmed)) !== null) {
-      if (SUBJECT_CODES.has(m[1])) {
-        const key = m[1] + ' ' + m[2];
-        if (!courses.includes(key)) courses.push(key);
+    for (const mention of findCourseMentions(trimmed)) {
+      if (!courses.some(c => c.key === mention.key)) {
+        courses.push(mention);
       }
     }
 
@@ -1417,14 +1442,52 @@
       return { kind: 'note', text: trimmed };
     }
     if (courses.length === 1) {
-      return { kind: 'course', key: courses[0] };
+      return { kind: 'course', key: courses[0].key };
     }
-    // Multiple courses in a single group. Heuristic: "and" → AND, otherwise OR.
+
+    // Multiple courses in a single group. Use the words between course codes so
+    // clauses like "A and credit or concurrent registration in B" stay as A AND B.
     const lower = trimmed.toLowerCase();
-    const hasOr = /\bor\b|\bone of\b/.test(lower);
+    const hasOr = /\bor\b|\bone of\b|\beither\b/.test(lower);
     const hasAnd = /\band\b/.test(lower);
-    const kind = (hasAnd && !hasOr) ? 'and' : 'or';
-    return { kind, children: courses.map(k => ({ kind: 'course', key: k })) };
+    const fallback = /\bone of\b|\beither\b/.test(lower) ? 'or' : (hasAnd && !hasOr ? 'and' : (hasOr && !hasAnd ? 'or' : 'and'));
+    const connectors = [];
+
+    for (let i = 0; i < courses.length - 1; i++) {
+      connectors.push(getCourseConnector(trimmed.slice(courses[i].end, courses[i + 1].start), fallback));
+    }
+
+    return buildConnectorTree(courses.map(c => ({ kind: 'course', key: c.key })), connectors);
+  }
+
+  function getCourseConnector(text, fallback) {
+    const lower = text.toLowerCase();
+    const andMatch = lower.match(/\band\b/);
+    const orMatch = lower.match(/\bor\b|\bone of\b|\beither\b/);
+    if (andMatch && orMatch) return andMatch.index < orMatch.index ? 'and' : 'or';
+    if (andMatch) return 'and';
+    if (orMatch) return 'or';
+    return fallback;
+  }
+
+  function buildConnectorTree(nodes, connectors) {
+    const orParts = [];
+    let andParts = [nodes[0]];
+
+    for (let i = 0; i < connectors.length; i++) {
+      if (connectors[i] === 'and') {
+        andParts.push(nodes[i + 1]);
+      } else {
+        orParts.push(groupConnectorParts('and', andParts));
+        andParts = [nodes[i + 1]];
+      }
+    }
+    orParts.push(groupConnectorParts('and', andParts));
+    return groupConnectorParts('or', orParts);
+  }
+
+  function groupConnectorParts(kind, parts) {
+    return parts.length === 1 ? parts[0] : { kind, children: parts };
   }
 
   // Recursively build the prereq tree starting from a course key.
@@ -1454,12 +1517,10 @@
   function expandGroup(g, depth, visited) {
     if (g.kind === 'note') return g;
     if (g.kind === 'course') return buildPrereqTree(g.key, depth, visited);
-    // or/and group — expand each child course
+    // or/and group — expand each child expression
     return {
       kind: g.kind,
-      children: g.children.map(child =>
-        child.kind === 'course' ? buildPrereqTree(child.key, depth, visited) : child
-      )
+      children: g.children.map(child => expandGroup(child, depth, visited))
     };
   }
 
