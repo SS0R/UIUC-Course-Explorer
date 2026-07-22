@@ -186,23 +186,64 @@
       min-width: 0;
     }
     .search-row {
-      width: 100%; display: grid; grid-template-columns: 2fr 1fr; gap: 12px;
-      margin-bottom: 18px;
+      width: 100%; display: grid; grid-template-columns: 2fr 1fr;
+      align-items: stretch; margin-bottom: 0;
+      background: var(--surface); border: 1.5px solid var(--border2);
+      border-radius: var(--radius); overflow: hidden;
     }
-    .search-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .search-controls {
+      display: flex; justify-content: flex-end; gap: 4px; align-items: center; padding-right: 4px;
+    }
+    .search-select {
+      position: relative; justify-self: end; align-self: center; width: 72px; height: 36px;
+      background: transparent; border: 0; border-radius: 10px;
+      transition: background 0.16s;
+    }
     .search-controls .sem-select,
     .search-controls .theme-btn {
-      width: 100% !important; min-height: 48px;
-      background: var(--surface); border-color: var(--border2); color: var(--text2);
-      border-radius: var(--radius);
+      min-height: 48px;
+      background: transparent; border: 0; color: var(--text2);
+      border-radius: 0;
     }
     .search-controls .sem-select {
-      font-size: 0.97rem; text-align: center; text-align-last: center;
+      position: absolute; inset: 0; z-index: 2;
+      width: 100% !important; min-height: 0; height: 100%; margin: 0; padding: 0 24px 0 10px;
+      font-size: 0.97rem; text-align: left; appearance: none;
     }
-    .search-controls .theme-btn { font-size: 0.97rem; }
+    .search-select-caret {
+      position: absolute; z-index: 3; right: 9px; top: 50%;
+      color: var(--text2); font-size: 0.8rem; line-height: 1;
+      transform: translateY(-60%); pointer-events: none;
+    }
+    .search-controls .theme-btn {
+      width: 36px !important; min-height: 0; height: 36px;
+      display: grid; place-items: center; padding: 0;
+      justify-self: center; align-self: center; border-radius: 10px;
+      font-size: 1.35rem; line-height: 1;
+    }
     .search-controls .sem-select:hover,
     .search-controls .theme-btn:hover { background: var(--surface2); }
+    .search-controls .sem-select:hover { background: transparent; }
+    .search-select:hover,
+    .search-select:focus-within { background: var(--surface2); }
     .search-controls .sem-select option { background: var(--surface); color: var(--text); }
+    .filter-toggle {
+      width: calc(100% - 16px); display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 14px; margin: -1px 8px 12px;
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: 0 0 var(--radius) var(--radius); color: var(--text2);
+      font: 600 0.78rem 'Plus Jakarta Sans', sans-serif;
+      letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer;
+    }
+    .filter-toggle:hover { border-color: var(--orange); color: var(--orange); }
+    .filter-toggle .filter-caret { position: relative; top: -2px; transition: transform 0.2s; }
+    .filter-toggle[aria-expanded="true"] .filter-caret { transform: rotate(180deg); }
+    .filter-toggle[aria-expanded="true"] { border-radius: 0; border-bottom: 0; }
+    #main-view #filter-groups {
+      width: calc(100% - 16px); margin: -13px 8px 12px; padding: 12px 16px 16px;
+      background: var(--surface); border: 1px solid var(--border2); border-top: 0;
+      border-radius: 0 0 var(--radius) var(--radius);
+    }
     @media (max-width: 680px) {
       .search-row { grid-template-columns: 1fr; }
     }
@@ -215,20 +256,17 @@
     }
     #search-input {
       width: 100%;
-      background: var(--surface);
-      border: 1.5px solid var(--border2);
-      border-radius: var(--radius);
+      background: transparent;
+      border: 0;
+      border-radius: 0;
       color: var(--text);
       font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 0.97rem;
-      padding: 13px 110px 13px 44px;
+      padding: 13px 44px;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
-    #search-input:focus {
-      border-color: var(--orange);
-      box-shadow: 0 0 0 3px rgba(255,95,5,0.18);
-    }
+    .search-row:focus-within { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(255,95,5,0.18); }
     #search-input::placeholder { color: var(--muted); }
     .search-go {
       position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
@@ -239,6 +277,7 @@
       transition: opacity 0.2s, transform 0.15s;
       letter-spacing: 0.06em;
     }
+    .search-row .search-go { display: none; }
     .search-go:hover { opacity: 0.88; transform: translateY(-50%) scale(1.04); }
 
     /* ── CHIPS ── */
@@ -247,7 +286,7 @@
       align-items: center; margin-bottom: 44px;
     }
     #filter-groups {
-      display: grid; grid-template-columns: 2fr 1fr;
+      display: flex; flex-direction: column;
       gap: 12px; width: 100%; align-items: stretch;
     }
     #filter-groups .filter-group {
@@ -264,12 +303,9 @@
       background: var(--surface2); border: 1px solid var(--border2);
       border-radius: var(--radius); padding: 12px;
     }
-    #gened-filter-group { grid-column: 1 / -1; }
     #filter-left, #filter-right {
-      display: flex; flex-direction: column; gap: 12px; min-width: 0;
+      display: contents;
     }
-    #filter-right .filter-group { flex: 1; }
-    #filter-right .filter-options { flex: 1; align-content: space-between; }
     .filter-groups:not(#filter-groups) .filter-group {
       display: flex; flex-wrap: wrap; gap: 7px;
       align-items: center; justify-content: center; max-width: 820px;
@@ -292,11 +328,7 @@
       grid-template-columns: repeat(3, minmax(0, 1fr)); width: min(100%, 660px);
     }
     #planner-gened-chips .chip { white-space: nowrap; }
-    #level-filter-group .filter-options,
-    #credit-filter-group .filter-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    @media (max-width: 680px) {
-      #filter-groups { grid-template-columns: 1fr; }
-    }
+    #level-filter-group .filter-options { grid-template-columns: repeat(6, minmax(0, 1fr)); }
     .chip {
       background: var(--surface);
       border: 1px solid var(--border2);
@@ -941,16 +973,26 @@
           </div>
         </div>
         <div class="search-controls">
-          <select class="sem-select" id="sem-select">
-            <option value="sp">Spring</option>
-            <option value="su">Summer</option>
-            <option value="fa">Fall</option>
-            <option value="wi">Winter</option>
-          </select>
-          <select class="sem-select" id="year-select"></select>
-          <button class="theme-btn" id="theme-btn">Dark</button>
+          <div class="search-select" onclick="if (event.target === this) openSelect('sem-select')">
+            <select class="sem-select" id="sem-select">
+              <option value="sp">Spring</option>
+              <option value="su">Summer</option>
+              <option value="fa">Fall</option>
+              <option value="wi">Winter</option>
+            </select>
+            <span class="search-select-caret" onclick="event.stopPropagation(); openSelect('sem-select')">⌄</span>
+          </div>
+          <div class="search-select" onclick="if (event.target === this) openSelect('year-select')">
+            <select class="sem-select" id="year-select"></select>
+            <span class="search-select-caret" onclick="event.stopPropagation(); openSelect('year-select')">⌄</span>
+          </div>
+          <button class="theme-btn" id="theme-btn" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">☀</button>
         </div>
       </div>
+
+      <button class="filter-toggle" id="filter-toggle" type="button" aria-controls="filter-groups" aria-expanded="false" onclick="toggleFilters()">
+        <span>Filters</span><span class="filter-caret">⌄</span>
+      </button>
 
       <div class="filter-groups" id="filter-groups" style="display:none">
         <div class="filter-group" id="gened-filter-group" style="display:none">
@@ -973,11 +1015,13 @@
           </div>
           <div class="filter-group" id="sort-filter-group">
             <span class="filter-label">Sort</span>
-            <div class="filter-options" style="--chip-count:4">
-              <span class="chip active" id="sort-alpha"    onclick="setSort('alpha')">A→Z</span>
-              <span class="chip"        id="sort-gpa"      onclick="setSort('gpa')">Avg GPA ↓</span>
-              <span class="chip"        id="sort-pct_a"    onclick="setSort('pct_a')">% 4.0 ↓</span>
-              <span class="chip"        id="sort-random"   onclick="setSort('random')">Random</span>
+            <div class="filter-options" style="--chip-count:6">
+            <span class="chip active" id="sort-alpha"    onclick="setSort('alpha')">A→Z</span>
+            <span class="chip"        id="sort-gpa"      onclick="setSort('gpa')">Avg GPA ↓</span>
+            <span class="chip"        id="sort-gpa_asc"  onclick="setSort('gpa_asc')">Avg GPA ↑</span>
+            <span class="chip"        id="sort-pct_a"    onclick="setSort('pct_a')">% 4.0 ↓</span>
+            <span class="chip"        id="sort-pct_a_asc" onclick="setSort('pct_a_asc')">% 4.0 ↑</span>
+            <span class="chip"        id="sort-random"   onclick="setSort('random')">Random</span>
             </div>
           </div>
         </div>
@@ -1056,7 +1100,7 @@
     document.getElementById('gened-filter-group').innerHTML  = '<span class="filter-label">Gen Ed</span><div class="filter-options"></div>';
     document.getElementById('credit-filter-group').innerHTML = '<span class="filter-label">Credit Hours</span><div class="filter-options"></div>';
     document.getElementById('other-filter-group').innerHTML  = '<span class="filter-label">Other</span><div class="filter-options"></div>';
-    document.getElementById('filter-groups').style.display = 'none';
+    setFiltersOpen(false);
     document.getElementById('courses-grid').style.display = 'none';
     document.getElementById('courses-grid').innerHTML = '';
     document.getElementById('load-status').style.display = '';
@@ -1115,11 +1159,16 @@
 
   // Resize a <select> to fit its selected option text
   const _sizer = document.createElement('span');
-  _sizer.style.cssText = 'position:absolute;visibility:hidden;font:0.75rem "Plus Jakarta Sans",sans-serif;padding:0 10px;white-space:nowrap;pointer-events:none;';
+  _sizer.style.cssText = 'position:absolute;visibility:hidden;font:0.97rem "Plus Jakarta Sans",sans-serif;padding:0 24px 0 10px;white-space:nowrap;pointer-events:none;';
   document.body.appendChild(_sizer);
   function resizeSelect(sel) {
     _sizer.textContent = sel.options[sel.selectedIndex].text;
-    sel.style.width = (_sizer.offsetWidth + 2) + 'px';
+    sel.parentElement.style.width = (_sizer.offsetWidth + 2) + 'px';
+  }
+  function openSelect(id) {
+    const select = document.getElementById(id);
+    if (typeof select.showPicker === 'function') select.showPicker();
+    else { select.focus(); select.click(); }
   }
   document.fonts.ready.then(() => { resizeSelect(semSelect); resizeSelect(yearSelect); });
 
@@ -1141,6 +1190,7 @@
   let activeFormats = new Set();
   let activeTerm    = new Set();
   let activeSortVal = 'alpha';
+  let filtersOpen   = false;
   let activePanelCourse = null;
   let panelHistory      = [];
   let openGpaRow  = null;
@@ -1152,7 +1202,10 @@
   document.getElementById('theme-btn').addEventListener('click', () => {
     const isDark = document.documentElement.dataset.theme === 'dark';
     document.documentElement.dataset.theme = isDark ? 'light' : 'dark';
-    document.getElementById('theme-btn').textContent = isDark ? 'Dark' : 'Light';
+    const themeButton = document.getElementById('theme-btn');
+    themeButton.textContent = isDark ? '☀' : '☾';
+    themeButton.setAttribute('aria-label', isDark ? 'Switch to dark mode' : 'Switch to light mode');
+    themeButton.title = themeButton.getAttribute('aria-label');
   });
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1417,7 +1470,7 @@
 
     setTimeout(() => { document.getElementById('load-bar').style.opacity = '0'; }, 600);
     document.getElementById('load-status').style.display = 'none';
-    document.getElementById('filter-groups').style.display = '';
+    setFiltersOpen(filtersOpen);
     document.getElementById('courses-grid').style.display = 'grid';
   }
 
@@ -1717,9 +1770,24 @@
   document.getElementById('search-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') doSearch();
   });
+  let searchDebounce;
+  document.getElementById('search-input').addEventListener('input', () => {
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(doSearch, 180);
+  });
 
   function doSearch() {
     applyFilter();
+  }
+
+  function toggleFilters() {
+    setFiltersOpen(!filtersOpen);
+  }
+
+  function setFiltersOpen(open) {
+    filtersOpen = open;
+    document.getElementById('filter-groups').style.display = open ? 'flex' : 'none';
+    document.getElementById('filter-toggle').setAttribute('aria-expanded', String(open));
   }
 
   function setSort(val) {
@@ -1737,9 +1805,18 @@
       if (bv === null) return -1;
       return bv - av; // descending
     };
+    const nullsLastAsc = (a, b, fn) => {
+      const av = fn(a), bv = fn(b);
+      if (av === null && bv === null) return 0;
+      if (av === null) return 1;
+      if (bv === null) return -1;
+      return av - bv;
+    };
     const copy = [...keys];
     if (activeSortVal === 'gpa')      copy.sort((a, b) => nullsLast(a, b, k => courseMap[k]._gpa));
+    else if (activeSortVal === 'gpa_asc') copy.sort((a, b) => nullsLastAsc(a, b, k => courseMap[k]._gpa));
     else if (activeSortVal === 'pct_a')    copy.sort((a, b) => nullsLast(a, b, k => courseMap[k]._pctA));
+    else if (activeSortVal === 'pct_a_asc') copy.sort((a, b) => nullsLastAsc(a, b, k => courseMap[k]._pctA));
     else if (activeSortVal === 'students') copy.sort((a, b) => nullsLast(a, b, k => courseMap[k]._gpaStudents));
     else if (activeSortVal === 'sections') copy.sort((a, b) => courseMap[b].sections.length - courseMap[a].sections.length);
     else if (activeSortVal === 'random') copy.sort(() => Math.random() - 0.5);
@@ -1816,7 +1893,7 @@
     { label: 'US Minority',         match: s => s.includes('Cultural Studies - US Minority') },
     { label: 'Hum & Arts',          match: s => s.includes('Humanities') },
     { label: 'Nat Sci & Tech',      match: s => s.includes('Nat Sci') },
-    { label: 'Quant Reasoning',     match: s => s.includes('Quantitative Reasoning') },
+    { label: 'Quant Reas',          match: s => s.includes('Quantitative Reasoning') },
     { label: 'Soc & Beh Sci',       match: s => s.includes('Soc & Beh') || s.includes('Social & Beh') },
   ];
 
@@ -1973,6 +2050,14 @@
     noInternshipChip.onclick = () => toggleOther('no_internship');
     group.querySelector('.filter-options').appendChild(noInternshipChip);
 
+    // Exclude independent studies
+    const noIndependentStudyChip = document.createElement('span');
+    noIndependentStudyChip.className = 'chip';
+    noIndependentStudyChip.dataset.other = 'no_independent_study';
+    noIndependentStudyChip.textContent = 'Exclude Independent Study';
+    noIndependentStudyChip.onclick = () => toggleOther('no_independent_study');
+    group.querySelector('.filter-options').appendChild(noIndependentStudyChip);
+
     setFilterOptionCount(group);
   }
 
@@ -2049,6 +2134,7 @@
       if (activeOther.has('no_prereq') && hasPrereq(c)) return;
       if (activeOther.has('no_x99') && /seminar/i.test(c.name)) return;
       if (activeOther.has('no_internship') && /internship/i.test(c.name)) return;
+      if (activeOther.has('no_independent_study') && /independent study/i.test(c.name)) return;
 
       // format filters
       if (activeFormats.has('online')   && !c.sections.some(s => s.typeCode === 'ONL')) return;
@@ -2481,7 +2567,7 @@
   const DOUBLEABLE_GENEDS = new Set([
     'Hum & Arts',
     'Nat Sci & Tech',
-    'Quant Reasoning',
+    'Quant Reas',
     'Soc & Beh Sci'
   ]);
 
