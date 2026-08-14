@@ -1090,7 +1090,7 @@
     const savedSort    = activeSortVal;
     const savedSearch  = document.getElementById('search-input').value;
 
-    courseMap = {}; gpaMap = {}; courseKeys = []; filtered = []; filteredPrereq = [];
+    courseMap = Object.create(null); courseKeys = []; filtered = []; filteredPrereq = [];
     activeLevels.clear(); activeGeneds.clear(); activeCredits.clear(); activeOther.clear(); activeFormats.clear(); activeTerm.clear();
     activeSortVal = 'alpha';
     document.getElementById('search-input').value = '';
@@ -1178,8 +1178,9 @@
   // ─────────────────────────────────────────────────────────────────────────
   // STATE
   // ─────────────────────────────────────────────────────────────────────────
-  let courseMap   = {};   // key = "SUBJECT NUMBER"  → { meta, sections[] }
-  let gpaMap      = {};   // key = "SUBJECT NUMBER LASTNAME" → { gpa, students, dist }
+  let courseMap   = Object.create(null); // key = "SUBJECT NUMBER" → { meta, sections[] }
+  let gpaMap      = Object.create(null); // key = "SUBJECT NUMBER LASTNAME" → { gpa, students, dist }
+  let gpaByCourse = Object.create(null); // key = "SUBJECT NUMBER" → [{ lastName, data }]
   let courseKeys  = [];   // ordered list of keys
   let filtered    = [];
   let filteredPrereq = [];
@@ -1194,6 +1195,9 @@
   let activePanelCourse = null;
   let panelHistory      = [];
   let openGpaRow  = null;
+  let gpaDataPromise = null;
+  let catalogAbortController = null;
+  let loadVersion = 0;
   const semNameMap = { sp: 'spring', su: 'summer', fa: 'fall', wi: 'winter' };
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1211,19 +1215,25 @@
   // ─────────────────────────────────────────────────────────────────────────
   // CSV PARSER  (handles quoted fields with commas and semicolons inside)
   // ─────────────────────────────────────────────────────────────────────────
-  function parseCSV(text) {
-    const rows = [];
-    const lines = text.split('\n');
-    const headers = splitCSVLine(lines[0]);
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
+  function forEachCSVRow(text, callback) {
+    const firstBreak = text.indexOf('\n');
+    if (firstBreak < 0) return;
+    const headers = splitCSVLine(text.slice(0, firstBreak)).map(h => h.trim());
+
+    // Process one row at a time. This avoids retaining a second copy of the whole
+    // file plus tens of thousands of temporary row objects during startup.
+    let start = firstBreak + 1;
+    while (start < text.length) {
+      let end = text.indexOf('\n', start);
+      if (end < 0) end = text.length;
+      const line = text.slice(start, end).trim();
+      start = end + 1;
       if (!line) continue;
       const vals = splitCSVLine(line);
-      const obj = {};
-      headers.forEach((h, idx) => { obj[h.trim()] = (vals[idx] || '').trim(); });
-      rows.push(obj);
+      const row = Object.create(null);
+      headers.forEach((h, idx) => { row[h] = (vals[idx] || '').trim(); });
+      callback(row);
     }
-    return rows;
   }
 
   function splitCSVLine(line) {
@@ -1273,29 +1283,26 @@
     // Exact match first
     const exact = gpaMap[`${subject} ${number} ${ln}`];
     if (exact) return exact;
-    const coursePrefix = `${subject} ${number} `;
+    const courseKey = `${subject} ${number}`;
+    const courseEntries = gpaByCourse[courseKey] || [];
     const tokens = ln.split(' ');
     if (tokens.length > 1) {
       // Try just the first word
       const first = gpaMap[`${subject} ${number} ${tokens[0]}`];
       if (first) return first;
       // Prefix match: handles truncation mismatches like "bahreini esfaha" vs "bahreini esfahani"
-      for (const k of Object.keys(gpaMap)) {
-        if (!k.startsWith(coursePrefix)) continue;
-        const gpaLn = k.slice(coursePrefix.length);
-        if (ln.startsWith(gpaLn) || gpaLn.startsWith(ln)) return gpaMap[k];
+      for (const entry of courseEntries) {
+        if (ln.startsWith(entry.lastName) || entry.lastName.startsWith(ln)) return entry.data;
       }
     } else {
       // ln is a single word — look for any gpaMap key that starts with it (multi-word gpa last name)
-      const prefix = `${coursePrefix}${ln} `;
-      for (const k of Object.keys(gpaMap)) {
-        if (k.startsWith(prefix)) return gpaMap[k];
+      const prefix = `${ln} `;
+      for (const entry of courseEntries) {
+        if (entry.lastName.startsWith(prefix)) return entry.data;
       }
       // Prefix match: handles truncation where gpa last name is a truncated version of ln
-      for (const k of Object.keys(gpaMap)) {
-        if (!k.startsWith(coursePrefix)) continue;
-        const gpaLn = k.slice(coursePrefix.length);
-        if (ln.startsWith(gpaLn) || gpaLn.startsWith(ln)) return gpaMap[k];
+      for (const entry of courseEntries) {
+        if (ln.startsWith(entry.lastName) || entry.lastName.startsWith(ln)) return entry.data;
       }
     }
     return null;
@@ -1306,7 +1313,7 @@
   function lookupGpaForCourse(c, ln) {
     const direct = lookupGpa(c.subject, c.number, ln);
     if (direct) return direct;
-    for (const t of findSameAsTargets(c.desc)) {
+    for (const t of c._sameAsTargets || findSameAsTargets(c.desc)) {
       const [ts, tn] = t.split(' ');
       const fallback = lookupGpa(ts, tn, ln);
       if (fallback) return fallback;
@@ -1317,69 +1324,95 @@
   // ─────────────────────────────────────────────────────────────────────────
   // LOAD & PROCESS DATA
   // ─────────────────────────────────────────────────────────────────────────
+  async function fetchText(url, options) {
+    const res = await fetch(url, options);
+    if (!res.ok) throw new Error(`HTTP ${res.status} loading ${url}`);
+    return res.text();
+  }
+
+  function buildGpaData(gpaText) {
+    const nextGpaMap = Object.create(null);
+    const nextGpaByCourse = Object.create(null);
+    const gpaTemp = Object.create(null);
+
+    forEachCSVRow(gpaText, row => {
+      if (!row['Subject'] || !row['Number']) return;
+      const subject = row['Subject'].trim();
+      const number = row['Number'].trim();
+      const courseKey = `${subject} ${number}`;
+      const lastNames = (row['Primary Instructor'] || '')
+        .split(';').map(s => extractLastName(s)).filter(Boolean);
+      const res = calcGPA(row);
+      if (!res) return;
+
+      lastNames.forEach(ln => {
+        const key = `${courseKey} ${ln}`;
+        if (!gpaTemp[key]) {
+          const dist = Object.create(null);
+          GRADE_COLS.forEach(g => { dist[g] = 0; });
+          gpaTemp[key] = { courseKey, lastName: ln, sumWeighted: 0, students: 0, dist };
+        }
+        const aggregate = gpaTemp[key];
+        aggregate.sumWeighted += res.gpa * res.students;
+        aggregate.students += res.students;
+        GRADE_COLS.forEach(g => { aggregate.dist[g] += parseInt(row[g]) || 0; });
+      });
+    });
+
+    Object.keys(gpaTemp).forEach(key => {
+      const aggregate = gpaTemp[key];
+      if (aggregate.students === 0) return;
+      const data = {
+        gpa: aggregate.sumWeighted / aggregate.students,
+        students: aggregate.students,
+        dist: aggregate.dist
+      };
+      nextGpaMap[key] = data;
+      (nextGpaByCourse[aggregate.courseKey] ||= []).push({ lastName: aggregate.lastName, data });
+    });
+    return { gpaMap: nextGpaMap, gpaByCourse: nextGpaByCourse };
+  }
+
+  function getGpaData() {
+    if (!gpaDataPromise) {
+      gpaDataPromise = fetchText(GPA_URL)
+        .then(buildGpaData)
+        .catch(error => {
+          gpaDataPromise = null;
+          throw error;
+        });
+    }
+    return gpaDataPromise;
+  }
+
   async function loadData() {
+    const myVersion = ++loadVersion;
+    if (catalogAbortController) catalogAbortController.abort();
+    catalogAbortController = new AbortController();
     setLoadBar(0.1);
     setStatus('Fetching course catalog…');
 
-    let catalogText, gpaText;
+    let catalogText, gpaData;
     try {
-      const [catRes, gpaRes] = await Promise.all([
-        fetch(getCatalogURL()),
-        fetch(GPA_URL)
+      [catalogText, gpaData] = await Promise.all([
+        fetchText(getCatalogURL(), { signal: catalogAbortController.signal }),
+        getGpaData()
       ]);
+      if (myVersion !== loadVersion) return;
       setLoadBar(0.5);
       setStatus('Parsing data…');
-      [catalogText, gpaText] = await Promise.all([catRes.text(), gpaRes.text()]);
     } catch(e) {
+      if (e.name === 'AbortError' || myVersion !== loadVersion) return;
       setStatus('⚠ Could not load data. Check your connection and refresh.');
       return;
     }
 
     setLoadBar(0.7);
-
-    // ── Process GPA dataset ──
-    // gpaMap key = "SUBJ NUM LASTNAME" → aggregate across all semesters
-    const gpaRaw = parseCSV(gpaText);
-    const gpaTemp = {}; // key → { sumGpa, students, distCounts }
-
-    gpaRaw.forEach(row => {
-      if (!row['Subject'] || !row['Number']) return;
-      const lastNames = (row['Primary Instructor'] || '')
-        .split(';').map(s => extractLastName(s)).filter(Boolean);
-
-      lastNames.forEach(ln => {
-        const key = `${row['Subject'].trim()} ${row['Number'].trim()} ${ln}`;
-        if (!gpaTemp[key]) {
-          gpaTemp[key] = { sumWeighted: 0, students: 0, dist: {} };
-          GRADE_COLS.forEach(g => gpaTemp[key].dist[g] = 0);
-        }
-        const res = calcGPA(row);
-        if (res) {
-          gpaTemp[key].sumWeighted += res.gpa * res.students;
-          gpaTemp[key].students += res.students;
-          GRADE_COLS.forEach(g => {
-            gpaTemp[key].dist[g] += parseInt(row[g]) || 0;
-          });
-        }
-      });
-    });
-
-    // Finalize weighted averages
-    Object.keys(gpaTemp).forEach(k => {
-      const d = gpaTemp[k];
-      if (d.students > 0) {
-        gpaMap[k] = {
-          gpa: d.sumWeighted / d.students,
-          students: d.students,
-          dist: d.dist
-        };
-      }
-    });
+    gpaMap = gpaData.gpaMap;
+    gpaByCourse = gpaData.gpaByCourse;
 
     // ── Process course catalog ──
-    const catalogRows = parseCSV(catalogText);
-
-    catalogRows.forEach(row => {
+    forEachCSVRow(catalogText, row => {
       if (!row['Subject'] || !row['Number'] || !row['Name']) return;
       const key = `${row['Subject'].trim()} ${row['Number'].trim()}`;
 
@@ -1428,6 +1461,7 @@
     // Pre-compute per-course GPA summary for cards
     courseKeys.forEach(key => {
       const c = courseMap[key];
+      c._sameAsTargets = findSameAsTargets(c.desc);
       // Collect all instructor last names across sections
       const lastNameSet = new Set();
       c.sections.forEach(s => {
@@ -1437,9 +1471,11 @@
       });
       // Find best GPA data for any instructor (with Same As fallback)
       let bestGpa = null, totalStudents = 0;
+      const matchedGpaData = [];
       lastNameSet.forEach(ln => {
         const gData = lookupGpaForCourse(c, ln);
         if (gData) {
+          matchedGpaData.push(gData);
           totalStudents += gData.students;
           if (!bestGpa || gData.students > bestGpa.students) bestGpa = gData;
         }
@@ -1449,16 +1485,39 @@
       c._lastNames = [...lastNameSet];
       // Aggregate grade distribution across all instructors for this course
       let totalA = 0, totalGraded = 0;
-      lastNameSet.forEach(ln => {
-        const gData = lookupGpaForCourse(c, ln);
-        if (gData && gData.dist) {
+      matchedGpaData.forEach(gData => {
+        if (gData.dist) {
           totalA += gData.dist['A+'] || 0;
           totalA += gData.dist['A']  || 0;
           GRADE_COLS.forEach(g => { totalGraded += gData.dist[g] || 0; });
         }
       });
       c._pctA = totalGraded > 0 ? totalA / totalGraded : null;
+
+      // Cache values used by every keystroke/filter change so filtering only
+      // performs cheap scalar and set comparisons.
+      c._courseNumber = Number.parseInt(c.number, 10);
+      c._creditBuckets = creditBuckets(c.credits);
+      c._isHalfCredit = isHalfCredit(c.credits);
+      c._halfIntBuckets = halfIntBuckets(c.credits);
+      c._hasOnline = c.sections.some(s => s.typeCode === 'ONL');
+      c._hasInPerson = c.sections.some(s => s.typeCode !== 'ONL');
+      c._partOfTerms = new Set(c.sections.map(s => s.partOfTerm));
+      c._genedLabels = GENED_FILTERS.filter(g => g.match(c.gened)).map(g => g.label);
+      c._searchName = c.name.toUpperCase();
+      c._searchDesc = c.desc.toUpperCase();
+      c._searchInstructors = c.sections
+        .map(s => s.instructors.join('\u0000'))
+        .join('\u0000')
+        .toUpperCase();
+      c._isSeminar = /seminar/i.test(c.name);
+      c._isInternship = /internship/i.test(c.name);
+      c._isIndependentStudy = /independent study/i.test(c.name);
     });
+
+    // This must happen after every course exists because cross-listed courses
+    // can inherit prerequisite text from another catalog entry.
+    courseKeys.forEach(key => { courseMap[key]._hasPrereq = hasPrereq(courseMap[key]); });
 
     setLoadBar(1.0);
     filtered = [...courseKeys];
@@ -1798,28 +1857,26 @@
   }
 
   function sortKeys(keys) {
-    const nullsLast = (a, b, fn) => {
-      const av = fn(a), bv = fn(b);
+    const nullsLast = (a, b, property, direction = -1) => {
+      const av = courseMap[a][property], bv = courseMap[b][property];
       if (av === null && bv === null) return 0;
       if (av === null) return 1;
       if (bv === null) return -1;
-      return bv - av; // descending
-    };
-    const nullsLastAsc = (a, b, fn) => {
-      const av = fn(a), bv = fn(b);
-      if (av === null && bv === null) return 0;
-      if (av === null) return 1;
-      if (bv === null) return -1;
-      return av - bv;
+      return direction * (av - bv);
     };
     const copy = [...keys];
-    if (activeSortVal === 'gpa')      copy.sort((a, b) => nullsLast(a, b, k => courseMap[k]._gpa));
-    else if (activeSortVal === 'gpa_asc') copy.sort((a, b) => nullsLastAsc(a, b, k => courseMap[k]._gpa));
-    else if (activeSortVal === 'pct_a')    copy.sort((a, b) => nullsLast(a, b, k => courseMap[k]._pctA));
-    else if (activeSortVal === 'pct_a_asc') copy.sort((a, b) => nullsLastAsc(a, b, k => courseMap[k]._pctA));
-    else if (activeSortVal === 'students') copy.sort((a, b) => nullsLast(a, b, k => courseMap[k]._gpaStudents));
+    if (activeSortVal === 'gpa')      copy.sort((a, b) => nullsLast(a, b, '_gpa'));
+    else if (activeSortVal === 'gpa_asc') copy.sort((a, b) => nullsLast(a, b, '_gpa', 1));
+    else if (activeSortVal === 'pct_a')    copy.sort((a, b) => nullsLast(a, b, '_pctA'));
+    else if (activeSortVal === 'pct_a_asc') copy.sort((a, b) => nullsLast(a, b, '_pctA', 1));
+    else if (activeSortVal === 'students') copy.sort((a, b) => nullsLast(a, b, '_gpaStudents'));
     else if (activeSortVal === 'sections') copy.sort((a, b) => courseMap[b].sections.length - courseMap[a].sections.length);
-    else if (activeSortVal === 'random') copy.sort(() => Math.random() - 0.5);
+    else if (activeSortVal === 'random') {
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+    }
     // 'alpha' keeps original order (courseKeys is already sorted A→Z)
     return copy;
   }
@@ -1898,6 +1955,7 @@
   ];
 
   function courseMatchesGened(c, label) {
+    if (c._genedLabels) return c._genedLabels.includes(label);
     const gf = GENED_FILTERS.find(g => g.label === label);
     return gf ? gf.match(c.gened) : false;
   }
@@ -2104,6 +2162,20 @@
 
   function applyFilter() {
     const q = document.getElementById('search-input').value.trim().toUpperCase();
+    const qIsSubject = q ? SUBJECT_CODES.has(q) : false;
+    const qIsNumber = q ? /^\d+$/.test(q) : false;
+    const selectedLevels = [...activeLevels].map(Number);
+    const selectedCredits = intCreditsSelected();
+    const selectedCreditSet = new Set(selectedCredits);
+    const includeHalfCredits = activeCredits.has('half');
+    const selectedGeneds = [...activeGeneds];
+    const selectedTerms = [...activeTerm];
+    const excludePrereqs = activeOther.has('no_prereq');
+    const excludeSeminars = activeOther.has('no_x99');
+    const excludeInternships = activeOther.has('no_internship');
+    const excludeIndependentStudy = activeOther.has('no_independent_study');
+    const requireOnline = activeFormats.has('online');
+    const requireInPerson = activeFormats.has('inperson');
 
     filtered = [];
     filteredPrereq = [];
@@ -2112,56 +2184,52 @@
       const c = courseMap[key];
 
       // level filter (600+ includes every course numbered 600 or higher)
-      const courseNumber = Number.parseInt(c.number, 10);
-      const levelMatches = [...activeLevels].some(level =>
-        level === '6'
-          ? courseNumber >= 600
-          : courseNumber >= Number(level) * 100 && courseNumber < (Number(level) + 1) * 100
-      );
-      if (activeLevels.size > 0 && !levelMatches) return;
+      if (selectedLevels.length > 0) {
+        const levelMatches = selectedLevels.some(level =>
+          level === 6
+            ? c._courseNumber >= 600
+            : c._courseNumber >= level * 100 && c._courseNumber < (level + 1) * 100
+        );
+        if (!levelMatches) return;
+      }
 
       // credit hour filter
       if (activeCredits.size > 0) {
-        const intSel = intCreditsSelected();
-        const halfSel = activeCredits.has('half');
-        const buckets = creditBuckets(c.credits);
-        const intMatch = intSel.some(sel => buckets.includes(sel));
-        const halfMatch = halfSel && isHalfCredit(c.credits) && halfIntBuckets(c.credits).some(b => intSel.includes(b));
+        const intMatch = c._creditBuckets.some(bucket => selectedCreditSet.has(bucket));
+        const halfMatch = includeHalfCredits && c._isHalfCredit &&
+          c._halfIntBuckets.some(bucket => selectedCreditSet.has(bucket));
         if (!intMatch && !halfMatch) return;
       }
 
       // other filters
-      if (activeOther.has('no_prereq') && hasPrereq(c)) return;
-      if (activeOther.has('no_x99') && /seminar/i.test(c.name)) return;
-      if (activeOther.has('no_internship') && /internship/i.test(c.name)) return;
-      if (activeOther.has('no_independent_study') && /independent study/i.test(c.name)) return;
+      if (excludePrereqs && c._hasPrereq) return;
+      if (excludeSeminars && c._isSeminar) return;
+      if (excludeInternships && c._isInternship) return;
+      if (excludeIndependentStudy && c._isIndependentStudy) return;
 
       // format filters
-      if (activeFormats.has('online')   && !c.sections.some(s => s.typeCode === 'ONL')) return;
-      if (activeFormats.has('inperson') && !c.sections.some(s => s.typeCode !== 'ONL')) return;
+      if (requireOnline && !c._hasOnline) return;
+      if (requireInPerson && !c._hasInPerson) return;
 
       // part of term filters (A / B) — course must have at least one section matching any selected term
-      if (activeTerm.size > 0 && !c.sections.some(s => activeTerm.has(s.partOfTerm))) return;
+      if (selectedTerms.length > 0 && !selectedTerms.some(term => c._partOfTerms.has(term))) return;
 
       // gen ed filter — course must satisfy ALL selected gen eds
       if (activeGeneds.size > 0) {
-        const match = [...activeGeneds].every(g => courseMatchesGened(c, g));
+        const match = selectedGeneds.every(g => c._genedLabels.includes(g));
         if (!match) return;
       }
 
       if (q) {
         // When query is a known subject code (e.g. "CS"), skip name/desc matching —
         // those would catch unrelated courses that merely mention the code in their text.
-        const qIsSubject = SUBJECT_CODES.has(q);
         const matchSubj = c.subject === q;
         const matchFull = key === q || key.startsWith(q + ' ');
-        const matchNum  = /^\d+$/.test(q) && String(c.number).includes(q);
-        const matchName = !qIsSubject && c.name.toUpperCase().includes(q);
-        const matchDesc = !qIsSubject && c.desc.toUpperCase().includes(q);
+        const matchNum  = qIsNumber && c.number.includes(q);
+        const matchName = !qIsSubject && c._searchName.includes(q);
+        const matchDesc = !qIsSubject && c._searchDesc.includes(q);
         // Instructor match: skip when query is a subject code (e.g. "CS" matches "Popovics")
-        const matchInstr = !qIsSubject && c.sections.some(s =>
-          s.instructors.some(instr => instr.toUpperCase().includes(q))
-        );
+        const matchInstr = !qIsSubject && c._searchInstructors.includes(q);
         if (!matchSubj && !matchFull && !matchNum && !matchName && !matchDesc && !matchInstr) return;
         if (matchSubj || matchFull || matchNum || matchName || matchInstr) {
           filtered.push(key);
@@ -2196,7 +2264,7 @@
     const credBadge = c.credits ? `<span class="badge b-neutral">${c.credits} hr</span>` : '';
     const sectionCount = c.sections.length;
 
-    const genedBadges = GENED_FILTERS.filter(g => g.match(c.gened)).map(g => `<span class="badge b-blue">${g.label}</span>`).join('');
+    const genedBadges = c._genedLabels.map(label => `<span class="badge b-blue">${label}</span>`).join('');
 
     return `<div class="course-card" style="animation-delay:${Math.min(i,30)*0.025}s" onclick="openPanel('${key}')">
       <div class="card-code">${c.subject} ${c.number}</div>
@@ -2438,6 +2506,7 @@
   const STATUS_PROXY_URL = '/api/illinois/';
   const statusCache = new Map();      // key: `${year}/${sem}/${subj}/${num}/${crn}` → 'open'|'restricted'|'closed'|'unknown'
   const statusRawCache = new Map();   // same key → raw status string for tooltip
+  const statusRequestCache = new Map(); // same key → in-flight request Promise
   let statusFetchVersion = 0;         // bumped on every renderSections — discards stale fetches
 
   function classifyEnrollmentStatus(raw) {
@@ -2454,17 +2523,26 @@
     if (statusCache.has(key)) {
       return { cls: statusCache.get(key), raw: statusRawCache.get(key) };
     }
-    const path = `schedule/${year}/${sem}/${subj}/${num}/${crn}.xml`;
-    const url = STATUS_PROXY_URL + path;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text = await res.text();
-    const m = text.match(/<enrollmentStatus>([^<]+)<\/enrollmentStatus>/);
-    const raw = m ? m[1].trim() : '';
-    const cls = classifyEnrollmentStatus(raw);
-    statusCache.set(key, cls);
-    statusRawCache.set(key, raw);
-    return { cls, raw };
+    if (!statusRequestCache.has(key)) {
+      const path = `schedule/${year}/${sem}/${subj}/${num}/${crn}.xml`;
+      const url = STATUS_PROXY_URL + path;
+      const request = fetch(url)
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.text();
+        })
+        .then(text => {
+          const m = text.match(/<enrollmentStatus>([^<]+)<\/enrollmentStatus>/);
+          const raw = m ? m[1].trim() : '';
+          const cls = classifyEnrollmentStatus(raw);
+          statusCache.set(key, cls);
+          statusRawCache.set(key, raw);
+          return { cls, raw };
+        })
+        .finally(() => { statusRequestCache.delete(key); });
+      statusRequestCache.set(key, request);
+    }
+    return statusRequestCache.get(key);
   }
 
   function loadSectionStatuses(c) {
@@ -2660,10 +2738,7 @@
     const rawCandidates = [];
     courseKeys.forEach(key => {
       const c = courseMap[key];
-      const cats = labels.filter(label => {
-        const gf = GENED_FILTERS.find(g => g.label === label);
-        return gf && gf.match(c.gened);
-      });
+      const cats = labels.filter(label => c._genedLabels.includes(label));
       if (cats.length > 0) rawCandidates.push({ key, cats, gpa: c._gpa || 0 });
     });
 
@@ -2811,8 +2886,8 @@
             <span class="badge ${gpaClass}">Avg GPA ${avgGpaStr}</span>
           </div>`;
         combo.courses.forEach(c => {
-          const covered = GENED_FILTERS.filter(g => needed.has(g.label) && g.match(c.gened))
-            .map(g => `<span class="badge b-blue">${g.label}</span>`).join('');
+          const covered = c._genedLabels.filter(label => needed.has(label))
+            .map(label => `<span class="badge b-blue">${label}</span>`).join('');
           const gpaStr = c._gpa ? c._gpa.toFixed(2) : '—';
           const credBadge = c.credits ? `<span class="badge b-neutral">${c.credits} hr</span>` : '';
           html += `<div class="combo-course-row" onclick="openPanel('${c.subject} ${c.number}')">
