@@ -1515,6 +1515,8 @@
       c._isIndependentStudy = /independent study/i.test(c.name);
     });
 
+    buildCourseEquivalenceGroups();
+
     // This must happen after every course exists because cross-listed courses
     // can inherit prerequisite text from another catalog entry.
     courseKeys.forEach(key => { courseMap[key]._hasPrereq = hasPrereq(courseMap[key]); });
@@ -1605,6 +1607,36 @@
       if (SUBJECT_CODES.has(mm[1])) targets.push(mm[1] + ' ' + mm[2]);
     }
     return targets;
+  }
+
+  // Assign one identity to every connected set of cross-listed courses. A course
+  // may only appear once in a combo, even when the catalog exposes it under
+  // multiple subject codes (for example, AFRO 340 and DANC 340).
+  function buildCourseEquivalenceGroups() {
+    const parent = new Map(courseKeys.map(key => [key, key]));
+
+    function find(key) {
+      let root = key;
+      while (parent.get(root) !== root) root = parent.get(root);
+      while (key !== root) {
+        const next = parent.get(key);
+        parent.set(key, root);
+        key = next;
+      }
+      return root;
+    }
+
+    function union(a, b) {
+      if (!parent.has(a) || !parent.has(b)) return;
+      const rootA = find(a);
+      const rootB = find(b);
+      if (rootA !== rootB) parent.set(rootB, rootA);
+    }
+
+    courseKeys.forEach(key => {
+      (courseMap[key]._sameAsTargets || []).forEach(target => union(key, target));
+    });
+    courseKeys.forEach(key => { courseMap[key]._equivId = find(key); });
   }
 
   // Returns the prereq groups for a course, falling back to a "Same as" equivalent
@@ -2739,7 +2771,9 @@
     courseKeys.forEach(key => {
       const c = courseMap[key];
       const cats = labels.filter(label => c._genedLabels.includes(label));
-      if (cats.length > 0) rawCandidates.push({ key, cats, gpa: c._gpa || 0 });
+      if (cats.length > 0) {
+        rawCandidates.push({ key, cats, gpa: c._gpa || 0, equivId: c._equivId || key });
+      }
     });
 
     // Group by category signature; keep top N per signature by GPA. Two courses with the
@@ -2755,7 +2789,13 @@
     const candidates = [];
     for (const arr of bySig.values()) {
       arr.sort((a, b) => b.gpa - a.gpa);
-      candidates.push(...arr.slice(0, KEEP_PER_SIG));
+      const seenEquivIds = new Set();
+      const uniqueCourses = arr.filter(c => {
+        if (seenEquivIds.has(c.equivId)) return false;
+        seenEquivIds.add(c.equivId);
+        return true;
+      });
+      candidates.push(...uniqueCourses.slice(0, KEEP_PER_SIG));
     }
 
     // Sort: courses matching more distinct needed categories first, then by GPA
@@ -2786,7 +2826,7 @@
 
     // Depth-limited DFS — maxLen is the hard cap for this pass.
     // Iterative deepening over maxLen guarantees minimum-course combos are found first.
-    function dfs(idx, needs, combo, maxLen) {
+    function dfs(idx, needs, combo, selectedEquivIds, maxLen) {
       if (aborted || results.length >= COLLECT) return;
       if (++iter > MAX_ITER) { aborted = true; return; }
 
@@ -2805,12 +2845,15 @@
       for (let i = idx; i < candidates.length; i++) {
         if (aborted || results.length >= COLLECT) return;
         const c = candidates[i];
+        if (selectedEquivIds.has(c.equivId)) continue;
         const decr = c.cats.filter(cat => (needs.get(cat) || 0) > 0);
         if (decr.length === 0) continue;
         const newNeeds = new Map(needs);
         decr.forEach(cat => newNeeds.set(cat, newNeeds.get(cat) - 1));
         combo.push(c);
-        dfs(i + 1, newNeeds, combo, maxLen);
+        selectedEquivIds.add(c.equivId);
+        dfs(i + 1, newNeeds, combo, selectedEquivIds, maxLen);
+        selectedEquivIds.delete(c.equivId);
         combo.pop();
       }
     }
@@ -2819,7 +2862,7 @@
     for (let maxLen = 1; maxLen <= COMBO_MAX; maxLen++) {
       iter = 0; aborted = false;
       const before = results.length;
-      dfs(0, new Map(needsByCategory), [], maxLen);
+      dfs(0, new Map(needsByCategory), [], new Set(), maxLen);
       if (results.length > before) break; // found combos at this minimum depth — stop
     }
 
@@ -2835,11 +2878,11 @@
         : b.avgGpa - a.avgGpa
     );
 
-    // Deduplicate (same set of keys regardless of order)
+    // Deduplicate equivalent course sets regardless of alias or order.
     const seen = new Set();
     const deduped = [];
     for (const s of scored) {
-      const sig = [...s.courses.map(c => c.key)].sort().join('|');
+      const sig = [...s.courses.map(c => c._equivId || c.key)].sort().join('|');
       if (!seen.has(sig)) { seen.add(sig); deduped.push(s); }
       if (deduped.length >= topK) break;
     }
