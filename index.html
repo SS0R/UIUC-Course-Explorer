@@ -125,17 +125,6 @@
     }
     .theme-btn:hover { background: rgba(255,255,255,0.18); }
     [data-theme="light"] .theme-btn { color: #fff; }
-    .sem-select {
-      background: rgba(255,255,255,0.10);
-      border: 1px solid rgba(255,255,255,0.18);
-      color: #fff; border-radius: 8px;
-      padding: 6px 10px; font-size: 0.75rem;
-      font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer;
-      transition: background 0.2s; appearance: none;
-    }
-    .sem-select:hover { background: rgba(255,255,255,0.18); }
-    .sem-select option { background: var(--blue); color: #fff; }
-
     /* ── LAYOUT ── */
     .container { max-width: 1140px; margin: 0 auto; padding: 0 24px; }
 
@@ -159,27 +148,26 @@
       font-size: clamp(2rem, 5.5vw, 3.4rem);
       font-weight: 800; line-height: 1.1; margin-bottom: 14px;
     }
-    .hero-switcher {
-      position: relative; display: inline-flex; align-items: center; gap: 10px;
-      margin-bottom: 14px; cursor: pointer; user-select: none;
-    }
-    .hero-switcher h1 { margin-bottom: 0; }
-    .hero-switcher .nav-caret {
-      color: var(--text2); font-size: 0.8rem; transition: transform 0.2s;
-    }
-    .hero-switcher.open .nav-caret { transform: rotate(180deg); }
-    .hero-switcher .nav-dropdown {
-      top: calc(100% + 8px); left: 50%; transform: translateX(-50%);
-      background: var(--surface); border-color: var(--border2); min-width: 190px;
-    }
-    .hero-switcher.open .nav-dropdown { display: block; }
-    .hero-switcher .nav-dropdown-item { color: var(--text2); justify-content: center; }
-    .hero-switcher .nav-dropdown-item:hover { background: var(--surface2); color: var(--text); }
     .hero h1 em { font-style: normal; color: var(--orange); }
     .hero-sub {
       color: var(--text2); font-size: 0.97rem;
-      max-width: 460px; line-height: 1.65; margin-bottom: 36px;
+      max-width: 460px; line-height: 1.65; margin-bottom: 18px;
     }
+    .view-nav-btn {
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 9px 15px;
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: 9px; box-shadow: var(--shadow-sm);
+      color: var(--text2); cursor: pointer;
+      font: 500 0.78rem 'Plus Jakarta Sans', sans-serif;
+      letter-spacing: 0.03em; transition: color 0.16s, border-color 0.16s, transform 0.16s, background 0.16s;
+    }
+    .view-nav-btn:hover {
+      color: var(--orange); border-color: var(--orange);
+      background: var(--surface2); transform: translateY(-1px);
+    }
+    .view-nav-btn:focus-visible { outline: 2px solid var(--orange); outline-offset: 3px; }
+    .view-nav-arrow { color: var(--orange); font-size: 0.95rem; line-height: 1; }
 
     /* ── SEARCH ── */
     .search-outer {
@@ -189,31 +177,15 @@
       width: 100%; display: grid; grid-template-columns: 2fr 1fr;
       align-items: stretch; margin-bottom: 0;
       background: var(--surface); border: 1.5px solid var(--border2);
-      border-radius: var(--radius); overflow: hidden;
+      border-radius: var(--radius); overflow: visible;
     }
     .search-controls {
       display: flex; justify-content: flex-end; gap: 4px; align-items: center; padding-right: 4px;
     }
-    .search-select {
-      position: relative; justify-self: end; align-self: center; width: 72px; height: 36px;
-      background: transparent; border: 0; border-radius: 10px;
-      transition: background 0.16s;
-    }
-    .search-controls .sem-select,
     .search-controls .theme-btn {
       min-height: 48px;
       background: transparent; border: 0; color: var(--text2);
       border-radius: 0;
-    }
-    .search-controls .sem-select {
-      position: absolute; inset: 0; z-index: 2;
-      width: 100% !important; min-height: 0; height: 100%; margin: 0; padding: 0 24px 0 10px;
-      font-size: 0.97rem; text-align: left; appearance: none;
-    }
-    .search-select-caret {
-      position: absolute; z-index: 3; right: 9px; top: 50%;
-      color: var(--text2); font-size: 0.8rem; line-height: 1;
-      transform: translateY(-60%); pointer-events: none;
     }
     .search-controls .theme-btn {
       width: 36px !important; min-height: 0; height: 36px;
@@ -221,12 +193,55 @@
       justify-self: center; align-self: center; border-radius: 10px;
       font-size: 1.35rem; line-height: 1;
     }
-    .search-controls .sem-select:hover,
     .search-controls .theme-btn:hover { background: var(--surface2); }
-    .search-controls .sem-select:hover { background: transparent; }
-    .search-select:hover,
-    .search-select:focus-within { background: var(--surface2); }
-    .search-controls .sem-select option { background: var(--surface); color: var(--text); }
+    .native-select { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+    .custom-select {
+      position: relative; align-self: center; width: 92px; height: 36px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .custom-select-trigger {
+      width: 100%; height: 100%; display: flex; align-items: center;
+      justify-content: space-between; gap: 8px; padding: 0 9px 0 10px;
+      border: 1px solid transparent; border-radius: 10px;
+      background: transparent; color: var(--text2); cursor: pointer;
+      font: 400 0.97rem 'Plus Jakarta Sans', sans-serif; text-align: left;
+      transition: background 0.16s, border-color 0.16s;
+    }
+    .custom-select-trigger:hover { background: var(--surface2); }
+    .custom-select.open .custom-select-trigger {
+      background: var(--surface2); border-color: var(--border2);
+    }
+    .custom-select-caret {
+      font-size: 0.75rem; line-height: 1; color: var(--muted);
+      transform: translateY(-1px); transition: transform 0.18s;
+    }
+    .custom-select.open .custom-select-caret { transform: rotate(180deg) translateY(1px); }
+    .custom-select-menu {
+      display: none; position: absolute; top: calc(100% + 7px); right: 0;
+      z-index: 150; min-width: 142px; max-height: min(320px, 45vh);
+      padding: 6px; overflow-y: auto; overscroll-behavior: contain;
+      scrollbar-width: none;
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: 12px; box-shadow: var(--shadow);
+    }
+    .custom-select-menu::-webkit-scrollbar { display: none; }
+    #year-picker .custom-select-menu { min-width: 108px; }
+    .custom-select.open .custom-select-menu { display: block; animation: selectMenuIn 0.14s ease-out; }
+    .custom-select-option {
+      width: 100%; min-height: 36px; display: flex; align-items: center;
+      justify-content: space-between; gap: 18px; padding: 8px 10px;
+      border: 0; border-radius: 8px; background: transparent;
+      color: var(--text2); cursor: pointer; white-space: nowrap;
+      font: 400 0.88rem 'Plus Jakarta Sans', sans-serif; text-align: left;
+    }
+    .custom-select-option:hover,
+    .custom-select-option:focus-visible { background: var(--surface2); color: var(--text); outline: none; }
+    .custom-select-option.selected { color: var(--text); }
+    .custom-select-option.selected::after { content: '\2713'; color: var(--orange); font-weight: 600; }
+    @keyframes selectMenuIn {
+      from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
     .filter-toggle {
       width: calc(100% - 16px); display: flex; align-items: center; justify-content: space-between;
       padding: 8px 14px; margin: -1px 8px 12px;
@@ -418,7 +433,7 @@
     }
     .card-desc {
       font-size: 0.78rem; color: var(--text2); line-height: 1.55;
-      display: -webkit-box; -webkit-line-clamp: 2;
+      display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2;
       -webkit-box-orient: vertical; overflow: hidden;
       margin-bottom: 12px;
     }
@@ -860,14 +875,11 @@
   <main class="container">
     <section class="hero" id="shared-header">
       <div class="hero-kicker">University of Illinois Urbana-Champaign</div>
-      <div class="hero-switcher" onclick="toggleNavDropdown(event)">
-        <h1 id="shared-view-title">Course Data Explorer</h1>
-        <span class="nav-caret">▼</span>
-        <div class="nav-dropdown">
-          <div class="nav-dropdown-item" id="shared-view-menu" onclick="event.stopPropagation(); openPlanner()">Gen Ed Planner</div>
-        </div>
-      </div>
+      <h1 id="shared-view-title">Course Data Explorer</h1>
       <p class="hero-sub" id="shared-view-subtitle">Includes GPA history from real grade data.</p>
+      <button class="view-nav-btn" id="shared-view-button" type="button" onclick="openPlanner()">
+        <span id="shared-view-button-label">Gen Ed Planner</span><span class="view-nav-arrow" id="shared-view-button-arrow">→</span>
+      </button>
     </section>
   </main>
 
@@ -977,18 +989,26 @@
           </div>
         </div>
         <div class="search-controls">
-          <div class="search-select" onclick="if (event.target === this) openSelect('sem-select')">
-            <select class="sem-select" id="sem-select">
+          <div class="custom-select" id="sem-picker">
+            <select class="native-select" id="sem-select" tabindex="-1" aria-hidden="true">
               <option value="sp">Spring</option>
               <option value="su">Summer</option>
               <option value="fa">Fall</option>
               <option value="wi">Winter</option>
             </select>
-            <span class="search-select-caret" onclick="event.stopPropagation(); openSelect('sem-select')">⌄</span>
+            <button class="custom-select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false"
+                    onclick="toggleCustomSelect('sem-picker', event)" onkeydown="handleSelectTriggerKeydown(event, 'sem-picker')">
+              <span class="custom-select-value"></span><span class="custom-select-caret">⌄</span>
+            </button>
+            <div class="custom-select-menu" role="listbox" aria-label="Semester"></div>
           </div>
-          <div class="search-select" onclick="if (event.target === this) openSelect('year-select')">
-            <select class="sem-select" id="year-select"></select>
-            <span class="search-select-caret" onclick="event.stopPropagation(); openSelect('year-select')">⌄</span>
+          <div class="custom-select" id="year-picker">
+            <select class="native-select" id="year-select" tabindex="-1" aria-hidden="true"></select>
+            <button class="custom-select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false"
+                    onclick="toggleCustomSelect('year-picker', event)" onkeydown="handleSelectTriggerKeydown(event, 'year-picker')">
+              <span class="custom-select-value"></span><span class="custom-select-caret">⌄</span>
+            </button>
+            <div class="custom-select-menu" role="listbox" aria-label="Year"></div>
           </div>
           <button class="theme-btn" id="theme-btn" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">☀</button>
         </div>
@@ -1161,23 +1181,116 @@
     if (plannerWasVisible && plannerNeeded.size > 0) runPlanner();
   }
 
-  // Resize a <select> to fit its selected option text
+  // Custom semester/year menus. The hidden selects remain the source of truth
+  // so the catalog-loading code can continue reading their values normally.
   const _sizer = document.createElement('span');
   _sizer.style.cssText = 'position:absolute;visibility:hidden;font:0.97rem "Plus Jakarta Sans",sans-serif;padding:0 24px 0 10px;white-space:nowrap;pointer-events:none;';
   document.body.appendChild(_sizer);
   function resizeSelect(sel) {
     _sizer.textContent = sel.options[sel.selectedIndex].text;
-    sel.parentElement.style.width = (_sizer.offsetWidth + 2) + 'px';
+    sel.closest('.custom-select').style.width = (_sizer.offsetWidth + 2) + 'px';
   }
-  function openSelect(id) {
-    const select = document.getElementById(id);
-    if (typeof select.showPicker === 'function') select.showPicker();
-    else { select.focus(); select.click(); }
+
+  function syncCustomSelect(select) {
+    const picker = select.closest('.custom-select');
+    const selected = select.options[select.selectedIndex];
+    picker.querySelector('.custom-select-value').textContent = selected.text;
+    picker.querySelectorAll('.custom-select-option').forEach(option => {
+      const isSelected = option.dataset.value === select.value;
+      option.classList.toggle('selected', isSelected);
+      option.setAttribute('aria-selected', String(isSelected));
+    });
   }
+
+  function closeCustomSelects(except = null) {
+    document.querySelectorAll('.custom-select.open').forEach(picker => {
+      if (picker === except) return;
+      picker.classList.remove('open');
+      picker.querySelector('.custom-select-trigger').setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  function toggleCustomSelect(id, event) {
+    event.stopPropagation();
+    const picker = document.getElementById(id);
+    const willOpen = !picker.classList.contains('open');
+    closeCustomSelects(picker);
+    picker.classList.toggle('open', willOpen);
+    picker.querySelector('.custom-select-trigger').setAttribute('aria-expanded', String(willOpen));
+  }
+
+  function chooseCustomOption(select, value) {
+    if (select.value !== value) {
+      select.value = value;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    closeCustomSelects();
+    select.closest('.custom-select').querySelector('.custom-select-trigger').focus();
+  }
+
+  function handleSelectOptionKeydown(event) {
+    const option = event.currentTarget;
+    const options = [...option.parentElement.querySelectorAll('.custom-select-option')];
+    const index = options.indexOf(option);
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      const step = event.key === 'ArrowDown' ? 1 : -1;
+      options[(index + step + options.length) % options.length].focus();
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      const picker = option.closest('.custom-select');
+      closeCustomSelects();
+      picker.querySelector('.custom-select-trigger').focus();
+    }
+  }
+
+  function handleSelectTriggerKeydown(event, id) {
+    if (event.key === 'Escape') {
+      const picker = document.getElementById(id);
+      if (picker.classList.contains('open')) {
+        event.preventDefault();
+        closeCustomSelects();
+      }
+      return;
+    }
+    if (!['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(event.key)) return;
+    event.preventDefault();
+    const picker = document.getElementById(id);
+    if (!picker.classList.contains('open')) toggleCustomSelect(id, event);
+    const options = [...picker.querySelectorAll('.custom-select-option')];
+    const selectedIndex = Math.max(0, options.findIndex(option => option.classList.contains('selected')));
+    options[selectedIndex].focus();
+  }
+
+  function buildCustomSelect(select) {
+    const menu = select.closest('.custom-select').querySelector('.custom-select-menu');
+    menu.innerHTML = '';
+    [...select.options].forEach(sourceOption => {
+      const option = document.createElement('button');
+      option.type = 'button';
+      option.className = 'custom-select-option';
+      option.setAttribute('role', 'option');
+      option.dataset.value = sourceOption.value;
+      option.textContent = sourceOption.text;
+      option.onclick = () => chooseCustomOption(select, sourceOption.value);
+      option.onkeydown = handleSelectOptionKeydown;
+      menu.appendChild(option);
+    });
+    syncCustomSelect(select);
+  }
+
+  buildCustomSelect(semSelect);
+  buildCustomSelect(yearSelect);
   document.fonts.ready.then(() => { resizeSelect(semSelect); resizeSelect(yearSelect); });
 
-  semSelect.addEventListener('change', () => { resizeSelect(semSelect);  onSemesterChange(); });
-  yearSelect.addEventListener('change', () => { resizeSelect(yearSelect); onSemesterChange(); });
+  semSelect.addEventListener('change', () => { syncCustomSelect(semSelect); resizeSelect(semSelect); onSemesterChange(); });
+  yearSelect.addEventListener('change', () => { syncCustomSelect(yearSelect); resizeSelect(yearSelect); onSemesterChange(); });
+  document.addEventListener('click', () => closeCustomSelects());
+  document.addEventListener('focusin', event => {
+    document.querySelectorAll('.custom-select.open').forEach(picker => {
+      if (!picker.contains(event.target)) closeCustomSelects();
+    });
+  });
 
   // ─────────────────────────────────────────────────────────────────────────
   // STATE
@@ -2704,21 +2817,6 @@
     'Soc & Beh Sci'
   ]);
 
-  function toggleNavDropdown(e) {
-    const switcher = e.currentTarget;
-    switcher.classList.toggle('open');
-    if (switcher.classList.contains('open')) {
-      setTimeout(() => {
-        document.addEventListener('click', function handler(ev) {
-          if (!switcher.contains(ev.target)) {
-            switcher.classList.remove('open');
-            document.removeEventListener('click', handler);
-          }
-        });
-      }, 0);
-    }
-  }
-
   function buildPlannerChips() {
     if (plannerChipsBuilt) return;
     plannerChipsBuilt = true;
@@ -2742,27 +2840,25 @@
   }
 
   function openPlanner() {
-    document.querySelectorAll('.hero-switcher').forEach(s => s.classList.remove('open'));
     buildPlannerChips();
     document.getElementById('main-view').style.display = 'none';
     document.getElementById('planner-view').style.display = 'block';
     document.getElementById('shared-view-title').textContent = 'Gen Ed Planner';
-    document.getElementById('shared-view-subtitle').textContent = 'Select the GenEd requirements you still need. Click twice on eligible gen eds to require two courses in that category.';
-    const menu = document.getElementById('shared-view-menu');
-    menu.textContent = 'Course Data Explorer';
-    menu.onclick = e => { e.stopPropagation(); closePlanner(); };
+    document.getElementById('shared-view-subtitle').textContent = 'Click twice on eligible gen eds to require two courses in that category.';
+    document.getElementById('shared-view-button-label').textContent = 'Course Data Explorer';
+    document.getElementById('shared-view-button-arrow').textContent = '←';
+    document.getElementById('shared-view-button').onclick = closePlanner;
     resetViewScroll();
   }
 
   function closePlanner() {
-    document.querySelectorAll('.hero-switcher').forEach(s => s.classList.remove('open'));
     document.getElementById('planner-view').style.display = 'none';
     document.getElementById('main-view').style.display = 'block';
     document.getElementById('shared-view-title').textContent = 'Course Data Explorer';
     document.getElementById('shared-view-subtitle').textContent = 'Includes GPA history from real grade data.';
-    const menu = document.getElementById('shared-view-menu');
-    menu.textContent = 'Gen Ed Planner';
-    menu.onclick = e => { e.stopPropagation(); openPlanner(); };
+    document.getElementById('shared-view-button-label').textContent = 'Gen Ed Planner';
+    document.getElementById('shared-view-button-arrow').textContent = '→';
+    document.getElementById('shared-view-button').onclick = openPlanner;
     resetViewScroll();
   }
 
