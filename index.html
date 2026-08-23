@@ -862,7 +862,6 @@
       .hero { padding: 52px 0 26px; }
       .courses-grid { grid-template-columns: 1fr; }
       .detail-panel { width: 96vw; max-height: 92vh; }
-      .detail-panel { width: 96vw; max-height: 92vh; }
       .prereq-modal { width: 96vw; height: 92vh; }
     }
   </style>
@@ -1096,23 +1095,28 @@
   }
   semSelect.value  = 'fa';
   yearSelect.value = '2026';
+  let pendingSemesterViewState = null;
 
   function getCatalogURL() {
     return `https://raw.githubusercontent.com/wadefagen/datasets/refs/heads/main/course-catalog/data/${yearSelect.value}-${semSelect.value}.csv`;
   }
 
   async function onSemesterChange() {
-    const plannerWasVisible = document.getElementById('planner-view').style.display !== 'none';
-
-    // Snapshot filter state before reset
-    const savedLevels  = new Set(activeLevels);
-    const savedGeneds  = new Set(activeGeneds);
-    const savedCredits = new Set(activeCredits);
-    const savedOther   = new Set(activeOther);
-    const savedFormats = new Set(activeFormats);
-    const savedTerm    = new Set(activeTerm);
-    const savedSort    = activeSortVal;
-    const savedSearch  = document.getElementById('search-input').value;
+    // Reuse the first snapshot if another selection is made while a catalog is
+    // loading. Otherwise a rapid semester + year change would restore the
+    // already-cleared state from the superseded request.
+    const saved = pendingSemesterViewState || {
+      plannerWasVisible: document.getElementById('planner-view').style.display !== 'none',
+      levels:  new Set(activeLevels),
+      geneds:  new Set(activeGeneds),
+      credits: new Set(activeCredits),
+      other:   new Set(activeOther),
+      formats: new Set(activeFormats),
+      term:    new Set(activeTerm),
+      sort:    activeSortVal,
+      search:  document.getElementById('search-input').value
+    };
+    pendingSemesterViewState = saved;
 
     courseMap = Object.create(null); courseKeys = []; filtered = []; filteredPrereq = [];
     activeLevels.clear(); activeGeneds.clear(); activeCredits.clear(); activeOther.clear(); activeFormats.clear(); activeTerm.clear();
@@ -1129,56 +1133,58 @@
     document.getElementById('courses-grid').innerHTML = '';
     document.getElementById('load-status').style.display = '';
     document.getElementById('load-status').textContent = 'Loading course data…';
-    await loadData();
+    const loaded = await loadData();
+    if (!loaded) return;
+    if (pendingSemesterViewState === saved) pendingSemesterViewState = null;
 
     // Restore filter state
-    document.getElementById('search-input').value = savedSearch;
+    document.getElementById('search-input').value = saved.search;
 
-    savedLevels.forEach(l => {
+    saved.levels.forEach(l => {
       activeLevels.add(l);
       const chip = document.getElementById(`chip-l${l}`);
       if (chip) chip.classList.add('active');
     });
 
-    savedGeneds.forEach(g => {
+    saved.geneds.forEach(g => {
       activeGeneds.add(g);
       const chip = document.querySelector(`#gened-filter-group [data-gened="${g}"]`);
       if (chip) chip.classList.add('active');
     });
 
-    savedCredits.forEach(v => {
+    saved.credits.forEach(v => {
       activeCredits.add(v);
       const chip = document.querySelector(`#credit-filter-group [data-credit="${v}"]`);
       if (chip) chip.classList.add('active');
     });
 
-    savedOther.forEach(v => {
+    saved.other.forEach(v => {
       activeOther.add(v);
       const chip = document.querySelector(`#other-filter-group [data-other="${v}"]`);
       if (chip) chip.classList.add('active');
     });
 
-    savedFormats.forEach(v => {
+    saved.formats.forEach(v => {
       activeFormats.add(v);
       const chip = document.getElementById(v === 'online' ? 'chip-online' : 'chip-inperson');
       if (chip) chip.classList.add('active');
     });
 
-    savedTerm.forEach(v => {
+    saved.term.forEach(v => {
       activeTerm.add(v);
       const chip = document.getElementById(`chip-term-${v.toLowerCase()}`);
       if (chip) chip.classList.add('active');
     });
 
-    if (savedSort !== 'alpha') {
-      activeSortVal = savedSort;
+    if (saved.sort !== 'alpha') {
+      activeSortVal = saved.sort;
       document.querySelectorAll('[id^="sort-"]').forEach(c => c.classList.remove('active'));
-      const sortChip = document.getElementById(`sort-${savedSort}`);
+      const sortChip = document.getElementById(`sort-${saved.sort}`);
       if (sortChip) sortChip.classList.add('active');
     }
 
     applyFilter();
-    if (plannerWasVisible && plannerNeeded.size > 0) runPlanner();
+    if (saved.plannerWasVisible && plannerNeeded.size > 0) runPlanner();
   }
 
   // Custom semester/year menus. The hidden selects remain the source of truth
@@ -1515,13 +1521,13 @@
         fetchText(getCatalogURL(), { signal: catalogAbortController.signal }),
         getGpaData()
       ]);
-      if (myVersion !== loadVersion) return;
+      if (myVersion !== loadVersion) return false;
       setLoadBar(0.5);
       setStatus('Parsing data…');
     } catch(e) {
-      if (e.name === 'AbortError' || myVersion !== loadVersion) return;
+      if (e.name === 'AbortError' || myVersion !== loadVersion) return false;
       setStatus('⚠ Could not load data. Check your connection and refresh.');
-      return;
+      return false;
     }
 
     setLoadBar(0.7);
@@ -1650,6 +1656,7 @@
     document.getElementById('load-status').style.display = 'none';
     setFiltersOpen(filtersOpen);
     document.getElementById('courses-grid').style.display = 'grid';
+    return true;
   }
 
   const COURSE_CODE_RE_G = /\b([A-Z]{2,5})\s+(\d{3,4})\b/g;
@@ -1965,6 +1972,9 @@
   }
 
   window.addEventListener('resize', syncPrereqModalToPanel);
+  document.getElementById('detail-panel').addEventListener('transitionend', event => {
+    if (event.propertyName === 'transform') syncPrereqModalToPanel();
+  });
 
   function closePrereqTree() {
     document.getElementById('prereq-modal').style.display = 'none';
@@ -2429,15 +2439,15 @@
     const gpaStr = c._gpa !== null ? c._gpa.toFixed(2) : '—';
     const gpaClass = gpaColorClass(c._gpa);
     const pctAStr = c._pctA !== null ? (c._pctA * 100).toFixed(1) + '%' : '—';
-    const credBadge = c.credits ? `<span class="badge b-neutral">${c.credits} hr</span>` : '';
+    const credBadge = c.credits ? `<span class="badge b-neutral">${escapeHtml(c.credits)} hr</span>` : '';
     const sectionCount = c.sections.length;
 
-    const genedBadges = c._genedLabels.map(label => `<span class="badge b-blue">${label}</span>`).join('');
+    const genedBadges = c._genedLabels.map(label => `<span class="badge b-blue">${escapeHtml(label)}</span>`).join('');
 
     return `<div class="course-card" style="animation-delay:${Math.min(i,30)*0.025}s" onclick="openPanel('${key}')">
-      <div class="card-code">${c.subject} ${c.number}</div>
-      <div class="card-name">${c.name}</div>
-      <div class="card-desc">${c.desc || 'No description available.'}</div>
+      <div class="card-code">${escapeHtml(c.subject)} ${escapeHtml(c.number)}</div>
+      <div class="card-name">${escapeHtml(c.name)}</div>
+      <div class="card-desc">${escapeHtml(c.desc || 'No description available.')}</div>
       <div class="card-footer">
         <span class="badge ${gpaClass}">GPA ${gpaStr}</span>
         <span class="badge b-neutral">4.0: ${pctAStr}</span>
@@ -2474,7 +2484,7 @@
 
     if (filteredPrereq.length > 0) {
       const q = document.getElementById('search-input').value.trim();
-      html += `<div class="section-divider" style="grid-column:1/-1">Courses with "${q}" in description</div>`;
+      html += `<div class="section-divider" style="grid-column:1/-1">Courses with "${escapeHtml(q)}" in description</div>`;
       const showPrereq = filteredPrereq.slice(0, BATCH);
       html += showPrereq.map((key, i) => renderCourseCard(key, filtered.length + i)).join('');
       if (filteredPrereq.length > BATCH) {
@@ -2540,8 +2550,8 @@
     document.getElementById('panel-meta').innerHTML =
       `<span class="badge ${gpaColorClass(c._gpa)}">Avg GPA ${gpaStr}</span>
        <span class="badge b-neutral">4.0: ${pctAStr}</span>
-       ${c.credits ? `<span class="badge b-neutral">${c.credits} credit hours</span>` : ''}
-       ${GENED_FILTERS.filter(g => g.match(c.gened)).map(g => `<span class="badge b-blue">${g.label}</span>`).join('')}`;
+       ${c.credits ? `<span class="badge b-neutral">${escapeHtml(c.credits)} credit hours</span>` : ''}
+       ${GENED_FILTERS.filter(g => g.match(c.gened)).map(g => `<span class="badge b-blue">${escapeHtml(g.label)}</span>`).join('')}`;
 
     // description + cross-refs
     const descEl = document.getElementById('panel-desc');
@@ -2603,7 +2613,9 @@
 
       if (gData) {
         const cls = gpaColorClass(gData.gpa);
-        gpaCell = `<span class="gpa-clickable badge ${cls}" onclick="toggleGradeSheet('${gk}','${ln}')">${gData.gpa.toFixed(2)} <span style="font-size:0.6rem;opacity:0.7">▾</span></span>`;
+        gpaCell = `<span class="gpa-clickable badge ${cls}"
+          data-gpa-key="${escapeHtml(gk)}" data-last-name="${escapeHtml(ln)}"
+          onclick="toggleGradeSheet(this.dataset.gpaKey, this.dataset.lastName)">${gData.gpa.toFixed(2)} <span style="font-size:0.6rem;opacity:0.7">▾</span></span>`;
         studCell = `<span class="gpa-students">${gData.students.toLocaleString()} students</span>`;
       } else {
         gpaCell = `<span style="color:var(--muted);font-size:0.76rem">No history</span>`;
@@ -2614,7 +2626,7 @@
       const rmpUrl = `https://www.ratemyprofessors.com/search/professors?q=${rmpQuery}`;
 
       return `<tr>
-        <td class="instr-name">${displayName}</td>
+        <td class="instr-name">${escapeHtml(displayName)}</td>
         <td>${gpaCell}</td>
         <td>${studCell}</td>
         <td><a class="rmp-btn" href="${rmpUrl}" target="_blank" rel="noopener">RMP ↗</a></td>
@@ -2631,8 +2643,12 @@
     }
     openGpaRow = gk;
     const [subj, num] = gk.split(' ');
-    const gData = lookupGpa(subj, num, ln);
-    if (!gData) return;
+    const course = courseMap[`${subj} ${num}`];
+    const gData = course ? lookupGpaForCourse(course, ln) : lookupGpa(subj, num, ln);
+    if (!gData) {
+      openGpaRow = null;
+      return;
+    }
 
     const dist = gData.dist;
     const maxCount = Math.max(...GRADE_COLS.map(g => dist[g] || 0), 1);
@@ -2650,7 +2666,7 @@
     }).join('');
 
     container.innerHTML = `<div class="grade-sheet open">
-      <div class="grade-sheet-title">GRADE DISTRIBUTION — ${gk.split(' ').slice(0,2).join(' ')} · ${gk.split(' ')[2].toUpperCase()}</div>
+      <div class="grade-sheet-title">GRADE DISTRIBUTION — ${escapeHtml(`${subj} ${num}`)} · ${escapeHtml(ln.toUpperCase())}</div>
       <div class="grade-bars">${bars}</div>
       <div class="grade-avg">
         <span>Avg GPA: <strong>${gData.gpa.toFixed(3)}</strong></span>
@@ -2747,7 +2763,7 @@
     c.sections.forEach(s => { typeSeen[s.typeCode] = s.typeName; });
     const typeColors = { LEC:'var(--lec)', DIS:'var(--dis)', LAB:'var(--lab)', ONL:'var(--onl)', LCD:'var(--lec)' };
     const typeLegend = Object.entries(typeSeen).map(([code, name]) =>
-      `<div class="leg-item"><div class="leg-dot" style="background:${typeColors[code]||'var(--other)'}"></div>${name || code}</div>`
+      `<div class="leg-item"><div class="leg-dot" style="background:${typeColors[code]||'var(--other)'}"></div>${escapeHtml(name || code)}</div>`
     ).join('');
     const statusLegend =
       `<div class="leg-item"><div class="leg-dot" style="background:#2ecc71;border-radius:50%"></div>Open</div>` +
@@ -2770,12 +2786,12 @@
       return `<div class="sec-row">
         <div class="sec-dot ${dotClass(s.typeCode)}"></div>
         <div class="sec-info">
-          <div class="sec-type-num">${s.typeCode} · ${s.section}</div>
-          <div class="sec-time">${timeStr}</div>
-          ${roomStr ? `<div class="sec-room">${roomStr}</div>` : ''}
+          <div class="sec-type-num">${escapeHtml(s.typeCode)} · ${escapeHtml(s.section)}</div>
+          <div class="sec-time">${escapeHtml(timeStr)}</div>
+          ${roomStr ? `<div class="sec-room">${escapeHtml(roomStr)}</div>` : ''}
         </div>
-        <div class="sec-instr" title="${s.instructors.join('; ')}">${instrStr || '—'}</div>
-        <div class="sec-status sec-status-loading" data-crn="${s.crn || ''}" title="Checking live status…"></div>
+        <div class="sec-instr" title="${escapeHtml(s.instructors.join('; '))}">${escapeHtml(instrStr || '—')}</div>
+        <div class="sec-status sec-status-loading" data-crn="${escapeHtml(s.crn || '')}" title="Checking live status…"></div>
       </div>`;
     };
 
@@ -3022,7 +3038,7 @@
       return;
     }
 
-    statusEl.innerHTML = '<div id="load-status" style="display:block">Searching combinations…</div>';
+    statusEl.innerHTML = '<div class="planner-no-results">Searching combinations…</div>';
     gridEl.style.display = 'none';
     barEl.style.display = 'none';
 
@@ -3049,13 +3065,13 @@
           </div>`;
         combo.courses.forEach(c => {
           const covered = c._genedLabels.filter(label => needed.has(label))
-            .map(label => `<span class="badge b-blue">${label}</span>`).join('');
+            .map(label => `<span class="badge b-blue">${escapeHtml(label)}</span>`).join('');
           const gpaStr = c._gpa ? c._gpa.toFixed(2) : '—';
-          const credBadge = c.credits ? `<span class="badge b-neutral">${c.credits} hr</span>` : '';
+          const credBadge = c.credits ? `<span class="badge b-neutral">${escapeHtml(c.credits)} hr</span>` : '';
           html += `<div class="combo-course-row" onclick="openPanel('${c.subject} ${c.number}')">
             <div class="combo-course-top">
-              <span class="combo-course-code">${c.subject} ${c.number}</span>
-              <span class="combo-course-name">${c.name}</span>
+              <span class="combo-course-code">${escapeHtml(c.subject)} ${escapeHtml(c.number)}</span>
+              <span class="combo-course-name">${escapeHtml(c.name)}</span>
             </div>
             <div class="combo-course-meta">
               <span class="badge ${gpaColorClass(c._gpa)}">GPA ${gpaStr}</span>
