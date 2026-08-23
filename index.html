@@ -307,6 +307,15 @@
       color: #fff; font: 600 0.88rem 'Plus Jakarta Sans', sans-serif;
       letter-spacing: 0.04em;
     }
+    .filter-panel-actions { display: flex; align-items: center; gap: 8px; }
+    .filter-reset {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff; border-radius: 7px;
+      padding: 5px 12px; font: 0.75rem 'Plus Jakarta Sans', sans-serif;
+      cursor: pointer; transition: background 0.18s;
+    }
+    .filter-reset:hover { background: rgba(255,255,255,0.22); }
     .filter-panel-body {
       max-height: calc(88vh - 58px); padding: 18px; overflow-y: auto;
       scrollbar-width: none;
@@ -517,6 +526,14 @@
       transition: background 0.18s;
     }
     .panel-close:hover { background: rgba(255,255,255,0.22); }
+    .panel-ce-link {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff; border-radius: 7px;
+      padding: 5px 12px; font: 0.75rem 'Plus Jakarta Sans', sans-serif;
+      text-decoration: none; transition: background 0.18s;
+    }
+    .panel-ce-link:hover { background: rgba(255,255,255,0.22); }
     .panel-back {
       background: none; border: none;
       color: rgba(255,255,255,0.6); font-size: 0.72rem; cursor: pointer;
@@ -948,7 +965,7 @@
         <span class="panel-code-label" id="panel-code"></span>
       </div>
       <div style="display:flex;gap:10px;align-items:center">
-        <a id="panel-ce-link" href="#" target="_blank" rel="noopener" style="font-size:0.72rem;color:var(--orange);text-decoration:none;font-family:'Plus Jakarta Sans',sans-serif">Course Explorer ↗</a>
+        <a class="panel-ce-link" id="panel-ce-link" href="#" target="_blank" rel="noopener">Open in Course Explorer</a>
         <button id="panel-prereq-btn" class="panel-prereq-btn" onclick="togglePrereqTree()" style="display:none">Prerequisite Tree</button>
         <button class="panel-close" onclick="closePanel()">✕ Close</button>
       </div>
@@ -1057,7 +1074,10 @@
       <div class="filter-panel" id="filter-panel" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="filter-panel-title">
         <div class="filter-panel-topbar">
           <div class="filter-panel-title" id="filter-panel-title">Course Filters</div>
-          <button class="panel-close" id="filter-panel-close" type="button" onclick="setFiltersOpen(false)">✕ Close</button>
+          <div class="filter-panel-actions">
+            <button class="filter-reset" type="button" onclick="clearAllFilters()">Reset</button>
+            <button class="panel-close" id="filter-panel-close" type="button" onclick="setFiltersOpen(false)">✕ Close</button>
+          </div>
         </div>
         <div class="filter-panel-body">
       <div class="filter-groups" id="filter-groups">
@@ -2144,6 +2164,7 @@
     activeOther.clear();
     activeFormats.clear();
     activeTerm.clear();
+    activeSortVal = 'alpha';
     document.querySelectorAll('#chip-l1,#chip-l2,#chip-l3,#chip-l4,#chip-l5,#chip-l6').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('#gened-filter-group .chip').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('#credit-filter-group .chip').forEach(c => c.classList.remove('active'));
@@ -2152,6 +2173,8 @@
     document.getElementById('chip-inperson').classList.remove('active');
     document.getElementById('chip-term-a').classList.remove('active');
     document.getElementById('chip-term-b').classList.remove('active');
+    document.querySelectorAll('[id^="sort-"]').forEach(c => c.classList.remove('active'));
+    document.getElementById('sort-alpha').classList.add('active');
     updateHalfChipState();
     updateChipAllState();
     applyFilter();
