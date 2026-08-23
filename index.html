@@ -714,14 +714,18 @@
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       width: min(680px, 92vw);
-      height: 88vh;
+      height: 88vh; /* fallback; JS matches the open detail panel's actual height */
       z-index: 203;
       border-radius: 16px;
       overflow: hidden;
-      /* transparent strip at top so the detail-panel topbar shows through */
-      background: linear-gradient(to bottom, transparent 56px, var(--bg) 56px);
+      /* Transparent strip at top so the detail-panel topbar shows through. */
+      background: linear-gradient(
+        to bottom,
+        transparent var(--prereq-header-height, 56px),
+        var(--bg) var(--prereq-header-height, 56px)
+      );
       display: flex; flex-direction: column;
-      padding-top: 56px;
+      padding-top: var(--prereq-header-height, 56px);
       pointer-events: none;
     }
     .prereq-canvas {
@@ -1802,6 +1806,21 @@
     }
   }
 
+  function syncPrereqModalToPanel() {
+    const panel = document.getElementById('detail-panel');
+    const modal = document.getElementById('prereq-modal');
+    if (!panel.classList.contains('open') || modal.style.display !== 'flex') return;
+
+    const panelRect = panel.getBoundingClientRect();
+    const topbarHeight = panel.querySelector('.panel-topbar').getBoundingClientRect().height;
+    modal.style.top = `${panelRect.top}px`;
+    modal.style.left = `${panelRect.left}px`;
+    modal.style.width = `${panelRect.width}px`;
+    modal.style.height = `${panelRect.height}px`;
+    modal.style.transform = 'none';
+    modal.style.setProperty('--prereq-header-height', `${topbarHeight}px`);
+  }
+
   function openPrereqTree() {
     if (!activePanelCourse) return;
     const tree = buildPrereqTree(activePanelCourse);
@@ -1816,9 +1835,11 @@
     }
     document.getElementById('prereq-modal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
+    syncPrereqModalToPanel();
 
     // Scroll canvas so the root card is centered horizontally and at the top
     requestAnimationFrame(() => {
+      syncPrereqModalToPanel();
       const canvas = document.getElementById('prereq-canvas');
       const rootCard = root.querySelector('.tree-card');
       if (!rootCard) return;
@@ -1829,6 +1850,8 @@
       canvas.scrollTop = 0;
     });
   }
+
+  window.addEventListener('resize', syncPrereqModalToPanel);
 
   function closePrereqTree() {
     document.getElementById('prereq-modal').style.display = 'none';
