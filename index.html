@@ -170,41 +170,66 @@
     .view-nav-arrow { color: var(--orange); font-size: 0.95rem; line-height: 1; }
 
     /* ── SEARCH ── */
-    .search-outer {
-      min-width: 0;
-    }
+    .search-outer { min-width: 0; flex: 1; }
     .search-row {
-      width: 100%; display: grid; grid-template-columns: 2fr 1fr;
-      align-items: stretch; margin-bottom: 0;
+      width: min(100%, 672px); min-height: 118px; display: flex; flex-direction: column;
+      gap: 12px; padding: 14px; margin: 0 auto 24px;
       background: var(--surface); border: 1.5px solid var(--border2);
-      border-radius: var(--radius); overflow: visible;
+      border-radius: 20px; overflow: visible; box-shadow: var(--shadow-sm);
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
+    .search-row:focus-within {
+      border-color: rgba(255,95,5,0.7);
+      box-shadow: 0 0 0 3px rgba(255,95,5,0.12), var(--shadow-sm);
+    }
+    .search-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; min-height: 32px;
+    }
+    .search-toolbar-left,
     .search-controls {
-      display: flex; justify-content: flex-end; gap: 4px; align-items: center; padding-right: 4px;
+      display: flex; align-items: center;
     }
+    .search-toolbar-left { gap: 4px; }
+    .search-controls { justify-content: flex-end; gap: 8px; }
+    .prompt-action-btn {
+      height: 32px; display: inline-flex; align-items: center; gap: 6px;
+      padding: 0 12px; border: 1px solid transparent; border-radius: 8px;
+      background: transparent; color: var(--text2); cursor: pointer;
+      font: 400 14px/20px 'Plus Jakarta Sans', sans-serif;
+      transition: color 0.16s, background 0.16s, border-color 0.16s;
+    }
+    .prompt-action-btn:hover { color: var(--text); background: var(--surface2); }
+    .prompt-action-btn[aria-expanded="true"] {
+      color: var(--orange); background: var(--surface2); border-color: var(--border2);
+    }
+    .prompt-action-icon { width: 20px; height: 20px; color: var(--muted); }
+    .prompt-action-btn:hover .prompt-action-icon,
+    .prompt-action-btn[aria-expanded="true"] .prompt-action-icon { color: var(--orange); }
+    .prompt-planner-arrow { color: var(--orange); font-size: 0.9rem; }
     .search-controls .theme-btn {
       min-height: 48px;
       background: transparent; border: 0; color: var(--text2);
       border-radius: 0;
     }
     .search-controls .theme-btn {
-      width: 36px !important; min-height: 0; height: 36px;
+      width: 32px !important; min-height: 0; height: 32px;
       display: grid; place-items: center; padding: 0;
-      justify-self: center; align-self: center; border-radius: 10px;
-      font-size: 1.35rem; line-height: 1;
+      justify-self: center; align-self: center; border-radius: 8px;
+      font-size: 20px; line-height: 1;
     }
     .search-controls .theme-btn:hover { background: var(--surface2); }
     .native-select { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
     .custom-select {
-      position: relative; align-self: center; width: 92px; height: 36px;
+      position: relative; align-self: center; width: max-content; height: 32px;
       font-family: 'Plus Jakarta Sans', sans-serif;
     }
     .custom-select-trigger {
-      width: 100%; height: 100%; display: flex; align-items: center;
-      justify-content: space-between; gap: 8px; padding: 0 9px 0 10px;
-      border: 1px solid transparent; border-radius: 10px;
+      width: auto; min-width: 0; height: 100%; display: inline-flex; align-items: center;
+      justify-content: flex-start; gap: 4px; padding: 0 8px 0 12px;
+      border: 1px solid transparent; border-radius: 8px;
       background: transparent; color: var(--text2); cursor: pointer;
-      font: 400 0.97rem 'Plus Jakarta Sans', sans-serif; text-align: left;
+      font: 430 14px/1.4 'Plus Jakarta Sans', sans-serif; text-align: left;
       transition: background 0.16s, border-color 0.16s;
     }
     .custom-select-trigger:hover { background: var(--surface2); }
@@ -212,10 +237,11 @@
       background: var(--surface2); border-color: var(--border2);
     }
     .custom-select-caret {
-      font-size: 0.75rem; line-height: 1; color: var(--muted);
-      transform: translateY(-1px); transition: transform 0.18s;
+      width: 12px; height: 12px; display: inline-flex; align-items: center; justify-content: center;
+      color: var(--muted); transition: transform 0.18s;
     }
-    .custom-select.open .custom-select-caret { transform: rotate(180deg) translateY(1px); }
+    .custom-select-caret svg { width: 12px; height: 12px; display: block; }
+    .custom-select.open .custom-select-caret { transform: rotate(180deg); }
     .custom-select-menu {
       display: none; position: absolute; top: calc(100% + 7px); right: 0;
       z-index: 150; min-width: 142px; max-height: min(320px, 45vh);
@@ -242,67 +268,59 @@
       from { opacity: 0; transform: translateY(-4px) scale(0.98); }
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
-    .filter-toggle {
-      width: calc(100% - 16px); display: flex; align-items: center; justify-content: space-between;
-      padding: 8px 14px; margin: -1px 8px 12px;
-      background: var(--surface); border: 1px solid var(--border2);
-      border-radius: 0 0 var(--radius) var(--radius); color: var(--text2);
-      font: 600 0.78rem 'Plus Jakarta Sans', sans-serif;
-      letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer;
-    }
-    .filter-toggle:hover { border-color: var(--orange); color: var(--orange); }
-    .filter-toggle .filter-caret { position: relative; top: -2px; transition: transform 0.2s; }
-    .filter-toggle[aria-expanded="true"] .filter-caret { transform: rotate(180deg); }
-    .filter-toggle[aria-expanded="true"] { border-radius: 0; border-bottom: 0; }
-    #main-view #filter-groups {
-      width: calc(100% - 16px); margin: -13px 8px 12px; padding: 12px 16px 16px;
-      background: var(--surface); border: 1px solid var(--border2); border-top: 0;
-      border-radius: 0 0 var(--radius) var(--radius);
-    }
-    @media (max-width: 680px) {
-      .search-row { grid-template-columns: 1fr; }
-    }
-    .search-box {
-      position: relative;
-    }
-    .search-box svg {
-      position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
-      color: var(--muted); pointer-events: none; flex-shrink: 0;
-    }
+    .search-box { position: relative; }
     #search-input {
-      width: 100%;
-      background: transparent;
-      border: 0;
-      border-radius: 0;
+      width: 100%; height: 46px; min-height: 46px; max-height: 384px; display: block; resize: none;
+      background: transparent; border: 0; border-radius: 0;
       color: var(--text);
       font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 0.97rem;
-      padding: 13px 44px;
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      font-size: 15px; line-height: 20px; font-weight: 400;
+      padding: 6px 6px 0;
+      outline: none; scrollbar-width: none;
     }
-    .search-row:focus-within { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(255,95,5,0.18); }
+    #search-input::-webkit-scrollbar { display: none; }
     #search-input::placeholder { color: var(--muted); }
-    .search-go {
-      position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
-      background: var(--orange); border: none; border-radius: 7px;
-      color: #fff; font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 0.72rem; font-weight: 500;
-      padding: 8px 18px; cursor: pointer;
-      transition: opacity 0.2s, transform 0.15s;
-      letter-spacing: 0.06em;
+
+    /* ── FILTER MODAL ── */
+    .filter-overlay {
+      display: none; position: fixed; inset: 0; z-index: 204;
+      background: rgba(0,0,0,0.65); backdrop-filter: blur(3px);
     }
-    .search-row .search-go { display: none; }
-    .search-go:hover { opacity: 0.88; transform: translateY(-50%) scale(1.04); }
+    .filter-overlay.open { display: block; }
+    .filter-panel {
+      position: fixed; top: 50%; left: 50%; z-index: 205;
+      width: min(760px, 92vw); max-height: 88vh;
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: 16px; box-shadow: var(--shadow); overflow: hidden;
+      opacity: 0; pointer-events: none;
+      transform: translate(-50%, -44%) scale(0.97);
+      transition: transform 0.24s cubic-bezier(0.4,0,0.2,1), opacity 0.24s cubic-bezier(0.4,0,0.2,1);
+    }
+    .filter-panel.open {
+      opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1);
+    }
+    .filter-panel-topbar {
+      min-height: 58px; display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; padding: 13px 18px 13px 22px; background: var(--blue);
+    }
+    .filter-panel-title {
+      color: #fff; font: 600 0.88rem 'Plus Jakarta Sans', sans-serif;
+      letter-spacing: 0.04em;
+    }
+    .filter-panel-body {
+      max-height: calc(88vh - 58px); padding: 18px; overflow-y: auto;
+      scrollbar-width: none;
+    }
+    .filter-panel-body::-webkit-scrollbar { display: none; }
+    .filter-panel #filter-groups {
+      display: grid; grid-template-columns: minmax(0, 1fr);
+      gap: 12px; width: 100%; margin: 0; align-items: stretch;
+    }
 
     /* ── CHIPS ── */
     .filter-groups {
       display: flex; flex-direction: column; gap: 10px;
       align-items: center; margin-bottom: 44px;
-    }
-    #filter-groups {
-      display: flex; flex-direction: column;
-      gap: 12px; width: 100%; align-items: stretch;
     }
     #filter-groups .filter-group {
       display: flex; flex-direction: column;
@@ -336,7 +354,7 @@
     }
     .filter-options .chip { text-align: center; }
     #gened-filter-group .filter-options,
-    #planner-gened-chips .filter-options { grid-template-columns: repeat(9, minmax(0, 1fr)); }
+    #planner-gened-chips .filter-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     #gened-filter-group .chip,
     #planner-gened-chips .chip { white-space: normal; padding: 5px 4px; line-height: 1.25; }
     #planner-gened-chips .filter-options {
@@ -863,6 +881,17 @@
       .courses-grid { grid-template-columns: 1fr; }
       .detail-panel { width: 96vw; max-height: 92vh; }
       .prereq-modal { width: 96vw; height: 92vh; }
+      .filter-panel { width: 96vw; max-height: 92vh; }
+      .filter-panel-body { max-height: calc(92vh - 58px); padding: 12px; }
+      #gened-filter-group .filter-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      #format-filter-group .filter-options { --chip-count: 2 !important; }
+      #sort-filter-group .filter-options { --chip-count: 2 !important; }
+    }
+    @media (max-width: 520px) {
+      .search-row { min-height: 0; gap: 8px; padding: 10px; }
+      .search-toolbar { flex-wrap: wrap; gap: 6px; }
+      .search-toolbar-left, .search-controls { width: 100%; justify-content: space-between; }
+      .search-controls { padding-top: 6px; border-top: 1px solid var(--border); }
     }
   </style>
 </head>
@@ -876,7 +905,7 @@
       <div class="hero-kicker">University of Illinois Urbana-Champaign</div>
       <h1 id="shared-view-title">Course Data Explorer</h1>
       <p class="hero-sub" id="shared-view-subtitle">Includes GPA history from real grade data.</p>
-      <button class="view-nav-btn" id="shared-view-button" type="button" onclick="openPlanner()">
+      <button class="view-nav-btn" id="shared-view-button" type="button" onclick="openPlanner()" style="display:none">
         <span id="shared-view-button-label">Gen Ed Planner</span><span class="view-nav-arrow" id="shared-view-button-arrow">→</span>
       </button>
     </section>
@@ -980,44 +1009,58 @@
       <div class="search-row">
         <div class="search-outer">
           <div class="search-box">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-            <input id="search-input" type="text" placeholder="Try CS, MATH 231, Algorithms, or a professor name…" autocomplete="off" />
-            <button class="search-go" onclick="doSearch()">SEARCH</button>
+            <textarea id="search-input" rows="2" placeholder="Search by subject, course, keyword, or professor…" autocomplete="off" spellcheck="false"></textarea>
           </div>
         </div>
-        <div class="search-controls">
-          <div class="custom-select" id="sem-picker">
-            <select class="native-select" id="sem-select" tabindex="-1" aria-hidden="true">
-              <option value="sp">Spring</option>
-              <option value="su">Summer</option>
-              <option value="fa">Fall</option>
-              <option value="wi">Winter</option>
-            </select>
-            <button class="custom-select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false"
-                    onclick="toggleCustomSelect('sem-picker', event)" onkeydown="handleSelectTriggerKeydown(event, 'sem-picker')">
-              <span class="custom-select-value"></span><span class="custom-select-caret">⌄</span>
+        <div class="search-toolbar">
+          <div class="search-toolbar-left">
+            <button class="prompt-action-btn" id="filter-toggle" type="button" aria-controls="filter-panel" aria-expanded="false" onclick="toggleFilters()">
+              <svg class="prompt-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M4 6h16M7 12h10M10 18h4"/>
+              </svg>
+              <span>Filters</span>
             </button>
-            <div class="custom-select-menu" role="listbox" aria-label="Semester"></div>
-          </div>
-          <div class="custom-select" id="year-picker">
-            <select class="native-select" id="year-select" tabindex="-1" aria-hidden="true"></select>
-            <button class="custom-select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false"
-                    onclick="toggleCustomSelect('year-picker', event)" onkeydown="handleSelectTriggerKeydown(event, 'year-picker')">
-              <span class="custom-select-value"></span><span class="custom-select-caret">⌄</span>
+            <button class="prompt-action-btn" type="button" onclick="openPlanner()">
+              <span>Gen Ed Planner</span><span class="prompt-planner-arrow">→</span>
             </button>
-            <div class="custom-select-menu" role="listbox" aria-label="Year"></div>
           </div>
-          <button class="theme-btn" id="theme-btn" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">☀</button>
+          <div class="search-controls">
+            <div class="custom-select" id="sem-picker">
+              <select class="native-select" id="sem-select" tabindex="-1" aria-hidden="true">
+                <option value="sp">Spring</option>
+                <option value="su">Summer</option>
+                <option value="fa">Fall</option>
+                <option value="wi">Winter</option>
+              </select>
+              <button class="custom-select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false"
+                      onclick="toggleCustomSelect('sem-picker', event)" onkeydown="handleSelectTriggerKeydown(event, 'sem-picker')">
+                <span class="custom-select-value"></span>
+                <span class="custom-select-caret" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              </button>
+              <div class="custom-select-menu" role="listbox" aria-label="Semester"></div>
+            </div>
+            <div class="custom-select" id="year-picker">
+              <select class="native-select" id="year-select" tabindex="-1" aria-hidden="true"></select>
+              <button class="custom-select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false"
+                      onclick="toggleCustomSelect('year-picker', event)" onkeydown="handleSelectTriggerKeydown(event, 'year-picker')">
+                <span class="custom-select-value"></span>
+                <span class="custom-select-caret" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              </button>
+              <div class="custom-select-menu" role="listbox" aria-label="Year"></div>
+            </div>
+            <button class="theme-btn" id="theme-btn" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">☀</button>
+          </div>
         </div>
       </div>
 
-      <button class="filter-toggle" id="filter-toggle" type="button" aria-controls="filter-groups" aria-expanded="false" onclick="toggleFilters()">
-        <span>Filters</span><span class="filter-caret">⌄</span>
-      </button>
-
-      <div class="filter-groups" id="filter-groups" style="display:none">
+      <div class="filter-overlay" id="filter-overlay" onclick="setFiltersOpen(false)"></div>
+      <div class="filter-panel" id="filter-panel" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="filter-panel-title">
+        <div class="filter-panel-topbar">
+          <div class="filter-panel-title" id="filter-panel-title">Course Filters</div>
+          <button class="panel-close" id="filter-panel-close" type="button" onclick="setFiltersOpen(false)">✕ Close</button>
+        </div>
+        <div class="filter-panel-body">
+      <div class="filter-groups" id="filter-groups">
         <div class="filter-group" id="gened-filter-group" style="display:none">
           <span class="filter-label">Gen Ed</span>
           <div class="filter-options"></div>
@@ -1064,6 +1107,8 @@
             <span class="filter-label">Credit Hours</span>
             <div class="filter-options"></div>
           </div>
+        </div>
+      </div>
         </div>
       </div>
     </section>
@@ -1122,6 +1167,7 @@
     activeLevels.clear(); activeGeneds.clear(); activeCredits.clear(); activeOther.clear(); activeFormats.clear(); activeTerm.clear();
     activeSortVal = 'alpha';
     document.getElementById('search-input').value = '';
+    resizeSearchInput();
     document.querySelectorAll('#chip-l1,#chip-l2,#chip-l3,#chip-l4,#chip-l5,#chip-l6').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('[id^="sort-"]').forEach(c => c.classList.remove('active'));
     document.getElementById('sort-alpha').classList.add('active');
@@ -1139,6 +1185,7 @@
 
     // Restore filter state
     document.getElementById('search-input').value = saved.search;
+    resizeSearchInput();
 
     saved.levels.forEach(l => {
       activeLevels.add(l);
@@ -1189,14 +1236,6 @@
 
   // Custom semester/year menus. The hidden selects remain the source of truth
   // so the catalog-loading code can continue reading their values normally.
-  const _sizer = document.createElement('span');
-  _sizer.style.cssText = 'position:absolute;visibility:hidden;font:0.97rem "Plus Jakarta Sans",sans-serif;padding:0 24px 0 10px;white-space:nowrap;pointer-events:none;';
-  document.body.appendChild(_sizer);
-  function resizeSelect(sel) {
-    _sizer.textContent = sel.options[sel.selectedIndex].text;
-    sel.closest('.custom-select').style.width = (_sizer.offsetWidth + 2) + 'px';
-  }
-
   function syncCustomSelect(select) {
     const picker = select.closest('.custom-select');
     const selected = select.options[select.selectedIndex];
@@ -1287,10 +1326,9 @@
 
   buildCustomSelect(semSelect);
   buildCustomSelect(yearSelect);
-  document.fonts.ready.then(() => { resizeSelect(semSelect); resizeSelect(yearSelect); });
 
-  semSelect.addEventListener('change', () => { syncCustomSelect(semSelect); resizeSelect(semSelect); onSemesterChange(); });
-  yearSelect.addEventListener('change', () => { syncCustomSelect(yearSelect); resizeSelect(yearSelect); onSemesterChange(); });
+  semSelect.addEventListener('change', () => { syncCustomSelect(semSelect); onSemesterChange(); });
+  yearSelect.addEventListener('change', () => { syncCustomSelect(yearSelect); onSemesterChange(); });
   document.addEventListener('click', () => closeCustomSelects());
   document.addEventListener('focusin', event => {
     document.querySelectorAll('.custom-select.open').forEach(picker => {
@@ -1636,6 +1674,7 @@
       c._isSeminar = /seminar/i.test(c.name);
       c._isInternship = /internship/i.test(c.name);
       c._isIndependentStudy = /independent study/i.test(c.name);
+      c._isStudyAbroad = /study abroad/i.test(c.name);
     });
 
     buildCourseEquivalenceGroups();
@@ -2004,11 +2043,21 @@
   // ─────────────────────────────────────────────────────────────────────────
   // SEARCH & FILTER
   // ─────────────────────────────────────────────────────────────────────────
-  document.getElementById('search-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') doSearch();
+  const searchInput = document.getElementById('search-input');
+  function resizeSearchInput() {
+    searchInput.style.height = '46px';
+    searchInput.style.height = `${Math.min(Math.max(searchInput.scrollHeight, 46), 384)}px`;
+  }
+
+  searchInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.isComposing) {
+      e.preventDefault();
+      doSearch();
+    }
   });
   let searchDebounce;
-  document.getElementById('search-input').addEventListener('input', () => {
+  searchInput.addEventListener('input', () => {
+    resizeSearchInput();
     clearTimeout(searchDebounce);
     searchDebounce = setTimeout(doSearch, 180);
   });
@@ -2021,11 +2070,38 @@
     setFiltersOpen(!filtersOpen);
   }
 
+  let filterReturnFocus = null;
   function setFiltersOpen(open) {
+    const wasOpen = filtersOpen;
     filtersOpen = open;
-    document.getElementById('filter-groups').style.display = open ? 'flex' : 'none';
-    document.getElementById('filter-toggle').setAttribute('aria-expanded', String(open));
+    const overlay = document.getElementById('filter-overlay');
+    const panel = document.getElementById('filter-panel');
+    const toggle = document.getElementById('filter-toggle');
+    overlay.classList.toggle('open', open);
+    panel.classList.toggle('open', open);
+    panel.setAttribute('aria-hidden', String(!open));
+    toggle.setAttribute('aria-expanded', String(open));
+
+    if (open) {
+      closeCustomSelects();
+      filterReturnFocus = document.activeElement;
+      document.body.style.overflow = 'hidden';
+      requestAnimationFrame(() => document.getElementById('filter-panel-close').focus());
+    } else {
+      if (!document.getElementById('detail-panel').classList.contains('open')) {
+        document.body.style.overflow = '';
+      }
+      if (wasOpen && filterReturnFocus instanceof HTMLElement) filterReturnFocus.focus();
+      filterReturnFocus = null;
+    }
   }
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && filtersOpen) {
+      event.preventDefault();
+      setFiltersOpen(false);
+    }
+  });
 
   function setSort(val) {
     activeSortVal = val;
@@ -2121,11 +2197,11 @@
   }
 
   const GENED_FILTERS = [
-    { label: 'Adv Comp',            match: s => s.includes('Advanced Composition') },
-    { label: 'Comp I',              match: s => s.includes('Composition I') },
     { label: 'West/Comp',           match: s => s.includes('Cultural Studies - Western') },
     { label: 'Non-West',            match: s => s.includes('Cultural Studies - Non-West') },
     { label: 'US Minority',         match: s => s.includes('Cultural Studies - US Minority') },
+    { label: 'Adv Comp',            match: s => s.includes('Advanced Composition') },
+    { label: 'Comp I',              match: s => s.includes('Composition I') },
     { label: 'Hum & Arts',          match: s => s.includes('Humanities') },
     { label: 'Nat Sci & Tech',      match: s => s.includes('Nat Sci') },
     { label: 'Quant Reas',          match: s => s.includes('Quantitative Reasoning') },
@@ -2294,7 +2370,15 @@
     noIndependentStudyChip.onclick = () => toggleOther('no_independent_study');
     group.querySelector('.filter-options').appendChild(noIndependentStudyChip);
 
-    setFilterOptionCount(group);
+    // Exclude study abroad courses
+    const noStudyAbroadChip = document.createElement('span');
+    noStudyAbroadChip.className = 'chip';
+    noStudyAbroadChip.dataset.other = 'no_study_abroad';
+    noStudyAbroadChip.textContent = 'Exclude Study Abroad';
+    noStudyAbroadChip.onclick = () => toggleOther('no_study_abroad');
+    group.querySelector('.filter-options').appendChild(noStudyAbroadChip);
+
+    setFilterOptionCount(group, 3);
   }
 
   function toggleTerm(val) {
@@ -2339,7 +2423,7 @@
   }
 
   function applyFilter() {
-    const q = document.getElementById('search-input').value.trim().toUpperCase();
+    const q = document.getElementById('search-input').value.trim().replace(/\s+/g, ' ').toUpperCase();
     const qIsSubject = q ? SUBJECT_CODES.has(q) : false;
     const qIsNumber = q ? /^\d+$/.test(q) : false;
     const selectedLevels = [...activeLevels].map(Number);
@@ -2352,6 +2436,7 @@
     const excludeSeminars = activeOther.has('no_x99');
     const excludeInternships = activeOther.has('no_internship');
     const excludeIndependentStudy = activeOther.has('no_independent_study');
+    const excludeStudyAbroad = activeOther.has('no_study_abroad');
     const requireOnline = activeFormats.has('online');
     const requireInPerson = activeFormats.has('inperson');
 
@@ -2384,6 +2469,7 @@
       if (excludeSeminars && c._isSeminar) return;
       if (excludeInternships && c._isInternship) return;
       if (excludeIndependentStudy && c._isIndependentStudy) return;
+      if (excludeStudyAbroad && c._isStudyAbroad) return;
 
       // format filters
       if (requireOnline && !c._hasOnline) return;
@@ -2483,7 +2569,7 @@
     }
 
     if (filteredPrereq.length > 0) {
-      const q = document.getElementById('search-input').value.trim();
+      const q = document.getElementById('search-input').value.trim().replace(/\s+/g, ' ');
       html += `<div class="section-divider" style="grid-column:1/-1">Courses with "${escapeHtml(q)}" in description</div>`;
       const showPrereq = filteredPrereq.slice(0, BATCH);
       html += showPrereq.map((key, i) => renderCourseCard(key, filtered.length + i)).join('');
@@ -2856,6 +2942,7 @@
   }
 
   function openPlanner() {
+    setFiltersOpen(false);
     buildPlannerChips();
     document.getElementById('main-view').style.display = 'none';
     document.getElementById('planner-view').style.display = 'block';
@@ -2864,6 +2951,7 @@
     document.getElementById('shared-view-button-label').textContent = 'Course Data Explorer';
     document.getElementById('shared-view-button-arrow').textContent = '←';
     document.getElementById('shared-view-button').onclick = closePlanner;
+    document.getElementById('shared-view-button').style.display = 'inline-flex';
     resetViewScroll();
   }
 
@@ -2875,6 +2963,7 @@
     document.getElementById('shared-view-button-label').textContent = 'Gen Ed Planner';
     document.getElementById('shared-view-button-arrow').textContent = '→';
     document.getElementById('shared-view-button').onclick = openPlanner;
+    document.getElementById('shared-view-button').style.display = 'none';
     resetViewScroll();
   }
 
