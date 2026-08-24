@@ -2511,7 +2511,9 @@
         // When query is a known subject code (e.g. "CS"), skip name/desc matching —
         // those would catch unrelated courses that merely mention the code in their text.
         const matchSubj = c.subject === q;
-        const matchFull = key === q || key.startsWith(q + ' ');
+        // Course tags are "SUBJECT NUMBER", so allow a partial number after a
+        // subject (for example, "STAT 4" matches STAT 400 and STAT 430).
+        const matchFull = key.startsWith(q);
         const matchNum  = qIsNumber && c.number.includes(q);
         const matchName = !qIsSubject && c._searchName.includes(q);
         const matchDesc = !qIsSubject && c._searchDesc.includes(q);
