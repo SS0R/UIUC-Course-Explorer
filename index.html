@@ -3,6 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.dataset.theme = 'dark';
+    }
+  </script>
   <title>UIUC Course Explorer</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1384,13 +1389,18 @@
   // ─────────────────────────────────────────────────────────────────────────
   // THEME
   // ─────────────────────────────────────────────────────────────────────────
-  document.getElementById('theme-btn').addEventListener('click', () => {
+  const themeButton = document.getElementById('theme-btn');
+  function syncThemeButton() {
+    const isDark = document.documentElement.dataset.theme === 'dark';
+    themeButton.textContent = isDark ? '☾' : '☀';
+    themeButton.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+    themeButton.title = themeButton.getAttribute('aria-label');
+  }
+  syncThemeButton();
+  themeButton.addEventListener('click', () => {
     const isDark = document.documentElement.dataset.theme === 'dark';
     document.documentElement.dataset.theme = isDark ? 'light' : 'dark';
-    const themeButton = document.getElementById('theme-btn');
-    themeButton.textContent = isDark ? '☀' : '☾';
-    themeButton.setAttribute('aria-label', isDark ? 'Switch to dark mode' : 'Switch to light mode');
-    themeButton.title = themeButton.getAttribute('aria-label');
+    syncThemeButton();
   });
 
   // ─────────────────────────────────────────────────────────────────────────
