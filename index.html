@@ -845,6 +845,13 @@
       -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical;
     }
     .tree-card-meta { font-size: 0.6rem; color: var(--muted); margin-top: 4px; font-style: italic; }
+    .tree-card-requirement {
+      display: inline-block; margin-top: 6px; padding: 2px 6px;
+      border-radius: 999px; border: 1px solid rgba(46, 204, 113, 0.38);
+      background: rgba(46, 204, 113, 0.1); color: var(--green);
+      font-size: 0.56rem; font-weight: 700; line-height: 1.25;
+      letter-spacing: 0.02em; white-space: normal;
+    }
     .tree-card-or, .tree-card-and {
       background: transparent; border-style: dashed;
       font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em;
@@ -1870,9 +1877,13 @@
     if (courses.length === 0) {
       return { kind: 'note', text: trimmed };
     }
-    if (courses.length === 1) {
-      return { kind: 'course', key: courses[0].key };
-    }
+    const courseNodes = courses.map((course, index) => ({
+      kind: 'course',
+      key: course.key,
+      concurrentAllowed: isConcurrentCourseRequirement(trimmed, courses, index)
+    }));
+
+    if (courses.length === 1) return courseNodes[0];
 
     // Multiple courses in a single group. Use the words between course codes so
     // clauses like "A and credit or concurrent registration in B" stay as A AND B.
@@ -1886,7 +1897,29 @@
       connectors.push(getCourseConnector(trimmed.slice(courses[i].end, courses[i + 1].start), fallback));
     }
 
-    return buildConnectorTree(courses.map(c => ({ kind: 'course', key: c.key })), connectors);
+    return buildConnectorTree(courseNodes, connectors);
+  }
+
+  // Preserve catalog qualifiers such as "credit or concurrent registration in
+  // CS 225" on the course they modify. Without this, the tree makes a course
+  // that may be taken at the same time look like a completed-course requirement.
+  function isConcurrentCourseRequirement(group, courses, index) {
+    const concurrentPhrase = /\bconcurrent(?:ly)?\s+(?:registration|enrollment|enrolment)\b|\bmay be taken concurrently\b/i;
+    const course = courses[index];
+    const previousEnd = index === 0 ? 0 : courses[index - 1].end;
+    const prefix = group.slice(previousEnd, course.start);
+
+    // A leading qualifier can govern a list: "concurrent registration in A or B".
+    const leadingQualifier = group.slice(0, courses[0].start);
+    if (concurrentPhrase.test(prefix)) return true;
+    if (concurrentPhrase.test(leadingQualifier) && !/\b(?:completion|credit)\s+(?:in|for)\b/i.test(prefix)) return true;
+
+    // Also support catalog wording placed immediately after a course, such as
+    // "CS 225 (concurrent enrollment allowed)" or "CS 225 may be taken concurrently".
+    const nextStart = index + 1 < courses.length ? courses[index + 1].start : group.length;
+    const suffix = group.slice(course.end, nextStart);
+    return /^\s*(?:may be taken concurrently|concurrent(?:ly)?\s+(?:registration|enrollment|enrolment))/i.test(suffix)
+      || /^\s*\([^)]*(?:may be taken concurrently|concurrent(?:ly)?\s+(?:registration|enrollment|enrolment))[^)]*\)/i.test(suffix);
   }
 
   function getCourseConnector(text, fallback) {
@@ -1920,19 +1953,19 @@
   }
 
   // Recursively build the prereq tree starting from a course key.
-  function buildPrereqTree(courseKey, depth, visited) {
+  function buildPrereqTree(courseKey, depth, visited, concurrentAllowed) {
     depth = depth || 0;
     visited = visited || new Set();
 
     if (visited.has(courseKey)) {
-      return { kind: 'course', key: courseKey, children: [], cycle: true };
+      return { kind: 'course', key: courseKey, children: [], cycle: true, concurrentAllowed };
     }
     if (depth >= PREREQ_MAX_DEPTH) {
-      return { kind: 'course', key: courseKey, children: [], depthCap: true };
+      return { kind: 'course', key: courseKey, children: [], depthCap: true, concurrentAllowed };
     }
     const c = courseMap[courseKey];
     if (!c) {
-      return { kind: 'course', key: courseKey, children: [], unknown: true };
+      return { kind: 'course', key: courseKey, children: [], unknown: true, concurrentAllowed };
     }
 
     const nextVisited = new Set(visited);
@@ -1940,12 +1973,12 @@
 
     const { groups, aliasOf } = resolvePrereqGroups(courseKey);
     const children = groups.map(g => expandGroup(g, depth + 1, nextVisited));
-    return { kind: 'course', key: courseKey, children, aliasOf };
+    return { kind: 'course', key: courseKey, children, aliasOf, concurrentAllowed };
   }
 
   function expandGroup(g, depth, visited) {
     if (g.kind === 'note') return g;
-    if (g.kind === 'course') return buildPrereqTree(g.key, depth, visited);
+    if (g.kind === 'course') return buildPrereqTree(g.key, depth, visited, g.concurrentAllowed);
     // or/and group — expand each child expression
     return {
       kind: g.kind,
@@ -1975,9 +2008,13 @@
     else if (node.depthCap) metaText = '… more prereqs hidden';
     else if (node.aliasOf)  metaText = `prereqs from ${node.aliasOf}`;
     const meta = metaText ? `<div class="tree-card-meta">${metaText}</div>` : '';
+    const requirement = node.concurrentAllowed
+      ? '<div class="tree-card-requirement">Concurrent enrollment allowed</div>'
+      : '';
     let h = `<li><div class="tree-card tree-card-course" onclick="openCourseFromTree('${node.key}')">
       <div class="tree-card-code">${node.key}</div>
       ${name ? `<div class="tree-card-name">${escapeHtml(name)}</div>` : ''}
+      ${requirement}
       ${meta}
     </div>`;
     if (node.children && node.children.length) {
