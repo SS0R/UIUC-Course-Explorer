@@ -1,2 +1,6 @@
 .DS_Store
-.claude/
+.catalog-cache/
+__pycache__/
+*.pyc
+data/catalog/*.tmp
+data/archive/*.tmp

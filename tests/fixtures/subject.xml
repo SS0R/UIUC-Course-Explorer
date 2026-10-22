@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ns:subject id="CS" xmlns:ns="http://rest.cis.illinois.edu">
+  <parents><calendarYear id="2027">2027</calendarYear><term id="120271">Spring 2027</term></parents>
+  <cascadingCourses>
+    <cascadingCourse id="CS 225">
+      <label>Data Structures</label>
+      <description>Lists, trees &amp; graphs. Prerequisite: CS 128.
+        Same as TEST 225.</description>
+      <creditHours>4 hours.</creditHours>
+      <genEdCategories><category><ns:genEdAttributes>
+        <genEdAttribute code="1QR2">Quantitative Reasoning II</genEdAttribute>
+      </ns:genEdAttributes></category></genEdCategories>
+      <detailedSections>
+        <detailedSection id="35917">
+          <sectionNumber>AL1</sectionNumber><partOfTerm>1</partOfTerm>
+          <enrollmentStatus>Open</enrollmentStatus>
+          <meetings>
+            <meeting id="0">
+              <start>11:00AM</start><end>11:50AM</end><daysOfTheWeek>MWF</daysOfTheWeek>
+              <roomNumber>AUD</roomNumber><buildingName>Foellinger Auditorium</buildingName>
+              <type code="LEC">Lecture</type>
+              <instructors><instructor> Beckman, M </instructor><instructor> Solomon, B </instructor></instructors>
+            </meeting>
+            <meeting id="1">
+              <start>01:00PM</start><end>01:50PM</end><daysOfTheWeek>R</daysOfTheWeek>
+              <type code="LEC">Lecture</type><instructors><instructor>Beckman, M</instructor></instructors>
+            </meeting>
+          </meetings>
+        </detailedSection>
+        <detailedSection id="35918"><sectionNumber>ARR</sectionNumber><meetings/></detailedSection>
+      </detailedSections>
+    </cascadingCourse>
+  </cascadingCourses>
+</ns:subject>

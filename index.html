@@ -268,6 +268,7 @@
     .custom-select-option:hover,
     .custom-select-option:focus-visible { background: var(--surface2); color: var(--text); outline: none; }
     .custom-select-option.selected { color: var(--text); }
+    .custom-select-option:disabled { opacity: 0.4; cursor: default; }
     .custom-select-option.selected::after { content: '\2713'; color: var(--orange); font-weight: 600; }
     @keyframes selectMenuIn {
       from { opacity: 0; transform: translateY(-4px) scale(0.98); }
@@ -415,6 +416,7 @@
     /* ── RESULTS BAR ── */
     .results-bar {
       display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 8px 12px;
       margin-bottom: 18px;
     }
     .results-label {
@@ -1147,6 +1149,7 @@
 
     <div class="results-bar">
       <span class="results-label">Results</span>
+      <span id="catalog-freshness" style="font-size:0.75rem;color:var(--muted)"></span>
       <span class="results-count" id="results-count"></span>
     </div>
 
@@ -1157,15 +1160,17 @@
 
   <script>
   // ─────────────────────────────────────────────────────────────────────────
-  // DATA SOURCES — both fetched directly from GitHub
+  // DATA SOURCES — local catalog snapshots; independent historical GPA source
   // ─────────────────────────────────────────────────────────────────────────
   const GPA_URL = 'https://raw.githubusercontent.com/wadefagen/datasets/refs/heads/main/gpa/uiuc-gpa-dataset.csv';
+  const CATALOG_BASE = new URL('data/catalog/', document.baseURI);
+  let catalogManifest = { schemaVersion: 1, terms: {} };
 
   // ── Semester selector setup ──
   const yearSelect = document.getElementById('year-select');
   const semSelect  = document.getElementById('sem-select');
-  const CURRENT_YEAR = 2026;
-  for (let y = CURRENT_YEAR; y >= 2018; y--) {
+  const CURRENT_YEAR = Math.max(2026, new Date().getFullYear());
+  for (let y = CURRENT_YEAR; y >= 2004; y--) {
     const opt = document.createElement('option');
     opt.value = y; opt.textContent = y;
     yearSelect.appendChild(opt);
@@ -1174,16 +1179,82 @@
   yearSelect.value = '2026';
   let pendingSemesterViewState = null;
 
-  function getCatalogURL() {
-    return `https://raw.githubusercontent.com/wadefagen/datasets/refs/heads/main/course-catalog/data/${yearSelect.value}-${semSelect.value}.csv`;
+  function availableCatalogTerms() {
+    return catalogManifest.availableTerms || Object.values(catalogManifest.terms);
+  }
+
+  function syncAvailableSemesters() {
+    const available = availableCatalogTerms().filter(entry => entry.year === Number(yearSelect.value));
+    const names = new Set(available.map(entry => entry.term));
+    for (const option of semSelect.options) option.disabled = !names.has(semNameMap[option.value]);
+    if (!names.has(semNameMap[semSelect.value])) {
+      const next = ['fa', 'su', 'sp', 'wi'].map(code => [...semSelect.options].find(option => option.value === code))
+        .find(option => option && !option.disabled);
+      if (next) semSelect.value = next.value;
+    }
+    buildCustomSelect(semSelect);
+  }
+
+  async function fetchCatalog(signal) {
+    const entry = catalogManifest.terms[`${yearSelect.value}-${semSelect.value}`];
+    if (!entry) {
+      const error = new Error('Course data for this semester is not available yet. Choose another semester or try again later.');
+      error.catalogPending = true;
+      throw error;
+    }
+    const res = await fetch(new URL(entry.file, CATALOG_BASE), { signal });
+    if (!res.ok) throw new Error(`HTTP ${res.status} loading local catalog`);
+    const data = await res.json();
+    if (data.schemaVersion !== 1 || data.year !== Number(yearSelect.value) ||
+        data.term !== entry.term || !Array.isArray(data.courses)) {
+      throw new Error('Invalid local course snapshot');
+    }
+    return { courses: data.courses, entry };
+  }
+
+  async function initializeCatalog() {
+    try {
+      const res = await fetch(new URL('manifest.json', CATALOG_BASE), { cache: 'no-cache' });
+      if (!res.ok) throw new Error(`HTTP ${res.status} loading catalog manifest`);
+      const manifest = await res.json();
+      if (manifest.schemaVersion !== 1 || !manifest.terms || typeof manifest.terms !== 'object') {
+        throw new Error('Invalid catalog manifest');
+      }
+      catalogManifest = manifest;
+      const entries = Object.values(manifest.terms);
+      const available = availableCatalogTerms();
+      const years = [...new Set(available.map(entry => entry.year))].sort((a, b) => b - a);
+      yearSelect.innerHTML = '';
+      for (const year of years) {
+        const option = document.createElement('option');
+        option.value = year; option.textContent = year;
+        yearSelect.appendChild(option);
+      }
+      const termOrder = { winter: 0, spring: 1, summer: 2, fall: 3 };
+      entries.sort((a, b) => b.year - a.year || termOrder[b.term] - termOrder[a.term]);
+      if (!entries.length) throw new Error('No semesters have finished importing yet');
+      yearSelect.value = entries[0].year;
+      semSelect.value = Object.keys(semNameMap).find(code => semNameMap[code] === entries[0].term);
+      buildCustomSelect(yearSelect);
+      syncAvailableSemesters();
+      syncCustomSelect(yearSelect);
+      syncCustomSelect(semSelect);
+    } catch (error) {
+      console.warn('Could not initialize local course data.', error);
+      setStatus('Could not load course data. Please reload and try again.');
+      return false;
+    }
+    return loadData();
   }
 
   async function onSemesterChange() {
+    syncAvailableSemesters();
+    document.getElementById('catalog-freshness').textContent = '';
     // Reuse the first snapshot if another selection is made while a catalog is
     // loading. Otherwise a rapid semester + year change would restore the
     // already-cleared state from the superseded request.
     const saved = pendingSemesterViewState || {
-      plannerWasVisible: document.getElementById('planner-view').style.display !== 'none',
+      plannerWasVisible: document.getElementById('planner-view').style.display === 'block',
       levels:  new Set(activeLevels),
       geneds:  new Set(activeGeneds),
       credits: new Set(activeCredits),
@@ -1194,8 +1265,9 @@
       search:  document.getElementById('search-input').value
     };
     pendingSemesterViewState = saved;
+    closePanel();
 
-    courseMap = Object.create(null); courseKeys = []; filtered = []; filteredPrereq = [];
+    courseMap = Object.create(null); courseKeys = []; filtered = []; filteredInstructors = []; filteredDescriptions = [];
     activeLevels.clear(); activeGeneds.clear(); activeCredits.clear(); activeOther.clear(); activeFormats.clear(); activeTerm.clear();
     activeSortVal = 'alpha';
     document.getElementById('search-input').value = '';
@@ -1233,9 +1305,10 @@
 
     saved.credits.forEach(v => {
       activeCredits.add(v);
-      const chip = document.querySelector(`#credit-filter-group [data-credit="${v}"]`);
+      const chip = document.querySelector(`[data-credit="${v}"]`);
       if (chip) chip.classList.add('active');
     });
+    updateHalfChipState();
 
     saved.other.forEach(v => {
       activeOther.add(v);
@@ -1271,7 +1344,7 @@
   function syncCustomSelect(select) {
     const picker = select.closest('.custom-select');
     const selected = select.options[select.selectedIndex];
-    picker.querySelector('.custom-select-value').textContent = selected.text;
+    picker.querySelector('.custom-select-value').textContent = selected ? selected.text : 'Unavailable';
     picker.querySelectorAll('.custom-select-option').forEach(option => {
       const isSelected = option.dataset.value === select.value;
       option.classList.toggle('selected', isSelected);
@@ -1307,7 +1380,7 @@
 
   function handleSelectOptionKeydown(event) {
     const option = event.currentTarget;
-    const options = [...option.parentElement.querySelectorAll('.custom-select-option')];
+    const options = [...option.parentElement.querySelectorAll('.custom-select-option:not(:disabled)')];
     const index = options.indexOf(option);
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
@@ -1334,7 +1407,8 @@
     event.preventDefault();
     const picker = document.getElementById(id);
     if (!picker.classList.contains('open')) toggleCustomSelect(id, event);
-    const options = [...picker.querySelectorAll('.custom-select-option')];
+    const options = [...picker.querySelectorAll('.custom-select-option:not(:disabled)')];
+    if (!options.length) return;
     const selectedIndex = Math.max(0, options.findIndex(option => option.classList.contains('selected')));
     options[selectedIndex].focus();
   }
@@ -1345,6 +1419,7 @@
     [...select.options].forEach(sourceOption => {
       const option = document.createElement('button');
       option.type = 'button';
+      option.disabled = sourceOption.disabled;
       option.className = 'custom-select-option';
       option.setAttribute('role', 'option');
       option.dataset.value = sourceOption.value;
@@ -1376,7 +1451,8 @@
   let gpaByCourse = Object.create(null); // key = "SUBJECT NUMBER" → [{ lastName, data }]
   let courseKeys  = [];   // ordered list of keys
   let filtered    = [];
-  let filteredPrereq = [];
+  let filteredInstructors = [];
+  let filteredDescriptions = [];
   let activeLevels  = new Set();
   let activeGeneds  = new Set();
   let activeCredits = new Set();
@@ -1590,10 +1666,10 @@
     setLoadBar(0.1);
     setStatus('Fetching course catalog…');
 
-    let catalogText, gpaData;
+    let catalog, gpaData;
     try {
-      [catalogText, gpaData] = await Promise.all([
-        fetchText(getCatalogURL(), { signal: catalogAbortController.signal }),
+      [catalog, gpaData] = await Promise.all([
+        fetchCatalog(catalogAbortController.signal),
         getGpaData()
       ]);
       if (myVersion !== loadVersion) return false;
@@ -1601,7 +1677,7 @@
       setStatus('Parsing data…');
     } catch(e) {
       if (e.name === 'AbortError' || myVersion !== loadVersion) return false;
-      setStatus('⚠ Could not load data. Check your connection and refresh.');
+      setStatus(e.catalogPending ? e.message : '⚠ Could not load data. Check your connection and refresh.');
       return false;
     }
 
@@ -1610,48 +1686,11 @@
     gpaByCourse = gpaData.gpaByCourse;
 
     // ── Process course catalog ──
-    forEachCSVRow(catalogText, row => {
-      if (!row['Subject'] || !row['Number'] || !row['Name']) return;
-      const key = `${row['Subject'].trim()} ${row['Number'].trim()}`;
-
-      if (!courseMap[key]) {
-        courseMap[key] = {
-          subject:    row['Subject'].trim(),
-          number:     row['Number'].trim(),
-          name:       decodeHtml(row['Name'].trim()),
-          desc:       decodeHtml((row['Description'] || '').trim()),
-          credits:    (row['Credit Hours'] || '').replace(' hours.','').replace(' hour.','').trim(),
-          gened:      row['Degree Attributes'] || '',
-          sections:   []
-        };
-        courseKeys.push(key);
-      }
-
-      // Parse section
-      const typeCode = row['Type Code'] || '';
-      const days     = row['Days of Week'] || '';
-      const start    = row['Start Time']  || '';
-      const end      = row['End Time']    || '';
-      const isTBA    = !start || start === 'ARRANGED' || days === 'ARRANGED';
-      const rawInstructors = row['Instructors'] || '';
-      const instructors = rawInstructors.split(';').map(s => s.trim()).filter(Boolean);
-
-      courseMap[key].sections.push({
-        crn:          row['CRN'],
-        section:      row['Section'] || '',
-        typeName:     row['Type']    || '',
-        typeCode:     typeCode,
-        days:         days,
-        startTime:    start,
-        endTime:      end,
-        isTBA:        isTBA,
-        room:         row['Room']     || '',
-        building:     row['Building'] || '',
-        status:       row['Enrollment Status'] || 'Unknown',
-        instructors:  instructors,
-        partOfTerm:   row['Part of Term'] || '1'
-      });
-    });
+    for (const course of catalog.courses) {
+      const key = `${course.subject} ${course.number}`;
+      courseMap[key] = course;
+      courseKeys.push(key);
+    }
 
     setLoadBar(0.9);
     setStatus('Building index…');
@@ -1698,8 +1737,8 @@
       c._creditBuckets = creditBuckets(c.credits);
       c._isHalfCredit = isHalfCredit(c.credits);
       c._halfIntBuckets = halfIntBuckets(c.credits);
-      c._hasOnline = c.sections.some(s => s.typeCode === 'ONL');
-      c._hasInPerson = c.sections.some(s => s.typeCode !== 'ONL');
+      c._hasOnline = c.sections.some(isOnlineSection);
+      c._hasInPerson = c.sections.some(s => !isOnlineSection(s));
       c._partOfTerms = new Set(c.sections.map(s => s.partOfTerm));
       c._genedLabels = GENED_FILTERS.filter(g => g.match(c.gened)).map(g => g.label);
       c._searchName = c.name.toUpperCase();
@@ -1713,6 +1752,10 @@
       c._isIndependentStudy = /independent study/i.test(c.name);
       c._isStudyAbroad = /study abroad/i.test(c.name);
     });
+
+    const freshness = document.getElementById('catalog-freshness');
+    freshness.textContent = `Catalog refreshed ${new Date(catalog.entry.fullRefreshedAt).toLocaleDateString()}`;
+    freshness.title = `Full refresh: ${catalog.entry.fullRefreshedAt}. Latest update: ${catalog.entry.updatedAt}.`;
 
     buildCourseEquivalenceGroups();
 
@@ -2240,6 +2283,11 @@
     applyFilter();
   }
 
+  function isOnlineSection(section) {
+    return /\bonline\b/i.test(section.typeName || '') ||
+      ['ONL', 'OLC', 'OD', 'OLB', 'OLD'].includes(section.typeCode);
+  }
+
   function toggleLevel(val) {
     const chip = document.getElementById('chip-l' + val);
     if (activeLevels.has(val)) {
@@ -2477,25 +2525,61 @@
     group.style.display = '';
   }
 
+  function hasPrereqRequirement(desc) {
+    const sentence = extractPrereqSentence(desc);
+    if (!sentence) return false;
+    return sentence.split(/;\s*/).some(clause => {
+      const text = clause.trim().replace(/[.,]\s*$/, '');
+      if (!text || /^(?:none|no prerequisites?)$/i.test(text)) return false;
+      // Some catalog entries label enrollment eligibility as a prerequisite.
+      // Only ignore a complete status-only clause, preserving any coursework,
+      // experience, or instructor consent requirements in mixed clauses.
+      return !/^(?:for|restricted to|open to)\s+(?:undergraduate|graduate)\s+students?(?:\s+only)?$/i.test(text);
+    });
+  }
+
   function hasPrereq(c) {
-    if (/prerequisite/i.test(c.desc)) return true;
-    // Follow "See SUBJ NUM" / "Same as SUBJ NUM" cross-references
-    const refs = [];
-    const refRe = /\b([A-Z]{2,5})\s+(\d{3,4})\b/g;
+    if (hasPrereqRequirement(c.desc)) return true;
+    // Inherit only from explicit catalog aliases, never credit exclusions or
+    // other incidental course mentions (e.g. TE 460's reference to TE 360).
+    const refs = findSameAsTargets(c.desc);
+    const refRe = /\bSee\s+([A-Z]{2,5})\s+(\d{3,4})\b/g;
     let m;
     while ((m = refRe.exec(c.desc)) !== null) {
       refs.push(m[1] + ' ' + m[2]);
     }
     return refs.some(ref => {
       const linked = courseMap[ref];
-      return linked && /prerequisite/i.test(linked.desc);
+      return linked && hasPrereqRequirement(linked.desc);
     });
+  }
+
+  function containsSearchWords(text, query) {
+    // Treat the query literally, including punctuation in titles or names.
+    let start = text.indexOf(query);
+    while (start !== -1) {
+      const end = start + query.length;
+      if ((start === 0 || !/[\p{L}\p{N}_]/u.test(text[start - 1])) &&
+          (end === text.length || !/[\p{L}\p{N}_]/u.test(text[end]))) return true;
+      start = text.indexOf(query, start + 1);
+    }
+    return false;
+  }
+
+  function searchMatchRank(c, key, query) {
+    if (c.subject === query || key === query || c.number === query || c._searchName === query) return 0;
+    if (containsSearchWords(key, query) || containsSearchWords(c._searchName, query)) return 1;
+    if (key.includes(query) || c._searchName.includes(query)) return 2;
+    if (containsSearchWords(c._searchInstructors, query)) return 3;
+    if (c._searchInstructors.includes(query)) return 4;
+    if (containsSearchWords(c._searchDesc, query)) return 5;
+    if (c._searchDesc.includes(query)) return 6;
+    return null;
   }
 
   function applyFilter() {
     const q = document.getElementById('search-input').value.trim().replace(/\s+/g, ' ').toUpperCase();
-    const qIsSubject = q ? SUBJECT_CODES.has(q) : false;
-    const qIsNumber = q ? /^\d+$/.test(q) : false;
+    const searchRanks = new Map();
     const selectedLevels = [...activeLevels].map(Number);
     const selectedCredits = intCreditsSelected();
     const selectedCreditSet = new Set(selectedCredits);
@@ -2511,7 +2595,8 @@
     const requireInPerson = activeFormats.has('inperson');
 
     filtered = [];
-    filteredPrereq = [];
+    filteredInstructors = [];
+    filteredDescriptions = [];
 
     courseKeys.forEach(key => {
       const c = courseMap[key];
@@ -2555,22 +2640,15 @@
       }
 
       if (q) {
-        // When query is a known subject code (e.g. "CS"), skip name/desc matching —
-        // those would catch unrelated courses that merely mention the code in their text.
-        const matchSubj = c.subject === q;
-        // Course tags are "SUBJECT NUMBER", so allow a partial number after a
-        // subject (for example, "STAT 4" matches STAT 400 and STAT 430).
-        const matchFull = key.startsWith(q);
-        const matchNum  = qIsNumber && c.number.includes(q);
-        const matchName = !qIsSubject && c._searchName.includes(q);
-        const matchDesc = !qIsSubject && c._searchDesc.includes(q);
-        // Instructor match: skip when query is a subject code (e.g. "CS" matches "Popovics")
-        const matchInstr = !qIsSubject && c._searchInstructors.includes(q);
-        if (!matchSubj && !matchFull && !matchNum && !matchName && !matchDesc && !matchInstr) return;
-        if (matchSubj || matchFull || matchNum || matchName || matchInstr) {
+        const rank = searchMatchRank(c, key, q);
+        if (rank === null) return;
+        searchRanks.set(key, rank);
+        if (rank <= 2) {
           filtered.push(key);
+        } else if (rank <= 4) {
+          filteredInstructors.push(key);
         } else {
-          filteredPrereq.push(key);
+          filteredDescriptions.push(key);
         }
       } else {
         filtered.push(key);
@@ -2578,7 +2656,15 @@
     });
 
     filtered = sortKeys(filtered);
-    filteredPrereq = sortKeys(filteredPrereq);
+    filteredInstructors = sortKeys(filteredInstructors);
+    filteredDescriptions = sortKeys(filteredDescriptions);
+    if (q) {
+      // Preserve the chosen sort within each relevance tier.
+      const byRelevance = (a, b) => searchRanks.get(a) - searchRanks.get(b);
+      filtered.sort(byRelevance);
+      filteredInstructors.sort(byRelevance);
+      filteredDescriptions.sort(byRelevance);
+    }
     renderGrid();
   }
 
@@ -2601,10 +2687,19 @@
     const sectionCount = c.sections.length;
 
     const genedBadges = c._genedLabels.map(label => `<span class="badge b-blue">${escapeHtml(label)}</span>`).join('');
+    const query = document.getElementById('search-input').value.trim().replace(/\s+/g, ' ').toUpperCase();
+    const rank = query ? searchMatchRank(c, key, query) : null;
+    const instructorMatches = rank === 3 || rank === 4
+      ? [...new Set(c.sections.flatMap(s => s.instructors))].filter(name => name.toUpperCase().includes(query))
+      : [];
+    const matchNote = instructorMatches.length > 0
+      ? `<div class="card-desc">Instructor match: ${escapeHtml(instructorMatches.join('; '))}</div>`
+      : '';
 
     return `<div class="course-card" style="animation-delay:${Math.min(i,30)*0.025}s" onclick="openPanel('${key}')">
       <div class="card-code">${escapeHtml(c.subject)} ${escapeHtml(c.number)}</div>
       <div class="card-name">${escapeHtml(c.name)}</div>
+      ${matchNote}
       <div class="card-desc">${escapeHtml(c.desc || 'No description available.')}</div>
       <div class="card-footer">
         <span class="badge ${gpaClass}">GPA ${gpaStr}</span>
@@ -2618,7 +2713,7 @@
 
   function renderGrid() {
     const grid = document.getElementById('courses-grid');
-    const total = filtered.length + filteredPrereq.length;
+    const total = filtered.length + filteredInstructors.length + filteredDescriptions.length;
     document.getElementById('results-count').textContent =
       `${total.toLocaleString()} course${total !== 1 ? 's' : ''}`;
 
@@ -2631,23 +2726,25 @@
     }
 
     const BATCH = 120;
-    const showDirect = filtered.slice(0, BATCH);
-    let html = showDirect.map((key, i) => renderCourseCard(key, i)).join('');
-
-    if (filtered.length > BATCH) {
-      html += `<div class="state-msg" style="grid-column:1/-1; padding:30px 20px;">
-        <p>Showing first ${BATCH} of ${filtered.length.toLocaleString()} results. Refine your search to narrow down.</p>
-      </div>`;
-    }
-
-    if (filteredPrereq.length > 0) {
-      const q = document.getElementById('search-input').value.trim().replace(/\s+/g, ' ');
-      html += `<div class="section-divider" style="grid-column:1/-1">Courses with "${escapeHtml(q)}" in description</div>`;
-      const showPrereq = filteredPrereq.slice(0, BATCH);
-      html += showPrereq.map((key, i) => renderCourseCard(key, filtered.length + i)).join('');
-      if (filteredPrereq.length > BATCH) {
+    const q = document.getElementById('search-input').value.trim().replace(/\s+/g, ' ');
+    const sections = [
+      { label: 'Title, number, and subject abbreviation matches', keys: filtered },
+      { label: 'Instructor matches', keys: filteredInstructors },
+      { label: 'Description matches', keys: filteredDescriptions }
+    ];
+    let html = '';
+    let offset = 0;
+    for (const { label, keys } of sections) {
+      if (!keys.length) continue;
+      if (q) {
+        html += `<div class="section-divider" style="grid-column:1/-1">${label} for "${escapeHtml(q)}" · ${keys.length.toLocaleString()}</div>`;
+      }
+      const shown = keys.slice(0, BATCH);
+      html += shown.map((key, i) => renderCourseCard(key, offset + i)).join('');
+      offset += shown.length;
+      if (keys.length > BATCH) {
         html += `<div class="state-msg" style="grid-column:1/-1; padding:30px 20px;">
-          <p>Showing first ${BATCH} of ${filteredPrereq.length.toLocaleString()} description matches.</p>
+          <p>Showing first ${BATCH} of ${keys.length.toLocaleString()} ${q ? label.toLowerCase() : 'results'}. Refine your search to narrow down.</p>
         </div>`;
       }
     }
@@ -2678,6 +2775,9 @@
     activePanelCourse = key;
     openGpaRow = null;
     updateBackBtn();
+    document.getElementById('panel-ce-link').href =
+      `https://courses.illinois.edu/schedule/${yearSelect.value}/${semNameMap[semSelect.value]}/${key.replace(' ', '/')}`;
+    document.body.style.overflow = 'hidden';
 
     if (!c) {
       document.getElementById('panel-code').textContent  = key;
@@ -2699,9 +2799,6 @@
     document.getElementById('panel-prereq-btn').style.display       = '';
     document.getElementById('panel-code').textContent  = `${c.subject} ${c.number}`;
     document.getElementById('panel-title').textContent = c.name;
-    document.getElementById('panel-ce-link').href =
-      `https://courses.illinois.edu/schedule/${yearSelect.value}/${semNameMap[semSelect.value]}/${c.subject}/${c.number}`;
-
     // meta
     const gpaStr = c._gpa !== null ? c._gpa.toFixed(2) : '—';
     const pctAStr = c._pctA !== null ? (c._pctA * 100).toFixed(1) + '%' : '—';
@@ -2728,6 +2825,7 @@
   }
 
   function closePanel() {
+    ++statusFetchVersion;
     document.getElementById('prereq-modal').style.display = 'none';
     document.getElementById('overlay').classList.remove('open');
     document.getElementById('detail-panel').classList.remove('open');
@@ -3252,7 +3350,7 @@
   // ─────────────────────────────────────────────────────────────────────────
   // BOOT
   // ─────────────────────────────────────────────────────────────────────────
-  loadData();
+  initializeCatalog();
   </script>
 </body>
 </html>

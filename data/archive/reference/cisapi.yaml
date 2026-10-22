@@ -1,0 +1,1140 @@
+openapi: 3.0.1
+info:
+  title: CIS CISAPP Data Explorer API
+  description: >
+    Data Explorer API Base URL: <a href="https://courses.illinois.edu/cisapp/explorer">https://courses.illinois.edu/cisapp/explorer</a><br/><br/>
+    
+    Course Information Suite (CIS) XML API for browsing schedule, catalog, and final exam data at the University of Illinois.
+    <br/><br/>
+    
+    XML Schema Definition: [cisapi.xsd](https://cis-data.cis.techservices.illinois.edu/css/cisapi.xsd)<br/>
+    Response Format: application/xml
+
+  version: 1.0.0
+
+servers:
+  - url: https://courses.illinois.edu/cisapp/explorer
+    description: Production
+
+tags:
+  - name: schedule
+    description: Browse a Schedule of courses and classes available by term.
+  - name: catalog
+    description: >
+      Browse Courses that may be offered by term.
+      Not all courses listed in the Catalog are offered every term.
+
+# ─────────────────────────────────────────────
+# COMMON COMPONENTS
+# ─────────────────────────────────────────────
+components:
+  parameters:
+    yearParam:
+      name: year
+      in: path
+      required: true
+      description: >
+        4-digit calendar year, or the special tokens `default` (the default term's year)
+        or `enrolling` (the currently enrolling term's year). Case-insensitive.
+      schema:
+        type: string
+        pattern: '[\d]{4}|(?i)default|(?i)enrolling'
+      example: "2025"
+
+    termParam:
+      name: term
+      in: path
+      required: true
+      description: >
+        Term name: `winter`, `spring`, `summer`, or `fall`.
+        Also accepts the special tokens `default` or `enrolling`. Case-insensitive.
+      schema:
+        type: string
+        enum: [winter, spring, summer, fall, default, enrolling]
+      example: spring
+
+    subjectCodeParam:
+      name: subjectCode
+      in: path
+      required: true
+      description: Subject code (2–4 uppercase letters, e.g. `CS`, `ECE`, `MATH`).
+      schema:
+        type: string
+        pattern: '[A-Z]{2,4}'
+      example: CS
+
+    courseNumberParam:
+      name: courseNumber
+      in: path
+      required: true
+      description: Course number (1–5 digits, e.g. `101`, `44700`).
+      schema:
+        type: string
+        pattern: '[\d]{1,5}'
+      example: "101"
+
+    crnParam:
+      name: crn
+      in: path
+      required: true
+      description: Course Registration Number (5 digits).
+      schema:
+        type: string
+        pattern: '[\d]{5}'
+      example: "12345"
+
+    modeLinksOrSummary:
+      name: mode
+      in: query
+      required: false
+      description: >
+        Response mode.
+        `links` (default) returns DescriptiveLink elements with `id` and `href` attributes.
+        `summary` returns richer TermDetail data inline.
+      schema:
+        type: string
+        enum: [links, summary]
+        default: links
+
+    modeSummaryOrCascade:
+      name: mode
+      in: query
+      required: false
+      description: >
+        Response mode.
+        `summary` (default) returns DescriptiveLinks to courses.
+        `cascade` returns full CourseType elements inline.
+      schema:
+        type: string
+        enum: [summary, cascade]
+        default: summary
+
+    modeCourseDetail:
+      name: mode
+      in: query
+      required: false
+      description: >
+        Response mode.
+        `summary` (default) returns DescriptiveLinks to sections.
+        `cascade` / `detail` return full SectionType elements inline.
+      schema:
+        type: string
+        enum: [summary, cascade, detail]
+        default: summary
+
+  schemas:
+    DescriptiveLink:
+      type: object
+      description: >
+        A hyperlinked resource. The element text is the display label.
+        The `id` attribute is the unique identifier and `href` is the URI to the resource.
+      xml:
+        name: descriptiveLink
+      properties:
+        id:
+          type: string
+          xml:
+            attribute: true
+        href:
+          type: string
+          format: uri
+          xml:
+            attribute: true
+        value:
+          type: string
+          xml:
+            wrapped: false
+
+    ParentsType:
+      type: object
+      description: Breadcrumb hierarchy. Contains DescriptiveLinks for each ancestor resource.
+      xml:
+        name: parents
+      properties:
+        calendarYear:
+          $ref: '#/components/schemas/DescriptiveLink'
+        term:
+          $ref: '#/components/schemas/DescriptiveLink'
+        subject:
+          $ref: '#/components/schemas/DescriptiveLink'
+        course:
+          $ref: '#/components/schemas/DescriptiveLink'
+
+    TermDetailType:
+      type: object
+      description: Detailed metadata about a single term.
+      xml:
+        name: termDetail
+      properties:
+        id:
+          type: string
+          description: Banner term code (e.g. 120251).
+          xml:
+            attribute: true
+        href:
+          type: string
+          format: uri
+          xml:
+            attribute: true
+        label:
+          type: string
+          example: Spring 2025
+        publicIndicator:
+          type: string
+          enum: [Y, N]
+          description: Y = term is publicly queryable.
+        archiveIndicator:
+          type: string
+          enum: [Y, N]
+          description: Y = term is archived.
+        attendingTerm:
+          type: string
+          enum: [Y]
+          description: Present (value Y) when this is the attending term.
+        defaultTerm:
+          type: string
+          enum: [Y]
+          description: Present (value Y) when this is the default term.
+        enrollingTerm:
+          type: string
+          enum: [Y]
+          description: Present (value Y) when this is the enrolling term.
+
+    YearsType:
+      type: object
+      description: >
+        Root response for `/schedule.xml` and `/catalog.xml`. Contains a label and a
+        list of calendarYear links (links mode) or calendarYearSummary elements (summary mode).
+      xml:
+        name: schedule
+        namespace: 'http://rest.cis.illinois.edu'
+        prefix: ns2
+      properties:
+        label:
+          type: string
+          example: Calendar Years
+        calendarYears:
+          type: object
+          xml:
+            name: calendarYears
+          properties:
+            calendarYear:
+              type: array
+              xml:
+                name: calendarYear
+                wrapped: false
+              items:
+                $ref: '#/components/schemas/DescriptiveLink'
+
+    YearType:
+      type: object
+      description: >
+        Response for `/{year}.xml`. Contains a label and a list of term links
+        (links mode) or termDetail elements (summary mode).
+      xml:
+        name: calendarYear
+        namespace: 'http://rest.cis.illinois.edu'
+        prefix: ns2
+      properties:
+        id:
+          type: integer
+          xml:
+            attribute: true
+        href:
+          type: string
+          format: uri
+          xml:
+            attribute: true
+        label:
+          type: string
+          example: "2025"
+        terms:
+          type: object
+          xml:
+            name: terms
+          properties:
+            term:
+              type: array
+              xml:
+                name: term
+                wrapped: false
+              items:
+                $ref: '#/components/schemas/DescriptiveLink'
+
+    TermType:
+      type: object
+      description: >
+        Response for `/{year}/{term}.xml`. Contains parent breadcrumbs, a label, and
+        a list of subject DescriptiveLinks.
+      xml:
+        name: term
+        namespace: 'http://rest.cis.illinois.edu'
+        prefix: ns2
+      properties:
+        id:
+          type: integer
+          description: Banner term code.
+          xml:
+            attribute: true
+        parents:
+          $ref: '#/components/schemas/ParentsType'
+        label:
+          type: string
+          example: Spring 2025
+        subjects:
+          type: object
+          xml:
+            name: subjects
+          properties:
+            subject:
+              type: array
+              xml:
+                name: subject
+                wrapped: false
+              items:
+                $ref: '#/components/schemas/DescriptiveLink'
+
+    SubjectType:
+      type: object
+      description: >
+        Response for `/{year}/{term}/{subjectCode}.xml`. Contains parent breadcrumbs,
+        subject metadata, and a list of course DescriptiveLinks (summary mode) or
+        full CourseType elements (cascade mode).
+      xml:
+        name: subject
+        namespace: 'http://rest.cis.illinois.edu'
+        prefix: ns2
+      properties:
+        id:
+          type: string
+          description: Subject code.
+          xml:
+            attribute: true
+        parents:
+          $ref: '#/components/schemas/ParentsType'
+        label:
+          type: string
+          description: Full subject name.
+          example: Computer Science
+        collegeCode:
+          type: string
+          example: EN
+        departmentCode:
+          type: string
+          example: CS
+        unitName:
+          type: string
+        contactName:
+          type: string
+        contactTitle:
+          type: string
+        addressLine1:
+          type: string
+        addressLine2:
+          type: string
+        phoneNumber:
+          type: string
+        webSiteURL:
+          type: string
+        subjectComment:
+          type: string
+        collegeDepartmentDescription:
+          type: string
+        courses:
+          type: object
+          description: Present in summary mode. DescriptiveLinks to courses.
+          xml:
+            name: courses
+          properties:
+            course:
+              type: array
+              xml:
+                name: course
+                wrapped: false
+              items:
+                $ref: '#/components/schemas/DescriptiveLink'
+        cascadingCourses:
+          type: object
+          description: Present in cascade mode. Full CourseType elements.
+          xml:
+            name: cascadingCourses
+          properties:
+            cascadingCourse:
+              type: array
+              xml:
+                name: cascadingCourse
+                wrapped: false
+              items:
+                $ref: '#/components/schemas/CourseType'
+
+    GenEdAttributeType:
+      type: object
+      xml:
+        name: genEdAttribute
+      properties:
+        code:
+          type: string
+          xml:
+            attribute: true
+        value:
+          type: string
+          xml:
+            wrapped: false
+
+    GenEdAttributesType:
+      type: object
+      xml:
+        name: genEdAttributes
+      properties:
+        genEdAttribute:
+          type: array
+          xml:
+            name: genEdAttribute
+            wrapped: false
+          items:
+            $ref: '#/components/schemas/GenEdAttributeType'
+
+    CourseType:
+      type: object
+      description: >
+        Full course information. When returned by the schedule module, contains
+        a `sections` or `detailedSections` container. When returned by the catalog
+        module, contains a `termsOffered` container.
+      xml:
+        name: course
+        namespace: 'http://rest.cis.illinois.edu'
+        prefix: ns2
+      properties:
+        id:
+          type: string
+          description: Subject code + course number (e.g. CS101).
+          xml:
+            attribute: true
+        href:
+          type: string
+          format: uri
+          xml:
+            attribute: true
+        parents:
+          $ref: '#/components/schemas/ParentsType'
+        label:
+          type: string
+          description: Course title.
+          example: Introduction to Computing
+        description:
+          type: string
+        creditHours:
+          type: string
+          example: 3 Hours.
+        sectionDateRange:
+          type: string
+        courseSectionInformation:
+          type: string
+        sectionRegistrationNotes:
+          type: string
+        sectionDegreeAttributes:
+          type: string
+        sectionCappArea:
+          type: string
+        sectionApprovalCode:
+          type: string
+        courseCoRequisite:
+          type: string
+        classScheduleInformation:
+          type: string
+        sectionDescription:
+          type: string
+        sectionFeeAmount:
+          type: string
+        sectionDeptRestriction:
+          type: string
+        genEdAttributes:
+          $ref: '#/components/schemas/GenEdAttributesType'
+        sections:
+          type: object
+          description: Present in summary mode (schedule). DescriptiveLinks to sections.
+          xml:
+            name: sections
+          properties:
+            section:
+              type: array
+              xml:
+                name: section
+                wrapped: false
+              items:
+                $ref: '#/components/schemas/DescriptiveLink'
+        detailedSections:
+          type: object
+          description: Present in cascade/detail mode (schedule). Full SectionType elements.
+          xml:
+            name: detailedSections
+          properties:
+            detailedSection:
+              type: array
+              xml:
+                name: detailedSection
+                wrapped: false
+              items:
+                $ref: '#/components/schemas/SectionType'
+        termsOffered:
+          type: object
+          description: Present in catalog module. Links to this course in specific schedule terms.
+          xml:
+            name: termsOffered
+          properties:
+            course:
+              type: array
+              xml:
+                name: course
+                wrapped: false
+              items:
+                $ref: '#/components/schemas/DescriptiveLink'
+
+    MeetingType:
+      type: object
+      description: A scheduled meeting for a section (lecture, lab, discussion, etc.).
+      xml:
+        name: meeting
+      properties:
+        id:
+          type: integer
+          xml:
+            attribute: true
+        type:
+          type: object
+          xml:
+            name: type
+          properties:
+            code:
+              type: string
+              xml:
+                attribute: true
+            value:
+              type: string
+              xml:
+                wrapped: false
+        start:
+          type: string
+          description: Start time, e.g. "10:00 AM"
+        end:
+          type: string
+          description: End time, e.g. "10:50 AM"
+        daysOfTheWeek:
+          type: string
+          description: Day abbreviations concatenated, e.g. "MWF"
+        roomNumber:
+          type: string
+        meetingDateRange:
+          type: string
+        buildingName:
+          type: string
+        instructors:
+          type: object
+          xml:
+            name: instructors
+          properties:
+            instructor:
+              type: array
+              xml:
+                name: instructor
+                wrapped: false
+              items:
+                type: object
+                properties:
+                  lastName:
+                    type: string
+                    xml:
+                      attribute: true
+                  firstName:
+                    type: string
+                    xml:
+                      attribute: true
+                  uin:
+                    type: integer
+                    xml:
+                      attribute: true
+                  value:
+                    type: string
+                    xml:
+                      wrapped: false
+
+    SectionType:
+      type: object
+      description: Full information about a single section offering.
+      xml:
+        name: section
+        namespace: 'http://rest.cis.illinois.edu'
+        prefix: ns2
+      properties:
+        id:
+          type: string
+          description: Course Registration Number (CRN).
+          xml:
+            attribute: true
+        href:
+          type: string
+          format: uri
+          xml:
+            attribute: true
+        parents:
+          $ref: '#/components/schemas/ParentsType'
+        sectionNumber:
+          type: string
+          example: "AD1"
+        sectionTitle:
+          type: string
+        sectionDateRange:
+          type: string
+        description:
+          type: string
+        comment:
+          type: string
+        creditHours:
+          type: string
+        statusCode:
+          type: string
+          enum: [A, P]
+          description: A = active, P = pending.
+        courseAttribute:
+          type: string
+        sectionText:
+          type: string
+        sectionNotes:
+          type: string
+        sectionDegreeAttributes:
+          type: string
+        sectionCappArea:
+          type: string
+        sectionApprovalCode:
+          type: string
+        sectionCoRequest:
+          type: string
+        sectionFeeAmount:
+          type: string
+        partOfTerm:
+          type: string
+        sectionDeptRestriction:
+          type: string
+        sectionStatusCode:
+          type: string
+          enum: [A, P]
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        specialApproval:
+          type: object
+          xml:
+            name: specialApproval
+          properties:
+            code:
+              type: string
+              xml:
+                attribute: true
+            value:
+              type: string
+              xml:
+                wrapped: false
+        meetings:
+          type: object
+          xml:
+            name: meetings
+          properties:
+            meeting:
+              type: array
+              xml:
+                name: meeting
+                wrapped: false
+              items:
+                $ref: '#/components/schemas/MeetingType'
+
+    FinalExamEventType:
+      type: object
+      xml:
+        name: finalExamEvent
+      properties:
+        sectionId:
+          type: string
+        crn:
+          type: string
+        date:
+          type: string
+        day:
+          type: string
+        startTime:
+          type: string
+        endTime:
+          type: string
+        location:
+          type: string
+        examType:
+          type: string
+
+    FinalExamType:
+      type: object
+      xml:
+        name: finalExam
+        namespace: 'http://rest.cis.illinois.edu'
+        prefix: ns2
+      properties:
+        id:
+          type: string
+          xml:
+            attribute: true
+        href:
+          type: string
+          format: uri
+          xml:
+            attribute: true
+        subjectCode:
+          type: string
+        courseNumber:
+          type: string
+        finalExamEvent:
+          type: array
+          xml:
+            name: finalExamEvent
+            wrapped: false
+          items:
+            $ref: '#/components/schemas/FinalExamEventType'
+
+    SessionsType:
+      type: object
+      xml:
+        name: sessions
+        namespace: 'http://rest.cis.illinois.edu'
+        prefix: ns2
+      properties:
+        session:
+          type: array
+          xml:
+            name: session
+            wrapped: false
+          items:
+            type: object
+            xml:
+              name: session
+            properties:
+              term:
+                $ref: '#/components/schemas/DescriptiveLink'
+              partOfTerm:
+                type: object
+                xml:
+                  name: partOfTerm
+                properties:
+                  id:
+                    type: string
+                    xml:
+                      attribute: true
+                  value:
+                    type: string
+                    xml:
+                      wrapped: false
+              startDate:
+                type: string
+                format: date-time
+              endDate:
+                type: string
+                format: date-time
+
+    SearchResultType:
+      type: object
+      description: >
+        Container of sections matching search criteria.
+      xml:
+        name: search
+        namespace: 'http://rest.cis.illinois.edu'
+        prefix: ns2
+      properties:
+        type:
+          type: string
+          xml:
+            attribute: true
+        parameters:
+          type: object
+          xml:
+            name: parameters
+          properties:
+            parameter:
+              type: array
+              xml:
+                name: parameter
+                wrapped: false
+              items:
+                type: object
+                xml:
+                  name: parameter
+                properties:
+                  name:
+                    type: string
+                    xml:
+                      attribute: true
+                  value:
+                    type: string
+                    xml:
+                      attribute: true
+        sections:
+          type: object
+          xml:
+            name: sections
+          properties:
+            section:
+              type: array
+              xml:
+                name: section
+                wrapped: false
+              items:
+                $ref: '#/components/schemas/SectionType'
+
+    ErrorMessage:
+      type: object
+      xml:
+        name: ErrorMessage
+      properties:
+        statusCode:
+          type: integer
+        message:
+          type: string
+
+  responses:
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+          example: "<ErrorMessage><statusCode>404</statusCode><message>Resource not found</message></ErrorMessage>"
+
+# ─────────────────────────────────────────────
+# PATHS
+# ─────────────────────────────────────────────
+paths:
+
+  # ──────────── SCHEDULE ────────────
+
+  /schedule.xml:
+    get:
+      tags: [schedule]
+      operationId: getScheduleYears
+      summary: List all available calendar years (schedule).
+      description: >
+        Returns a list of calendar years for which schedule data is available.
+        Use `mode=summary` to include term detail metadata inline.
+      parameters:
+        - $ref: '#/components/parameters/modeLinksOrSummary'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/YearsType'
+              example: "<ns2:schedule xmlns:ns2=\"http://rest.cis.illinois.edu\"><label>Calendar Years</label><calendarYears><calendarYear id=\"2027\" href=\"https://courses.illinois.edu/cisapp/explorer/schedule/2027.xml\">2027</calendarYear><calendarYear id=\"2026\" href=\"https://courses.illinois.edu/cisapp/explorer/schedule/2026.xml\">2026</calendarYear><calendarYear id=\"2025\" href=\"https://courses.illinois.edu/cisapp/explorer/schedule/2025.xml\">2025</calendarYear></calendarYears></ns2:schedule>"
+
+  /schedule/{year}.xml:
+    get:
+      tags: [schedule]
+      operationId: getScheduleYear
+      summary: List terms for a schedule year.
+      description: >
+        Returns a list of terms available for the specified year.
+        Use `mode=summary` to include term detail metadata inline.
+      parameters:
+        - $ref: '#/components/parameters/yearParam'
+        - $ref: '#/components/parameters/modeLinksOrSummary'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/YearType'
+              example: "<ns2:calendarYear xmlns:ns2=\"http://rest.cis.illinois.edu\" id=\"2025\"><label>2025</label><terms><term id=\"120251\" href=\"https://courses.illinois.edu/cisapp/explorer/schedule/2025/spring.xml\">Spring 2025</term><term id=\"120258\" href=\"https://courses.illinois.edu/cisapp/explorer/schedule/2025/fall.xml\">Fall 2025</term></terms></ns2:calendarYear>"
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /schedule/{year}/{term}.xml:
+    get:
+      tags: [schedule]
+      operationId: getScheduleTerm
+      summary: List subjects for a schedule term.
+      description: Returns a list of subjects offered in the given year and term.
+      parameters:
+        - $ref: '#/components/parameters/yearParam'
+        - $ref: '#/components/parameters/termParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TermType'
+              example: "<ns2:term xmlns:ns2=\"http://rest.cis.illinois.edu\" id=\"120251\"><parents><calendarYear id=\"2025\" href=\"https://courses.illinois.edu/cisapp/explorer/schedule/2025.xml\">2025</calendarYear></parents><label>Spring 2025</label><subjects><subject id=\"CS\" href=\"https://courses.illinois.edu/cisapp/explorer/schedule/2025/spring/CS.xml\">Computer Science</subject></subjects></ns2:term>"
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /schedule/{year}/{term}/{subjectCode}.xml:
+    get:
+      tags: [schedule]
+      operationId: getScheduleSubject
+      summary: List courses for a schedule subject.
+      description: >
+        Returns subject metadata and a list of courses.
+        `summary` mode (default) returns DescriptiveLinks to each course.
+        `cascade` mode returns full CourseType elements including all section data inline.
+      parameters:
+        - $ref: '#/components/parameters/yearParam'
+        - $ref: '#/components/parameters/termParam'
+        - $ref: '#/components/parameters/subjectCodeParam'
+        - $ref: '#/components/parameters/modeSummaryOrCascade'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/SubjectType'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /schedule/{year}/{term}/{subjectCode}/{courseNumber}.xml:
+    get:
+      tags: [schedule]
+      operationId: getScheduleCourse
+      summary: Get a course and its sections (schedule).
+      description: >
+        Returns full course information including sections.
+        `summary` mode (default) returns DescriptiveLinks to sections.
+        `cascade` or `detail` mode returns full SectionType elements inline.
+      parameters:
+        - $ref: '#/components/parameters/yearParam'
+        - $ref: '#/components/parameters/termParam'
+        - $ref: '#/components/parameters/subjectCodeParam'
+        - $ref: '#/components/parameters/courseNumberParam'
+        - $ref: '#/components/parameters/modeCourseDetail'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/CourseType'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /schedule/{year}/{term}/{subjectCode}/{courseNumber}/{crn}.xml:
+    get:
+      tags: [schedule]
+      operationId: getScheduleSection
+      summary: Get a single section by CRN.
+      description: Returns full SectionType data for the specified section.
+      parameters:
+        - $ref: '#/components/parameters/yearParam'
+        - $ref: '#/components/parameters/termParam'
+        - $ref: '#/components/parameters/subjectCodeParam'
+        - $ref: '#/components/parameters/courseNumberParam'
+        - $ref: '#/components/parameters/crnParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/SectionType'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /schedule/{year}/{term}/{subjectCode}/{courseNumber}/finalexam.xml:
+    get:
+      tags: [schedule]
+      operationId: getScheduleFinalExam
+      summary: Get final exam schedule for a course.
+      description: >
+        Returns final exam event information for each section of the specified course.
+        Only available for terms where final exam data is public.
+      parameters:
+        - $ref: '#/components/parameters/yearParam'
+        - $ref: '#/components/parameters/termParam'
+        - $ref: '#/components/parameters/subjectCodeParam'
+        - $ref: '#/components/parameters/courseNumberParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/FinalExamType'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /schedule/sessions/{year}/{term}.xml:
+    get:
+      tags: [schedule]
+      operationId: getScheduleSessions
+      summary: Get sessions (parts of term) for a term.
+      description: >
+        Returns all sessions (parts of term / sub-sessions) for the given year and term.
+        The `partOfTerm` code returned here corresponds to the `partOfTerm` field in a SectionType.
+      parameters:
+        - $ref: '#/components/parameters/yearParam'
+        - $ref: '#/components/parameters/termParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/SessionsType'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /schedule/sections.xml:
+    get:
+      tags: [schedule]
+      operationId: searchScheduleSections
+      summary: Search for sections by CRN.
+      description: >
+        Returns full SectionType data for one or more sections identified by CRN.
+        Multiple `crn` query parameters may be provided.
+      parameters:
+        - name: year
+          in: query
+          required: true
+          description: 4-digit calendar year.
+          schema:
+            type: string
+          example: "2025"
+        - name: term
+          in: query
+          required: true
+          description: Term name (winter, spring, summer, fall).
+          schema:
+            type: string
+            enum: [winter, spring, summer, fall]
+          example: spring
+        - name: crn
+          in: query
+          required: true
+          description: One or more 5-digit CRNs, comma-separated.
+          schema:
+            type: string
+          example: "12345,67890,01234,56789"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/SearchResultType'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ──────────── CATALOG ────────────
+
+  /catalog.xml:
+    get:
+      tags: [catalog]
+      operationId: getCatalogYears
+      summary: List all available calendar years (catalog).
+      description: >
+        Returns a list of calendar years for which catalog data is available.
+        Use `mode=summary` to include term detail metadata inline.
+      parameters:
+        - $ref: '#/components/parameters/modeLinksOrSummary'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/YearsType'
+              example: "<ns2:schedule xmlns:ns2=\"http://rest.cis.illinois.edu\"><label>Calendar Years</label><calendarYears><calendarYear id=\"2025\" href=\"https://courses.illinois.edu/cisapp/explorer/catalog/2025.xml\">2025</calendarYear></calendarYears></ns2:schedule>"
+
+  /catalog/{year}.xml:
+    get:
+      tags: [catalog]
+      operationId: getCatalogYear
+      summary: List terms for a catalog year.
+      description: >
+        Returns a list of terms available in the catalog for the specified year.
+      parameters:
+        - $ref: '#/components/parameters/yearParam'
+        - $ref: '#/components/parameters/modeLinksOrSummary'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/YearType'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /catalog/{year}/{term}.xml:
+    get:
+      tags: [catalog]
+      operationId: getCatalogTerm
+      summary: List subjects for a catalog term.
+      description: Returns a list of all subjects offered in the catalog for the given year and term.
+      parameters:
+        - $ref: '#/components/parameters/yearParam'
+        - $ref: '#/components/parameters/termParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TermType'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /catalog/{year}/{term}/{subjectCode}.xml:
+    get:
+      tags: [catalog]
+      operationId: getCatalogSubject
+      summary: List courses for a catalog subject.
+      description: >
+        Returns subject metadata and a list of courses.
+        `summary` mode (default) returns DescriptiveLinks to courses.
+        `cascade` mode returns full CourseType elements inline.
+      parameters:
+        - $ref: '#/components/parameters/yearParam'
+        - $ref: '#/components/parameters/termParam'
+        - $ref: '#/components/parameters/subjectCodeParam'
+        - $ref: '#/components/parameters/modeSummaryOrCascade'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/SubjectType'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /catalog/{year}/{term}/{subjectCode}/{courseNumber}.xml:
+    get:
+      tags: [catalog]
+      operationId: getCatalogCourse
+      summary: Get a course and its terms offered (catalog).
+      description: >
+        Returns full course information from the catalog including a `termsOffered` container
+        with DescriptiveLinks to this course in the schedule module for each available term.
+      parameters:
+        - $ref: '#/components/parameters/yearParam'
+        - $ref: '#/components/parameters/termParam'
+        - $ref: '#/components/parameters/subjectCodeParam'
+        - $ref: '#/components/parameters/courseNumberParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/CourseType'
+        '404':
+          $ref: '#/components/responses/NotFound'
+

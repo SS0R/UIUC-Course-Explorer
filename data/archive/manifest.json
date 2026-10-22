@@ -1,0 +1,1179 @@
+{
+  "schemaVersion": 1,
+  "terms": {
+    "2027-sp": {
+      "file": "2027-sp.zip",
+      "sha256": "03a2921d7b6b81457e59d26d42ffaafe835e1cb84f7e6987d2d05c93de35a569",
+      "year": 2027,
+      "term": "spring",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-17T01:22:57+00:00",
+      "responses": 189,
+      "unavailable": 0
+    },
+    "2026-fa": {
+      "file": "2026-fa.zip",
+      "sha256": "677ba3c8b5bdcf5005e3af419dde3c8b9bd7afc80c65b8a11afae1fedba1b38e",
+      "year": 2026,
+      "term": "fall",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T22:06:58+00:00",
+      "responses": 383,
+      "unavailable": 0
+    },
+    "2004-fa": {
+      "file": "2004-fa.zip",
+      "sha256": "890c8259030573fa9917fea03b9fa53ffef9a1dcea98724cc91f212ac19646ee",
+      "year": 2004,
+      "term": "fall",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T22:36:58+00:00",
+      "responses": 333,
+      "unavailable": 0
+    },
+    "2005-sp": {
+      "file": "2005-sp.zip",
+      "sha256": "9791af530046a1c55df480c95b23cf2493985d12fd0da0dc82e0e77aac1c61ec",
+      "year": 2005,
+      "term": "spring",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T23:03:45+00:00",
+      "responses": 338,
+      "unavailable": 0
+    },
+    "2005-su": {
+      "file": "2005-su.zip",
+      "sha256": "51b889bd13611e944eda6bef402fffbede4a8c1a7a4071bf6b27f4ea443035be",
+      "year": 2005,
+      "term": "summer",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T23:18:42+00:00",
+      "responses": 324,
+      "unavailable": 0
+    },
+    "2005-fa": {
+      "file": "2005-fa.zip",
+      "sha256": "218670aaa694fe304533efb21577401cac12844633e3f65f85a03e1f2a0807b8",
+      "year": 2005,
+      "term": "fall",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T23:35:11+00:00",
+      "responses": 344,
+      "unavailable": 0
+    },
+    "2006-sp": {
+      "file": "2006-sp.zip",
+      "sha256": "8a9b5c39a1979c09e0a7eb2771f9602ea0c9ec00079cf752543a6737a1818963",
+      "year": 2006,
+      "term": "spring",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T23:50:45+00:00",
+      "responses": 341,
+      "unavailable": 0
+    },
+    "2006-su": {
+      "file": "2006-su.zip",
+      "sha256": "65ce8b56f0d174ae25295feb110d106ba11894afa8bafe04419c58cb85667f6b",
+      "year": 2006,
+      "term": "summer",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T00:05:57+00:00",
+      "responses": 329,
+      "unavailable": 0
+    },
+    "2006-fa": {
+      "file": "2006-fa.zip",
+      "sha256": "c41c09a34fe32ede0dbaf0e9cecc2ef02d62343e1a38c2b01a016347aa8699b4",
+      "year": 2006,
+      "term": "fall",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T00:21:46+00:00",
+      "responses": 345,
+      "unavailable": 0
+    },
+    "2007-sp": {
+      "file": "2007-sp.zip",
+      "sha256": "18f109553b511f199a339dcd135ffd8fc991c8aac8a790e579a2795ff21d410e",
+      "year": 2007,
+      "term": "spring",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T00:37:11+00:00",
+      "responses": 345,
+      "unavailable": 0
+    },
+    "2007-su": {
+      "file": "2007-su.zip",
+      "sha256": "e25726d5c63542f4a215fa546bb62ffabde0ae4d26942b7132f3502f5c9b896c",
+      "year": 2007,
+      "term": "summer",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T00:53:02+00:00",
+      "responses": 331,
+      "unavailable": 0
+    },
+    "2007-fa": {
+      "file": "2007-fa.zip",
+      "sha256": "b3920d5e4574c302819cda7361501b8676c6dad3656a6b6d9803eca6535e7224",
+      "year": 2007,
+      "term": "fall",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T01:08:38+00:00",
+      "responses": 350,
+      "unavailable": 0
+    },
+    "2008-sp": {
+      "file": "2008-sp.zip",
+      "sha256": "893db7e813aa77373ab68e7e7a1cb4554cc0dcc8c0ae3fa9294646a30267319e",
+      "year": 2008,
+      "term": "spring",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T01:24:25+00:00",
+      "responses": 352,
+      "unavailable": 0
+    },
+    "2008-su": {
+      "file": "2008-su.zip",
+      "sha256": "3ee9d86c07e97d307e000ad314608e4b00b06aa102e61650e5b6b0d7b6ab0c96",
+      "year": 2008,
+      "term": "summer",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T01:40:08+00:00",
+      "responses": 330,
+      "unavailable": 0
+    },
+    "2008-fa": {
+      "file": "2008-fa.zip",
+      "sha256": "3346841a51b88fd7ccaf8155725219d3ef2ff8128201dfb65c77c59e932b3e3c",
+      "year": 2008,
+      "term": "fall",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T01:58:50+00:00",
+      "responses": 358,
+      "unavailable": 0
+    },
+    "2009-sp": {
+      "file": "2009-sp.zip",
+      "sha256": "07e775e627a2882189272d07b4243dd2c72780e0b2044debee3b43d6b2f0c54e",
+      "year": 2009,
+      "term": "spring",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T02:17:46+00:00",
+      "responses": 360,
+      "unavailable": 0
+    },
+    "2009-su": {
+      "file": "2009-su.zip",
+      "sha256": "a0c1856124d0596c81f5852581775b93c7676e2f55c561708e036c16066c44af",
+      "year": 2009,
+      "term": "summer",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T02:36:13+00:00",
+      "responses": 335,
+      "unavailable": 0
+    },
+    "2009-fa": {
+      "file": "2009-fa.zip",
+      "sha256": "5ce7a5e1d99a12a63d36d12db2a94783f4493c54f38103155b5e559c97da0a0e",
+      "year": 2009,
+      "term": "fall",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T02:52:24+00:00",
+      "responses": 366,
+      "unavailable": 0
+    },
+    "2010-sp": {
+      "file": "2010-sp.zip",
+      "sha256": "d90d43a13024dd8ddc63ec1413da8d3c9cb0c922a10996903173c76bac318b7c",
+      "year": 2010,
+      "term": "spring",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T03:14:09+00:00",
+      "responses": 369,
+      "unavailable": 0
+    },
+    "2010-su": {
+      "file": "2010-su.zip",
+      "sha256": "e349ede27c81c2894ac56f419750593095db1baa4e183037088f8990fd0ad905",
+      "year": 2010,
+      "term": "summer",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T03:46:14+00:00",
+      "responses": 344,
+      "unavailable": 0
+    },
+    "2010-fa": {
+      "file": "2010-fa.zip",
+      "sha256": "8e86352fc17626911765990fafb553ed41297cb9646214999815bb2598035988",
+      "year": 2010,
+      "term": "fall",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T12:14:34+00:00",
+      "responses": 373,
+      "unavailable": 0
+    },
+    "2011-sp": {
+      "file": "2011-sp.zip",
+      "sha256": "01bfdce43e64ff1e09fd0a6838cd587f6cff782afaa048b834fb75834c3f2e02",
+      "year": 2011,
+      "term": "spring",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T17:33:49+00:00",
+      "responses": 370,
+      "unavailable": 0
+    },
+    "2011-su": {
+      "file": "2011-su.zip",
+      "sha256": "548ca9c76d5f94cd8732c24dbbeb80638465ffaf25eacf5187741a6a5f61de0a",
+      "year": 2011,
+      "term": "summer",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T17:50:20+00:00",
+      "responses": 344,
+      "unavailable": 0
+    },
+    "2011-fa": {
+      "file": "2011-fa.zip",
+      "sha256": "699d19cc179822c57f2173b1468a41e350784f501a499eb36ebe694a297dfc7c",
+      "year": 2011,
+      "term": "fall",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T18:07:04+00:00",
+      "responses": 366,
+      "unavailable": 0
+    },
+    "2012-sp": {
+      "file": "2012-sp.zip",
+      "sha256": "da0b3504bd70637b8f1c68324fa6c96a55eceecfa896e076b76f22f3cff30040",
+      "year": 2012,
+      "term": "spring",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T18:23:15+00:00",
+      "responses": 368,
+      "unavailable": 0
+    },
+    "2012-su": {
+      "file": "2012-su.zip",
+      "sha256": "146f14b18cbcb89f4fad17a7dae174cae01d94d8785ffe9755f7f4a7f2a9d237",
+      "year": 2012,
+      "term": "summer",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T18:43:00+00:00",
+      "responses": 346,
+      "unavailable": 0
+    },
+    "2012-fa": {
+      "file": "2012-fa.zip",
+      "sha256": "49d5d2cfe75afcd39358296e0c000137016e4d8361d6927b3a324e1792d6c75e",
+      "year": 2012,
+      "term": "fall",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T19:31:47+00:00",
+      "responses": 370,
+      "unavailable": 0
+    },
+    "2013-sp": {
+      "file": "2013-sp.zip",
+      "sha256": "aa53d495d150020f211b01b2485ed3278029b176d54ca99967066ba908374260",
+      "year": 2013,
+      "term": "spring",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T19:48:50+00:00",
+      "responses": 369,
+      "unavailable": 0
+    },
+    "2013-su": {
+      "file": "2013-su.zip",
+      "sha256": "cf23ae9034c79bd5156004b69d8396c71f985212846f9975f6812246caaf315f",
+      "year": 2013,
+      "term": "summer",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T20:10:28+00:00",
+      "responses": 347,
+      "unavailable": 0
+    },
+    "2013-fa": {
+      "file": "2013-fa.zip",
+      "sha256": "92685c38529b5af5048f64d0bd10671e5c6d400054d91b2b53000c592bb5eead",
+      "year": 2013,
+      "term": "fall",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T20:54:31+00:00",
+      "responses": 366,
+      "unavailable": 0
+    },
+    "2014-sp": {
+      "file": "2014-sp.zip",
+      "sha256": "71bd7b8a6d8a06768e610d25370d7242a43cae9467152b3db71876fff9a73819",
+      "year": 2014,
+      "term": "spring",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T22:34:43+00:00",
+      "responses": 372,
+      "unavailable": 0
+    },
+    "2014-su": {
+      "file": "2014-su.zip",
+      "sha256": "f7c5bc73817abc4cd3401cbca43ad3e758bd16b4c31d65f390aa69091b20936e",
+      "year": 2014,
+      "term": "summer",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T22:51:07+00:00",
+      "responses": 351,
+      "unavailable": 0
+    },
+    "2014-fa": {
+      "file": "2014-fa.zip",
+      "sha256": "2ec3f65247a979c6d1878d63695151e12edffbdfd6bb0a80437394a17ca1f21e",
+      "year": 2014,
+      "term": "fall",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T23:07:59+00:00",
+      "responses": 370,
+      "unavailable": 0
+    },
+    "2015-wi": {
+      "file": "2015-wi.zip",
+      "sha256": "eb035d01f06280602899446a2ec526a6ae0a0d470593dd1366464d4cd6cf3bdd",
+      "year": 2015,
+      "term": "winter",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-21T23:26:01+00:00",
+      "responses": 195,
+      "unavailable": 0
+    },
+    "2015-sp": {
+      "file": "2015-sp.zip",
+      "sha256": "7f15041dcf9b0396ca4dc3dc5cbd1101034a63e04eacd306de365b4ce0abcb31",
+      "year": 2015,
+      "term": "spring",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-22T15:21:06+00:00",
+      "responses": 371,
+      "unavailable": 0
+    },
+    "2015-su": {
+      "file": "2015-su.zip",
+      "sha256": "36b91cded86f630d624c36332392af40770c30772fba1cfa705a6410c857b7a6",
+      "year": 2015,
+      "term": "summer",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-22T15:53:51+00:00",
+      "responses": 354,
+      "unavailable": 0
+    },
+    "2015-fa": {
+      "file": "2015-fa.zip",
+      "sha256": "df47a02469832e153fbe66609a667053d1d959781b1ebad52e25865d61393d49",
+      "year": 2015,
+      "term": "fall",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-22T18:17:37+00:00",
+      "responses": 372,
+      "unavailable": 0
+    },
+    "2016-wi": {
+      "file": "2016-wi.zip",
+      "sha256": "0c584333673bdfa5a12852d37e6aa75033114361110215a4af9892d74ce290c8",
+      "year": 2016,
+      "term": "winter",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-22T18:34:00+00:00",
+      "responses": 204,
+      "unavailable": 0
+    },
+    "2016-sp": {
+      "file": "2016-sp.zip",
+      "sha256": "0054dbb563193406b0f39067ab5d970edee99d67897bfb7e777e6775bfe55792",
+      "year": 2016,
+      "term": "spring",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-22T19:02:14+00:00",
+      "responses": 376,
+      "unavailable": 0
+    },
+    "2016-su": {
+      "file": "2016-su.zip",
+      "sha256": "2cb449c1d3090c7460fa7da434330d2242857bbb12ce59c0224f7ee97e13fa2b",
+      "year": 2016,
+      "term": "summer",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-22T19:35:44+00:00",
+      "responses": 354,
+      "unavailable": 0
+    },
+    "2016-fa": {
+      "file": "2016-fa.zip",
+      "sha256": "f7dad95530e2ccd8fae945039c31360d8944d1dd86e6e819d6ac524832a491e3",
+      "year": 2016,
+      "term": "fall",
+      "complete": false,
+      "completedPhases": [
+        "schedule",
+        "catalog"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-22T20:35:00+00:00",
+      "responses": 372,
+      "unavailable": 0
+    },
+    "2017-wi": {
+      "file": "2017-wi.zip",
+      "sha256": "66277fdcc690ac7955da5a4aab00bdd87c92d235d2bae44068e3ddbfc310063f",
+      "year": 2017,
+      "term": "winter",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-18T20:45:54+00:00",
+      "responses": 20,
+      "unavailable": 0
+    },
+    "2017-sp": {
+      "file": "2017-sp.zip",
+      "sha256": "8ab135e55774f63a54791b647f8eff86c7d1d05a17225635e1f54cd1600886ce",
+      "year": 2017,
+      "term": "spring",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-18T21:28:17+00:00",
+      "responses": 182,
+      "unavailable": 0
+    },
+    "2017-su": {
+      "file": "2017-su.zip",
+      "sha256": "38164fef700d5f2fb66e9754f52ae8baea3029dd484349e310189b4c5ba351f7",
+      "year": 2017,
+      "term": "summer",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-18T23:32:57+00:00",
+      "responses": 161,
+      "unavailable": 0
+    },
+    "2017-fa": {
+      "file": "2017-fa.zip",
+      "sha256": "2e1897b5614b56943f28f50852e8b7d7102493ba757f229b5c544cc3b1658227",
+      "year": 2017,
+      "term": "fall",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-18T23:48:53+00:00",
+      "responses": 182,
+      "unavailable": 0
+    },
+    "2018-wi": {
+      "file": "2018-wi.zip",
+      "sha256": "5e7c4c3748a35a7655158427e45d585b1cff7d15e84991045f08d61610e61e49",
+      "year": 2018,
+      "term": "winter",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-18T23:51:07+00:00",
+      "responses": 26,
+      "unavailable": 0
+    },
+    "2018-sp": {
+      "file": "2018-sp.zip",
+      "sha256": "42b39da6970f6605d2b37077fcaf840c723df4f78f5d867c805a3a88d8091c1f",
+      "year": 2018,
+      "term": "spring",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-19T01:02:03+00:00",
+      "responses": 181,
+      "unavailable": 0
+    },
+    "2018-su": {
+      "file": "2018-su.zip",
+      "sha256": "4b76c3f04267bfaa9f79f2e2dc1cb962499e7b720932b018fbe41236ab53ca6a",
+      "year": 2018,
+      "term": "summer",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-19T01:26:38+00:00",
+      "responses": 164,
+      "unavailable": 0
+    },
+    "2018-fa": {
+      "file": "2018-fa.zip",
+      "sha256": "cf42f625346f507ea474d2535a6dc475498dfb05a9eedcf6ab5b3b86a1d708d1",
+      "year": 2018,
+      "term": "fall",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-19T05:36:02+00:00",
+      "responses": 184,
+      "unavailable": 0
+    },
+    "2019-wi": {
+      "file": "2019-wi.zip",
+      "sha256": "e4e518e4760ca463d9befbb8ae7593e9046c5314ac3123195e490c49a85e6c27",
+      "year": 2019,
+      "term": "winter",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-19T05:38:20+00:00",
+      "responses": 27,
+      "unavailable": 0
+    },
+    "2019-sp": {
+      "file": "2019-sp.zip",
+      "sha256": "08784ad5ffc5832d77c1455fa75d8081c17e9b24a765edfe16b087229b5ecfaa",
+      "year": 2019,
+      "term": "spring",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-19T05:54:28+00:00",
+      "responses": 187,
+      "unavailable": 0
+    },
+    "2019-su": {
+      "file": "2019-su.zip",
+      "sha256": "196b322543d4e69c57e9f842d09f8f3db70c7a21f291c85f099cd3e02693bfff",
+      "year": 2019,
+      "term": "summer",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-19T09:35:41+00:00",
+      "responses": 165,
+      "unavailable": 0
+    },
+    "2019-fa": {
+      "file": "2019-fa.zip",
+      "sha256": "c60993e54b95298b0390808ca3522cd943914494b3269f2e44d285ce4c1cb8ee",
+      "year": 2019,
+      "term": "fall",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-19T17:34:30+00:00",
+      "responses": 187,
+      "unavailable": 0
+    },
+    "2020-wi": {
+      "file": "2020-wi.zip",
+      "sha256": "b2326e9f2f427e07f3f1f9c8c0d9d93bbde005ad4307dacc5b4fdf6807971116",
+      "year": 2020,
+      "term": "winter",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-19T17:36:43+00:00",
+      "responses": 26,
+      "unavailable": 0
+    },
+    "2020-sp": {
+      "file": "2020-sp.zip",
+      "sha256": "56a6bf35e4321ff199cb20a51e56230d35cd173675ee9303fcc576f4369384d3",
+      "year": 2020,
+      "term": "spring",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-19T19:02:10+00:00",
+      "responses": 190,
+      "unavailable": 0
+    },
+    "2020-su": {
+      "file": "2020-su.zip",
+      "sha256": "70c396791e730fad150e3a8a909fa4a4a4174919e13ac2e4aed1a72418f4f4e0",
+      "year": 2020,
+      "term": "summer",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-19T20:25:03+00:00",
+      "responses": 168,
+      "unavailable": 0
+    },
+    "2020-fa": {
+      "file": "2020-fa.zip",
+      "sha256": "175487bbf60dd6234e5d868e0e2fedf3c9a61cf588f083b7001ae41dcafe2a88",
+      "year": 2020,
+      "term": "fall",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-19T20:41:44+00:00",
+      "responses": 191,
+      "unavailable": 0
+    },
+    "2021-wi": {
+      "file": "2021-wi.zip",
+      "sha256": "45607882ecdc8c21ec16dea8c9132b4b030c2bd0bd59f6d1a9211743b6491ddf",
+      "year": 2021,
+      "term": "winter",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-19T20:44:58+00:00",
+      "responses": 38,
+      "unavailable": 0
+    },
+    "2021-sp": {
+      "file": "2021-sp.zip",
+      "sha256": "6a23937cb398c2409e2f1a32c6406bd3e6a807d3d2e8e575fe7c68e5eebe3636",
+      "year": 2021,
+      "term": "spring",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-19T21:01:37+00:00",
+      "responses": 191,
+      "unavailable": 0
+    },
+    "2021-su": {
+      "file": "2021-su.zip",
+      "sha256": "2ca3bfd8a547224d35aaf93511f6943da69fa7d17ce5d7bf5113e98b7e2645e8",
+      "year": 2021,
+      "term": "summer",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-19T22:12:52+00:00",
+      "responses": 163,
+      "unavailable": 0
+    },
+    "2021-fa": {
+      "file": "2021-fa.zip",
+      "sha256": "700d549285e58c932e08f5651974aa176587a74f8bf4e856f8c232fa96743b97",
+      "year": 2021,
+      "term": "fall",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T02:30:51+00:00",
+      "responses": 190,
+      "unavailable": 0
+    },
+    "2022-wi": {
+      "file": "2022-wi.zip",
+      "sha256": "22b952fd20577722c32a87f1034c305cea84920f14d6b0a5fb0241ba89e87c57",
+      "year": 2022,
+      "term": "winter",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T02:57:03+00:00",
+      "responses": 34,
+      "unavailable": 0
+    },
+    "2022-sp": {
+      "file": "2022-sp.zip",
+      "sha256": "47ed298a4d925e2787d5e6ea154bd6d29451913eb22fe6fecd53213fd549e9e5",
+      "year": 2022,
+      "term": "spring",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T03:27:41+00:00",
+      "responses": 190,
+      "unavailable": 0
+    },
+    "2022-su": {
+      "file": "2022-su.zip",
+      "sha256": "cca5855734663a682ef288718f3573ea6b42ff76c705e46a37908e7f510ab80a",
+      "year": 2022,
+      "term": "summer",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T03:41:39+00:00",
+      "responses": 163,
+      "unavailable": 0
+    },
+    "2022-fa": {
+      "file": "2022-fa.zip",
+      "sha256": "5d71d42ca26f5b20e2584e39932eec5ea5e0bbe88ebc12b37b8ace32818d0418",
+      "year": 2022,
+      "term": "fall",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T03:58:39+00:00",
+      "responses": 191,
+      "unavailable": 0
+    },
+    "2023-wi": {
+      "file": "2023-wi.zip",
+      "sha256": "035dcd7ed6484a6535e95382784f4fa8a5aea06ac06ad219569579ccf2a75ca5",
+      "year": 2023,
+      "term": "winter",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T04:01:25+00:00",
+      "responses": 32,
+      "unavailable": 0
+    },
+    "2023-sp": {
+      "file": "2023-sp.zip",
+      "sha256": "b6ae741142edf06dbe432198dc405a1a240437f7c251e05c604181761fe51136",
+      "year": 2023,
+      "term": "spring",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T04:18:07+00:00",
+      "responses": 190,
+      "unavailable": 0
+    },
+    "2023-su": {
+      "file": "2023-su.zip",
+      "sha256": "62ab63c1a0354e9a549b69ff64acc26ae96a799e52bd861cae82251e133f9170",
+      "year": 2023,
+      "term": "summer",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T04:32:02+00:00",
+      "responses": 162,
+      "unavailable": 0
+    },
+    "2023-fa": {
+      "file": "2023-fa.zip",
+      "sha256": "e65ee0bf187e89126a69bc7316693631e55998dc72606a80f3df300aa950f2cf",
+      "year": 2023,
+      "term": "fall",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T05:43:49+00:00",
+      "responses": 189,
+      "unavailable": 0
+    },
+    "2024-wi": {
+      "file": "2024-wi.zip",
+      "sha256": "ba26f9550a50737b9a1aa5987d6999395a528c1bd0ad6c172397f5db639ad4f5",
+      "year": 2024,
+      "term": "winter",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T05:46:38+00:00",
+      "responses": 33,
+      "unavailable": 0
+    },
+    "2024-sp": {
+      "file": "2024-sp.zip",
+      "sha256": "830ae8aedf47194968c8badb77270ba1e90127e9747eb2191273bdbd30c5662e",
+      "year": 2024,
+      "term": "spring",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T06:03:16+00:00",
+      "responses": 192,
+      "unavailable": 0
+    },
+    "2024-su": {
+      "file": "2024-su.zip",
+      "sha256": "af67d2f4cd66a7d1e0a2aff271b528bbdf364715ff2a7f95739557ae974f4596",
+      "year": 2024,
+      "term": "summer",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T06:36:30+00:00",
+      "responses": 156,
+      "unavailable": 0
+    },
+    "2024-fa": {
+      "file": "2024-fa.zip",
+      "sha256": "76a15094c3ca89a657eafad644f2b6dce5ae47c566e57afc311c595a1b191bb5",
+      "year": 2024,
+      "term": "fall",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T06:52:58+00:00",
+      "responses": 185,
+      "unavailable": 0
+    },
+    "2025-wi": {
+      "file": "2025-wi.zip",
+      "sha256": "c45c35fc33c44f0ceb0659bdc150711b78dc411df94636fdef3af053352f48dd",
+      "year": 2025,
+      "term": "winter",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T06:56:05+00:00",
+      "responses": 35,
+      "unavailable": 0
+    },
+    "2025-sp": {
+      "file": "2025-sp.zip",
+      "sha256": "2f5082bedcd84ebae49286c4707c2bae1a1b8e3091bf6a7117672620b69fb9b2",
+      "year": 2025,
+      "term": "spring",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T07:12:17+00:00",
+      "responses": 187,
+      "unavailable": 0
+    },
+    "2025-su": {
+      "file": "2025-su.zip",
+      "sha256": "1fe8dad55074d57e0250cad6a96ade66ff7db800240f8601387aba474c7bc7ed",
+      "year": 2025,
+      "term": "summer",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T08:58:09+00:00",
+      "responses": 152,
+      "unavailable": 0
+    },
+    "2025-fa": {
+      "file": "2025-fa.zip",
+      "sha256": "e4e042c38964cf42329263b89cdaf35e7a9ea9922f23aabbf9335cea4cb868a2",
+      "year": 2025,
+      "term": "fall",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T14:06:27+00:00",
+      "responses": 185,
+      "unavailable": 0
+    },
+    "2026-wi": {
+      "file": "2026-wi.zip",
+      "sha256": "36bb2f7fd0e6dcf14a8ab5193f03a1799cd7fca1e2fead462ad9d3740831bc9c",
+      "year": 2026,
+      "term": "winter",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T15:16:55+00:00",
+      "responses": 31,
+      "unavailable": 0
+    },
+    "2026-sp": {
+      "file": "2026-sp.zip",
+      "sha256": "a277a937f6c1aee91f1c004d4ccf04bbdead17a442d8566f0f1f4c2f1e965409",
+      "year": 2026,
+      "term": "spring",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T16:44:03+00:00",
+      "responses": 188,
+      "unavailable": 0
+    },
+    "2026-su": {
+      "file": "2026-su.zip",
+      "sha256": "abf5ff7c7c8cebcbdc3e5e6d37e36a97bcf8acca5f1f4dc8fed45a1afc29a041",
+      "year": 2026,
+      "term": "summer",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T17:01:12+00:00",
+      "responses": 151,
+      "unavailable": 0
+    },
+    "2027-wi": {
+      "file": "2027-wi.zip",
+      "sha256": "0292381ed88eb4d30e1ab9fb6638ba447dec6cff6400210bb84a549f76e7e0bd",
+      "year": 2027,
+      "term": "winter",
+      "complete": false,
+      "completedPhases": [
+        "schedule"
+      ],
+      "errors": {},
+      "updatedAt": "2026-10-20T17:03:50+00:00",
+      "responses": 31,
+      "unavailable": 0
+    }
+  }
+}

@@ -1,0 +1,1485 @@
+{
+  "fetchedAt": "2026-10-21T21:43:10+00:00",
+  "modules": {
+    "schedule": [
+      {
+        "year": 2004,
+        "term": "fall",
+        "id": "120048",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2005,
+        "term": "spring",
+        "id": "120051",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2005,
+        "term": "summer",
+        "id": "120055",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2005,
+        "term": "fall",
+        "id": "120058",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2006,
+        "term": "spring",
+        "id": "120061",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2006,
+        "term": "summer",
+        "id": "120065",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2006,
+        "term": "fall",
+        "id": "120068",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2007,
+        "term": "spring",
+        "id": "120071",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2007,
+        "term": "summer",
+        "id": "120075",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2007,
+        "term": "fall",
+        "id": "120078",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2008,
+        "term": "spring",
+        "id": "120081",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2008,
+        "term": "summer",
+        "id": "120085",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2008,
+        "term": "fall",
+        "id": "120088",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2009,
+        "term": "spring",
+        "id": "120091",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2009,
+        "term": "summer",
+        "id": "120095",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2009,
+        "term": "fall",
+        "id": "120098",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2010,
+        "term": "spring",
+        "id": "120101",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2010,
+        "term": "summer",
+        "id": "120105",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2010,
+        "term": "fall",
+        "id": "120108",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2011,
+        "term": "spring",
+        "id": "120111",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2011,
+        "term": "summer",
+        "id": "120115",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2011,
+        "term": "fall",
+        "id": "120118",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2012,
+        "term": "spring",
+        "id": "120121",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2012,
+        "term": "summer",
+        "id": "120125",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2012,
+        "term": "fall",
+        "id": "120128",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2013,
+        "term": "spring",
+        "id": "120131",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2013,
+        "term": "summer",
+        "id": "120135",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2013,
+        "term": "fall",
+        "id": "120138",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2014,
+        "term": "spring",
+        "id": "120141",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2014,
+        "term": "summer",
+        "id": "120145",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2014,
+        "term": "fall",
+        "id": "120148",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2015,
+        "term": "winter",
+        "id": "120150",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2015,
+        "term": "spring",
+        "id": "120151",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2015,
+        "term": "summer",
+        "id": "120155",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2015,
+        "term": "fall",
+        "id": "120158",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2016,
+        "term": "winter",
+        "id": "120160",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2016,
+        "term": "spring",
+        "id": "120161",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2016,
+        "term": "summer",
+        "id": "120165",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2016,
+        "term": "fall",
+        "id": "120168",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2017,
+        "term": "winter",
+        "id": "120170",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2017,
+        "term": "spring",
+        "id": "120171",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2017,
+        "term": "summer",
+        "id": "120175",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2017,
+        "term": "fall",
+        "id": "120178",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2018,
+        "term": "winter",
+        "id": "120180",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2018,
+        "term": "spring",
+        "id": "120181",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2018,
+        "term": "summer",
+        "id": "120185",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2018,
+        "term": "fall",
+        "id": "120188",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2019,
+        "term": "winter",
+        "id": "120190",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2019,
+        "term": "spring",
+        "id": "120191",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2019,
+        "term": "summer",
+        "id": "120195",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2019,
+        "term": "fall",
+        "id": "120198",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2020,
+        "term": "winter",
+        "id": "120200",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2020,
+        "term": "spring",
+        "id": "120201",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2020,
+        "term": "summer",
+        "id": "120205",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2020,
+        "term": "fall",
+        "id": "120208",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2021,
+        "term": "winter",
+        "id": "120210",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2021,
+        "term": "spring",
+        "id": "120211",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2021,
+        "term": "summer",
+        "id": "120215",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2021,
+        "term": "fall",
+        "id": "120218",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2022,
+        "term": "winter",
+        "id": "120220",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2022,
+        "term": "spring",
+        "id": "120221",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2022,
+        "term": "summer",
+        "id": "120225",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2022,
+        "term": "fall",
+        "id": "120228",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2023,
+        "term": "winter",
+        "id": "120230",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2023,
+        "term": "spring",
+        "id": "120231",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2023,
+        "term": "summer",
+        "id": "120235",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2023,
+        "term": "fall",
+        "id": "120238",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2024,
+        "term": "winter",
+        "id": "120240",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2024,
+        "term": "spring",
+        "id": "120241",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2024,
+        "term": "summer",
+        "id": "120245",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2024,
+        "term": "fall",
+        "id": "120248",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2025,
+        "term": "winter",
+        "id": "120250",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2025,
+        "term": "spring",
+        "id": "120251",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2025,
+        "term": "summer",
+        "id": "120255",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2025,
+        "term": "fall",
+        "id": "120258",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2026,
+        "term": "winter",
+        "id": "120260",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2026,
+        "term": "spring",
+        "id": "120261",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2026,
+        "term": "summer",
+        "id": "120265",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2026,
+        "term": "fall",
+        "id": "120268",
+        "public": true,
+        "archived": false,
+        "default": true,
+        "enrolling": true
+      },
+      {
+        "year": 2027,
+        "term": "winter",
+        "id": "120270",
+        "public": true,
+        "archived": false,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2027,
+        "term": "spring",
+        "id": "120271",
+        "public": true,
+        "archived": false,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2027,
+        "term": "summer",
+        "id": "120275",
+        "public": false,
+        "archived": false,
+        "default": false,
+        "enrolling": false
+      }
+    ],
+    "catalog": [
+      {
+        "year": 2004,
+        "term": "fall",
+        "id": "120048",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2005,
+        "term": "spring",
+        "id": "120051",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2005,
+        "term": "summer",
+        "id": "120055",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2005,
+        "term": "fall",
+        "id": "120058",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2006,
+        "term": "spring",
+        "id": "120061",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2006,
+        "term": "summer",
+        "id": "120065",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2006,
+        "term": "fall",
+        "id": "120068",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2007,
+        "term": "spring",
+        "id": "120071",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2007,
+        "term": "summer",
+        "id": "120075",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2007,
+        "term": "fall",
+        "id": "120078",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2008,
+        "term": "spring",
+        "id": "120081",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2008,
+        "term": "summer",
+        "id": "120085",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2008,
+        "term": "fall",
+        "id": "120088",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2009,
+        "term": "spring",
+        "id": "120091",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2009,
+        "term": "summer",
+        "id": "120095",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2009,
+        "term": "fall",
+        "id": "120098",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2010,
+        "term": "spring",
+        "id": "120101",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2010,
+        "term": "summer",
+        "id": "120105",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2010,
+        "term": "fall",
+        "id": "120108",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2011,
+        "term": "spring",
+        "id": "120111",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2011,
+        "term": "summer",
+        "id": "120115",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2011,
+        "term": "fall",
+        "id": "120118",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2012,
+        "term": "spring",
+        "id": "120121",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2012,
+        "term": "summer",
+        "id": "120125",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2012,
+        "term": "fall",
+        "id": "120128",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2013,
+        "term": "spring",
+        "id": "120131",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2013,
+        "term": "summer",
+        "id": "120135",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2013,
+        "term": "fall",
+        "id": "120138",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2014,
+        "term": "spring",
+        "id": "120141",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2014,
+        "term": "summer",
+        "id": "120145",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2014,
+        "term": "fall",
+        "id": "120148",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2015,
+        "term": "winter",
+        "id": "120150",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2015,
+        "term": "spring",
+        "id": "120151",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2015,
+        "term": "summer",
+        "id": "120155",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2015,
+        "term": "fall",
+        "id": "120158",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2016,
+        "term": "winter",
+        "id": "120160",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2016,
+        "term": "spring",
+        "id": "120161",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2016,
+        "term": "summer",
+        "id": "120165",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2016,
+        "term": "fall",
+        "id": "120168",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2017,
+        "term": "winter",
+        "id": "120170",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2017,
+        "term": "spring",
+        "id": "120171",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2017,
+        "term": "summer",
+        "id": "120175",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2017,
+        "term": "fall",
+        "id": "120178",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2018,
+        "term": "winter",
+        "id": "120180",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2018,
+        "term": "spring",
+        "id": "120181",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2018,
+        "term": "summer",
+        "id": "120185",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2018,
+        "term": "fall",
+        "id": "120188",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2019,
+        "term": "winter",
+        "id": "120190",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2019,
+        "term": "spring",
+        "id": "120191",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2019,
+        "term": "summer",
+        "id": "120195",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2019,
+        "term": "fall",
+        "id": "120198",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2020,
+        "term": "winter",
+        "id": "120200",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2020,
+        "term": "spring",
+        "id": "120201",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2020,
+        "term": "summer",
+        "id": "120205",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2020,
+        "term": "fall",
+        "id": "120208",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2021,
+        "term": "winter",
+        "id": "120210",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2021,
+        "term": "spring",
+        "id": "120211",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2021,
+        "term": "summer",
+        "id": "120215",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2021,
+        "term": "fall",
+        "id": "120218",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2022,
+        "term": "winter",
+        "id": "120220",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2022,
+        "term": "spring",
+        "id": "120221",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2022,
+        "term": "summer",
+        "id": "120225",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2022,
+        "term": "fall",
+        "id": "120228",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2023,
+        "term": "winter",
+        "id": "120230",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2023,
+        "term": "spring",
+        "id": "120231",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2023,
+        "term": "summer",
+        "id": "120235",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2023,
+        "term": "fall",
+        "id": "120238",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2024,
+        "term": "winter",
+        "id": "120240",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2024,
+        "term": "spring",
+        "id": "120241",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2024,
+        "term": "summer",
+        "id": "120245",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2024,
+        "term": "fall",
+        "id": "120248",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2025,
+        "term": "winter",
+        "id": "120250",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2025,
+        "term": "spring",
+        "id": "120251",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2025,
+        "term": "summer",
+        "id": "120255",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2025,
+        "term": "fall",
+        "id": "120258",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2026,
+        "term": "winter",
+        "id": "120260",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2026,
+        "term": "spring",
+        "id": "120261",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2026,
+        "term": "summer",
+        "id": "120265",
+        "public": true,
+        "archived": true,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2026,
+        "term": "fall",
+        "id": "120268",
+        "public": true,
+        "archived": false,
+        "default": true,
+        "enrolling": true
+      },
+      {
+        "year": 2027,
+        "term": "winter",
+        "id": "120270",
+        "public": true,
+        "archived": false,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2027,
+        "term": "spring",
+        "id": "120271",
+        "public": true,
+        "archived": false,
+        "default": false,
+        "enrolling": false
+      },
+      {
+        "year": 2027,
+        "term": "summer",
+        "id": "120275",
+        "public": false,
+        "archived": false,
+        "default": false,
+        "enrolling": false
+      }
+    ]
+  }
+}
