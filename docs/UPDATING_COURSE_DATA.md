@@ -2,8 +2,9 @@
 
 Run these commands in the repository root, using Python 3.9 or newer. No packages,
 API keys, database server, or virtual environment are required. This updates course
-and semester schedule data. The full archiver also preserves final exams, session
-dates, and all other fields returned by the documented public API. The site's
+and semester schedule data. The archiver preserves full bulk catalog/schedule
+responses and session dates. Offered semesters are derived locally from schedules;
+finals and individual catalog-detail requests are skipped by default. The site's
 historical GPA source stays separate.
 
 ## Collect every public semester from 2004
@@ -48,17 +49,17 @@ The stages run in this order across all selected terms:
 2. **Catalog:** full department/course catalog responses, including courses not
    offered in the selected semester.
 3. **Sessions:** parts of term and session start/end dates.
-4. **Finals:** the separate final-exam endpoint for every scheduled course.
-5. **Catalog details:** each catalog course's individual detail response, including
-   fields absent from bulk responses, such as `termsOffered`.
 
-The full job is large. At five seconds per request, 10,000 requests alone take about
-14 hours, plus response time and retries. Course-by-course finals and catalog-detail
-requests can extend the full archive to days or weeks. A running worker or a completed
-schedule stage does **not** mean the entire archive is complete. Consult
-`completedByPhase`, errors, and each ZIP's `complete` flag.
+Finals and individual catalog-detail passes are not part of the default job.
+`termsOffered` is calculated from the semester schedules already collected, avoiding
+thousands of individual course requests. The optional passes remain available only
+through an explicit `--phases` selection; do not enable them unless requested.
 
-HTTP 404 from optional finals, sessions, or catalog-detail endpoints is stored as
+At five seconds per request, 10,000 requests take about 14 hours, plus response time
+and retries. Completion now requires the three retained stages above. Consult
+`completedByPhase`, errors, and each ZIP's `requiredPhases` and `complete` fields.
+
+HTTP 404 from session endpoints (or explicitly requested optional endpoints) is stored as
 **checked but unavailable**, with its response body and timestamp. It is distinct
 from an HTTP 200 response containing no exam events. Temporary failures are retried;
 failures after the retry limit remain errors, and other terms continue. Repeat the
@@ -87,7 +88,7 @@ To archive just one term (using saved responses):
 python3 scripts/archive_catalog.py --year 2027 --term spring
 ```
 
-To collect fresh versions of **all** fields for one term:
+To collect fresh versions of the retained schedule, catalog, and session data for one term:
 
 ```sh
 python3 scripts/archive_catalog.py --year 2027 --term spring --refresh
@@ -96,12 +97,13 @@ python3 scripts/archive_catalog.py --year 2027 --term spring --refresh
 Stop the all-history worker first. `--refresh` creates new versions for that term;
 when resuming an interrupted refresh, **omit `--refresh`**, or it will start over.
 For a quick website-only refresh, use `update_catalog.py` below. That command updates
-schedule snapshots; it does not refresh every finals/catalog-detail archive response.
+schedule snapshots and derived history indexes; it does not refresh the other retained archive responses.
 
 For a deliberate staged run, `--phases schedule catalog sessions` is supported.
 `finals` requires a completed `schedule` stage; `catalog-details` requires a completed
 `catalog` stage. Completion applies to the requested stages, while each archive
-ZIP's `complete` flag always requires all five stages.
+ZIP's `complete` flag requires schedule, catalog, and session stages. Finals and
+individual catalog-detail requests are optional and excluded from default completion.
 
 ## Reading the full archive
 
@@ -114,7 +116,7 @@ more current between ZIP exports. Each ZIP contains:
   byte count, archived filename, completed phases, and errors.
 - `responses/`: successful original XML, including course descriptions, gen ed
   categories, restrictions, fees, notes, dates, meeting details, instructor attributes,
-  final-exam events, and any additional fields returned by the API.
+  and any additional fields returned by the retained bulk APIs.
 - `unavailable/`: response bodies for checked HTTP 404 resources.
 
 `data/archive/manifest.json` summarizes per-term coverage and ZIP checksums.
@@ -130,17 +132,36 @@ Completed responses do not need to be downloaded again. Keep the ZIPs, their
 coverage manifest, and the website snapshots together. An old resumed archive
 collection does not overwrite a website snapshot updated after it began.
 
-Example: inspect the final-exam response for CS 225 after that phase has run:
+## Offered semesters without extra API requests
+
+`data/catalog/manifest.json` points to a separate `courseOfferings` JSON asset. Its
+`offeredTerms` map lists each course code's semesters chronologically, computed
+from the published schedule snapshots. It includes public upcoming terms already
+listed in the schedules, and does not predict unannounced future offerings.
 
 ```sh
-python3 - <<'PYARCHIVE'
-import zipfile
-with zipfile.ZipFile('data/archive/2026-fa.zip') as archive:
-    print(archive.read('responses/schedule/2026/fall/CS/225/finalexam.xml').decode())
-PYARCHIVE
+python3 - <<'PYOFFERINGS'
+import json
+from pathlib import Path
+root = Path('data/catalog')
+manifest = json.loads((root / 'manifest.json').read_text())
+offerings = json.loads((root / manifest['courseOfferings']['file']).read_text())
+print(offerings['offeredTerms'].get('CS 225', []))
+PYOFFERINGS
 ```
 
-Inspect the ZIP's `manifest.json` first: the request may be pending or unavailable.
+`coverageComplete` indicates whether all discovered public schedules are represented.
+History begins in Fall 2004. Rebuild offline with `python3 scripts/course_history.py`
+after stopping any active updater; schedule publishing rebuilds both indexes
+implicitly. The website's first-offering filter still uses the separate small
+`courseHistory` asset, so the full offered-semester index adds no page-load download.
+The website does not yet display the full course-offering timeline.
+
+To remove previously collected finals from SQLite, term ZIPs, and request logs,
+stop the worker and run `python3 scripts/prune_finals.py`. This does not download
+anything and preserves the other responses. After cleanup, completion reflects the
+three retained stages. Finals should not be downloaded again by the default command.
+
 For historical CSV exports, use `gzip.open('data/catalog/2004-fa.csv.gz', 'rt')`
 with Python's `csv` module, or decompress the file with your preferred archive tool.
 Only the selected semester's compact JSON is fetched by website visitors; archive
@@ -267,7 +288,8 @@ data problem; review the change summary and spot-check important courses.
 | `data/catalog/YEAR-TERM-HASH.json` | Compact website snapshot; course metadata stored once | Yes |
 | `data/catalog/YEAR-TERM.csv` | Website-only updater CSV export, one row per section meeting | Yes |
 | `data/catalog/YEAR-TERM.csv.gz` | Compressed historical CSV export from the archiver | Yes |
-| `data/archive/` | Lossless per-term ZIPs, coverage manifests, discovery, API reference | Yes |
+| `data/archive/` | Lossless per-term ZIPs for retained responses, coverage manifests, discovery, API reference | Yes |
+| `data/catalog/course-offerings-*.json` | Derived offered-semester lists; loaded only when needed | Yes |
 
 Term filename codes are `sp`, `su`, `fa`, and `wi`. JSON filenames include a content
 hash. The updater writes the new JSON first and switches the manifest last, so a
@@ -325,6 +347,34 @@ status requests remain separate and can change after a snapshot.
 If you clean up old hashed JSON files, keep those referenced by the current manifest
 and allow time for already-open clients before deleting older versions. You can roll
 back a term by restoring its manifest entry and referenced JSON from Git.
+
+## New This Semester filter
+
+The Other filters include **New This Semester**. A course matches when its subject
+and course number first appear in that semester's schedule across our complete
+earlier schedule history. Returning courses and title changes under the same code
+do not count as new. Renumbered courses are distinct course codes.
+
+The history begins in Fall 2004; it cannot establish whether courses existed before
+then. Fall 2004 is treated as a baseline and its new-course filter is disabled.
+Missing earlier public semesters, unavailable history, or a history index that does
+not match the selected snapshot also disable the filter rather than guess.
+
+`update_catalog.py` rebuilds the hashed first-offering and offered-semester indexes
+whenever it publishes a schedule snapshot. The manifest's `courseHistory` entry
+points to the small `course-history-*.json` asset used by this filter.
+The website fetches this index once per page load, alongside the selected semester;
+it does not download historical semester files to calculate the filter.
+
+To rebuild the index from existing snapshots without API requests, stop the archive
+worker, wait for its lock to be released, then run:
+
+```sh
+python3 scripts/course_history.py
+```
+
+Restart a previously running archive with `python3 scripts/archive_catalog.py --all --background` afterward. Keep term discovery current when importing newly released
+semesters; the filter requires known, complete coverage of earlier public terms.
 
 ## Guidance for agents
 

@@ -14,7 +14,7 @@ See [Updating course data](docs/UPDATING_COURSE_DATA.md) for setup, rate limits,
 resuming interrupted runs, targeted instructor refreshes, and publishing snapshots.
 The historical GPA dataset is maintained separately.
 
-To archive every public semester from 2004, including full API fields and final exams:
+To archive every public semester from 2004, including full bulk API fields and session dates:
 
 ```sh
 python3 scripts/archive_catalog.py --all --background
@@ -23,3 +23,6 @@ python3 scripts/archive_catalog.py --status
 
 This long-running job saves progress and resumes when the start command is repeated.
 The site uses our own semester snapshots; no external course-catalog repository is required.
+
+Finals and individual catalog-detail downloads are skipped by default. Offered-semester
+history is calculated from the schedules locally with `python3 scripts/course_history.py`.

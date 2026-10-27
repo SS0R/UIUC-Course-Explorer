@@ -1165,6 +1165,8 @@
   const GPA_URL = 'https://raw.githubusercontent.com/wadefagen/datasets/refs/heads/main/gpa/uiuc-gpa-dataset.csv';
   const CATALOG_BASE = new URL('data/catalog/', document.baseURI);
   let catalogManifest = { schemaVersion: 1, terms: {} };
+  let courseHistoryPromise = null;
+  let newCourseHistoryAvailable = false;
 
   // ── Semester selector setup ──
   const yearSelect = document.getElementById('year-select');
@@ -1195,21 +1197,54 @@
     buildCustomSelect(semSelect);
   }
 
+  async function getCourseHistory() {
+    const entry = catalogManifest.courseHistory;
+    if (!entry) return null;
+    if (!courseHistoryPromise) {
+      courseHistoryPromise = fetch(new URL(entry.file, CATALOG_BASE))
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP ${res.status} loading course history`);
+          return res.json();
+        })
+        .then(history => {
+          if (history.schemaVersion !== 1 || !history.firstOffered || !history.sourceSnapshots ||
+              !Array.isArray(history.eligibleTerms)) throw new Error('Invalid course history');
+          return history;
+        })
+        .catch(error => {
+          console.warn('New-course history unavailable.', error);
+          courseHistoryPromise = null;
+          return null;
+        });
+    }
+    return courseHistoryPromise;
+  }
+
   async function fetchCatalog(signal) {
-    const entry = catalogManifest.terms[`${yearSelect.value}-${semSelect.value}`];
+    const termKey = `${yearSelect.value}-${semSelect.value}`;
+    const entry = catalogManifest.terms[termKey];
     if (!entry) {
       const error = new Error('Course data for this semester is not available yet. Choose another semester or try again later.');
       error.catalogPending = true;
       throw error;
     }
-    const res = await fetch(new URL(entry.file, CATALOG_BASE), { signal });
+    const [res, history] = await Promise.all([
+      fetch(new URL(entry.file, CATALOG_BASE), { signal }),
+      getCourseHistory()
+    ]);
     if (!res.ok) throw new Error(`HTTP ${res.status} loading local catalog`);
     const data = await res.json();
     if (data.schemaVersion !== 1 || data.year !== Number(yearSelect.value) ||
         data.term !== entry.term || !Array.isArray(data.courses)) {
       throw new Error('Invalid local course snapshot');
     }
-    return { courses: data.courses, entry };
+    const historyAvailable = Boolean(entry.sha256 && history && history.eligibleTerms.includes(termKey) &&
+      history.sourceSnapshots[termKey] === entry.sha256);
+    for (const course of data.courses) {
+      course._isNewThisSemester = historyAvailable &&
+        history.firstOffered[`${course.subject} ${course.number}`] === termKey;
+    }
+    return { courses: data.courses, entry, historyAvailable };
   }
 
   async function initializeCatalog() {
@@ -1311,6 +1346,7 @@
     updateHalfChipState();
 
     saved.other.forEach(v => {
+      if (v === 'new_this_semester' && !newCourseHistoryAvailable) return;
       activeOther.add(v);
       const chip = document.querySelector(`#other-filter-group [data-other="${v}"]`);
       if (chip) chip.classList.add('active');
@@ -1684,6 +1720,7 @@
     setLoadBar(0.7);
     gpaMap = gpaData.gpaMap;
     gpaByCourse = gpaData.gpaByCourse;
+    newCourseHistoryAvailable = catalog.historyAvailable;
 
     // ── Process course catalog ──
     for (const course of catalog.courses) {
@@ -2433,6 +2470,7 @@
   }
 
   function toggleOther(val) {
+    if (val === 'new_this_semester' && !newCourseHistoryAvailable) return;
     const chip = document.querySelector(`#other-filter-group [data-other="${val}"]`);
     if (activeOther.has(val)) {
       activeOther.delete(val);
@@ -2455,6 +2493,18 @@
     halfChip.textContent = 'Include 0.5 hr';
     halfChip.onclick = () => toggleCredit('half');
     group.querySelector('.filter-options').appendChild(halfChip);
+
+    const newChip = document.createElement('span');
+    newChip.className = 'chip' + (newCourseHistoryAvailable ? '' : ' chip-disabled');
+    newChip.dataset.other = 'new_this_semester';
+    newChip.textContent = 'New This Semester';
+    newChip.title = newCourseHistoryAvailable
+      ? 'First recorded offering of this course code in our history, starting Fall 2004.'
+      : 'Earlier offering history is unavailable for this semester.';
+    if (!newCourseHistoryAvailable) newChip.dataset.tip = newChip.title;
+    newChip.setAttribute('aria-disabled', String(!newCourseHistoryAvailable));
+    newChip.onclick = () => toggleOther('new_this_semester');
+    group.querySelector('.filter-options').appendChild(newChip);
 
     // No prerequisites chip
     const npreqChip = document.createElement('span');
@@ -2591,6 +2641,7 @@
     const excludeInternships = activeOther.has('no_internship');
     const excludeIndependentStudy = activeOther.has('no_independent_study');
     const excludeStudyAbroad = activeOther.has('no_study_abroad');
+    const requireNewCourse = activeOther.has('new_this_semester');
     const requireOnline = activeFormats.has('online');
     const requireInPerson = activeFormats.has('inperson');
 
@@ -2620,6 +2671,7 @@
       }
 
       // other filters
+      if (requireNewCourse && !c._isNewThisSemester) return;
       if (excludePrereqs && c._hasPrereq) return;
       if (excludeSeminars && c._isSeminar) return;
       if (excludeInternships && c._isInternship) return;

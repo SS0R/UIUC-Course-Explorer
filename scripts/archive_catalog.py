@@ -29,7 +29,8 @@ except ImportError:
     import update_catalog as catalog
 
 API = "https://courses.illinois.edu/cisapp/explorer/"
-PHASES = ("schedule", "catalog", "sessions", "finals", "catalog-details")
+PHASES = ("schedule", "catalog", "sessions")
+OPTIONAL_PHASES = ("finals", "catalog-details")
 ORDER = {"winter": 0, "spring": 1, "summer": 2, "fall": 3}
 
 
@@ -345,14 +346,14 @@ class Archive:
             errors = json.loads(self.db.execute("SELECT errors FROM archive_terms WHERE term_key=?", (key,)).fetchone()[0])
             metadata = dict(schemaVersion=1, year=term["year"], term=term["term"],
                 generatedAt=catalog.now(), completedPhases=completed, errors=errors,
-                complete=all(p in completed for p in PHASES), resources=resources)
+                requiredPhases=list(PHASES), complete=all(p in completed for p in PHASES), resources=resources)
             bundle.writestr("manifest.json", json.dumps(metadata, indent=2))
         os.replace(temp, path)
         manifest_path = directory / "manifest.json"
         manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else dict(schemaVersion=1, terms={})
         manifest["terms"][key] = dict(file=path.name, sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
             year=term["year"], term=term["term"], complete=metadata["complete"],
-            completedPhases=completed, errors=errors, updatedAt=metadata["generatedAt"],
+            completedPhases=completed, requiredPhases=list(PHASES), errors=errors, updatedAt=metadata["generatedAt"],
             responses=sum(r["status"] == 200 for r in resources), unavailable=sum(r["status"] == 404 for r in resources))
         catalog.atomic_write(manifest_path, (json.dumps(manifest, indent=2) + "\n").encode())
 
@@ -500,7 +501,7 @@ def arguments(argv=None):
     selection.add_argument("--year", type=int, help="Collect one year/term")
     parser.add_argument("--term", choices=catalog.TERMS)
     parser.add_argument("--start-year", type=int, default=2004)
-    parser.add_argument("--phases", nargs="+", choices=PHASES, default=list(PHASES))
+    parser.add_argument("--phases", nargs="+", choices=PHASES + OPTIONAL_PHASES, default=list(PHASES))
     parser.add_argument("--refresh", action="store_true", help="Start fresh versions for selected terms")
     parser.add_argument("--background", action="store_true")
     parser.add_argument("--status", action="store_true")

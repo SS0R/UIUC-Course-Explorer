@@ -1704,5 +1704,15 @@
       "default": false,
       "enrolling": false
     }
-  ]
+  ],
+  "courseHistory": {
+    "file": "course-history-dd99605a674e5e07.json",
+    "sha256": "dd99605a674e5e07796e7e55bb6b4ce23633ebbb44bdb10e84032c7683a37ae1",
+    "coverageStart": "2004-fa"
+  },
+  "courseOfferings": {
+    "file": "course-offerings-0f4f0928136c9c8b.json",
+    "sha256": "0f4f0928136c9c8bfc2e9d9f2d509682b284251ac75e71bf1322c3ba1d7d4759",
+    "coverageStart": "2004-fa"
+  }
 }

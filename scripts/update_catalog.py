@@ -339,6 +339,13 @@ def publish(directory, db, args, incoming, run_id):
         atomic_write(directory / (key + ".csv.gz"), gzip.compress(csv_body, compresslevel=6, mtime=0))
     if not getattr(args, "compress_csv", False) or (directory / (key + ".csv")).exists():
         atomic_write(directory / (key + ".csv"), csv_body)
+    try:
+        from .course_history import prepare_indexes
+    except ImportError:
+        from course_history import prepare_indexes
+    for name, (index_file, index_body, index_entry) in prepare_indexes(directory, manifest).items():
+        atomic_write(directory / index_file, index_body)
+        manifest[name] = index_entry
     atomic_write(directory / "manifest.json", (json.dumps(manifest, indent=2) + "\n").encode())
     with db:
         db.execute("INSERT OR REPLACE INTO snapshots VALUES (?, ?, ?)", (key, refreshed_at, body.decode()))

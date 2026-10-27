@@ -12,6 +12,7 @@ import zipfile
 
 from scripts import archive_catalog as archive
 from scripts import update_catalog as catalog
+from scripts.prune_finals import remove_final_records
 
 
 SUBJECT = (Path(__file__).parent / 'fixtures' / 'subject.xml').read_bytes()
@@ -32,7 +33,7 @@ class ArchiveTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         self.args = archive.arguments(['--year','2027','--term','spring', '--retries','0',
             '--cache-dir',str(self.root/'cache'), '--output',str(self.root/'site'),
-            '--archive-output',str(self.root/'archive')])
+            '--archive-output',str(self.root/'archive'), '--phases', *archive.PHASES, *archive.OPTIONAL_PHASES])
         self.db = catalog.open_db(self.args.cache_dir/'catalog.sqlite3')
         self.responses = {
             'schedule.xml?mode=summary': DISCOVERY,
@@ -77,6 +78,39 @@ class ArchiveTests(unittest.TestCase):
         with self.assertRaises(catalog.CatalogError):
             archive.discover_terms(b'<html>error</html>')
 
+    def test_default_collection_skips_finals_and_individual_catalog_details(self):
+        args = archive.arguments(['--all'])
+        self.assertEqual(args.phases,['schedule','catalog','sessions'])
+        self.args.phases = args.phases
+        self.assertEqual(self.run_worker(),0)
+        self.assertFalse(any('/finalexam.xml' in p or p=='catalog/2027/spring/CS/225.xml' for p in self.requests))
+
+    def test_prune_removes_finals_but_preserves_other_responses_and_archives(self):
+        self.run_worker()
+        before = {path:catalog.response_bytes(body) for path,body in self.db.execute('SELECT path,body FROM responses')
+                  if '/finalexam.xml' not in path}
+        with self.db:
+            self.db.execute('INSERT INTO missing_responses VALUES (?,?,?,?,?)',
+                (self.db.execute('SELECT run_id FROM archive_terms').fetchone()[0],
+                 'schedule/2027/spring/CS/999/finalexam.xml','2026-10-27',404,b'not found'))
+        removed = remove_final_records(self.db)
+        self.assertEqual(removed,{'responses':1,'missing_responses':1})
+        after = {path:catalog.response_bytes(body) for path,body in self.db.execute('SELECT path,body FROM responses')}
+        self.assertEqual(after,before)
+        worker = archive.Archive(self.args,self.db)
+        worker.export(dict(year=2027,term='spring'))
+        with zipfile.ZipFile(self.args.archive_output/'2027-sp.zip') as bundle:
+            self.assertFalse(any('/finalexam.xml' in name for name in bundle.namelist()))
+            metadata=json.loads(bundle.read('manifest.json'))
+            self.assertTrue(metadata['complete'])
+            self.assertNotIn('finals',metadata['completedPhases'])
+            self.assertEqual(bundle.read('responses/catalog/2027/spring/CS/225.xml'),DETAIL)
+        self.assertEqual(remove_final_records(self.db),{'responses':0,'missing_responses':0})
+        self.args.phases=list(archive.PHASES)
+        initial=len(self.requests)
+        self.assertEqual(self.run_worker(),0)
+        self.assertEqual(self.requests[initial:],['schedule.xml?mode=summary','catalog.xml?mode=summary'])
+
     def test_catalog_year_label_is_accepted_only_with_correct_term_identity(self):
         body = self.responses['catalog/2027/spring.xml']
         self.assertEqual(archive.subject_ids(body,2027,'spring'),['CS'])
@@ -90,7 +124,8 @@ class ArchiveTests(unittest.TestCase):
         with zipfile.ZipFile(self.args.archive_output/'2027-sp.zip') as bundle:
             metadata = json.loads(bundle.read('manifest.json'))
             self.assertTrue(metadata['complete'])
-            self.assertEqual(set(metadata['completedPhases']), set(archive.PHASES))
+            self.assertEqual(set(metadata['completedPhases']), set(self.args.phases))
+            self.assertEqual(metadata['requiredPhases'],list(archive.PHASES))
             for record in metadata['resources']:
                 body = bundle.read(record['file'])
                 self.assertEqual(body, self.responses[record['path']])
