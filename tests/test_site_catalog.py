@@ -156,6 +156,63 @@ check().catch(error => {
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn(marker, result.stdout)
 
+    def test_course_navigation_clears_grade_distribution(self):
+        html = (ROOT / 'index.html').read_text()
+        panel = html[html.index('  function updateBackBtn()'):html.index('  const LECTURE_TYPES')]
+        chart = html[html.index('  function toggleGradeSheet('):html.index('  function dotClass(')]
+        harness = r'''
+const log = typeof print === 'function' ? print : globalThis.console.log;
+function assert(ok, message) { if (!ok) throw new Error(message); }
+const elements = {};
+const document = {
+  body: {style: {}},
+  getElementById(id) {
+    return elements[id] || (elements[id] = {
+      innerHTML: '', style: {}, classList: {add() {}, remove() {}}
+    });
+  }
+};
+let activePanelCourse = null, openGpaRow = null, panelHistory = [], statusFetchVersion = 0;
+const yearSelect = {value: '2026'}, semSelect = {value: 'fa'};
+const semNameMap = {fa: 'fall'}, GENED_FILTERS = [], GRADE_COLS = ['A', 'B'];
+const courseMap = {
+  'CS 225': {subject: 'CS', number: '225', name: 'Data Structures', _gpa: 3.46, _pctA: 0.61},
+  'CS 173': {subject: 'CS', number: '173', name: 'Discrete Structures', _gpa: 3.16, _pctA: 0.35}
+};
+function escapeHtml(value) { return value; }
+function linkifyDesc(value) { return value; }
+function gpaColorClass() { return 'b-green'; }
+function buildInstrTable() {}
+function renderSections() {}
+function lookupGpaForCourse(course) {
+  return {gpa: course._gpa, students: 10, dist: {A: 7, B: 3}};
+}
+const container = document.getElementById('grade-sheet-container');
+openPanel('CS 225');
+toggleGradeSheet('CS 225 SOLOMON', 'SOLOMON');
+assert(container.innerHTML.includes('CS 225'), 'Open the original instructor distribution');
+openPanel('CS 173');
+assert(activePanelCourse === 'CS 173' && container.innerHTML === '' && openGpaRow === null,
+  'Following a course link must clear the old distribution and selection');
+toggleGradeSheet('CS 173 EVANS', 'EVANS');
+assert(container.innerHTML.includes('CS 173') && !container.innerHTML.includes('CS 225'),
+  'The destination instructor must show the destination distribution');
+goBack();
+assert(activePanelCourse === 'CS 225' && container.innerHTML === '' && openGpaRow === null,
+  'Back navigation must also clear the previous distribution');
+toggleGradeSheet('CS 225 SOLOMON', 'SOLOMON');
+assert(container.innerHTML.includes('CS 225'), 'The original distribution can be reopened');
+toggleGradeSheet('CS 225 SOLOMON', 'SOLOMON');
+assert(container.innerHTML === '' && openGpaRow === null, 'Clicking again closes the chart');
+toggleGradeSheet('CS 225 SOLOMON', 'SOLOMON');
+openPanel('CS 999');
+assert(container.innerHTML === '' && openGpaRow === null,
+  'Courses not offered this semester must also clear the chart');
+log('Course navigation grade distribution checks passed');
+'''
+        self.run_javascript(panel + chart + harness,
+                            'Course navigation grade distribution checks passed')
+
     def test_new_course_chip_toggles_and_combines_with_existing_filters(self):
         html = (ROOT/'index.html').read_text()
         chips = html[html.index('  function toggleOther(val)'):html.index('  function toggleTerm(val)')]

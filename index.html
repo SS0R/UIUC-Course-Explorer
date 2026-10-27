@@ -2826,6 +2826,7 @@
     const c = courseMap[key];
     activePanelCourse = key;
     openGpaRow = null;
+    document.getElementById('grade-sheet-container').innerHTML = '';
     updateBackBtn();
     document.getElementById('panel-ce-link').href =
       `https://courses.illinois.edu/schedule/${yearSelect.value}/${semNameMap[semSelect.value]}/${key.replace(' ', '/')}`;
@@ -2837,7 +2838,6 @@
       document.getElementById('panel-meta').innerHTML    = '';
       document.getElementById('panel-desc').innerHTML    =
         `<span style="color:var(--muted);font-size:0.85rem">${key} is not in the ${semNameMap[semSelect.value].charAt(0).toUpperCase() + semNameMap[semSelect.value].slice(1)} ${yearSelect.value} course catalog.</span>`;
-      document.getElementById('grade-sheet-container').innerHTML = '';
       document.getElementById('panel-section-instr').style.display    = 'none';
       document.getElementById('panel-section-sections').style.display = 'none';
       document.getElementById('panel-prereq-btn').style.display       = 'none';
