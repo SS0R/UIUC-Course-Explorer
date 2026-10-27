@@ -15,6 +15,44 @@ ENGINE = shutil.which('node') or (str(JSC) if JSC.exists() else None)
 
 @unittest.skipUnless(ENGINE, 'Install Node.js to run the optional website loader check')
 class SiteCatalogTests(unittest.TestCase):
+    def test_planner_average_excludes_missing_gpas(self):
+        html = (ROOT / 'index.html').read_text()
+        start = html.index('  function findCombos(')
+        end = html.index('  function runPlanner()', start)
+        harness = r'''
+function assert(ok, message) { if (!ok) throw new Error(message); }
+let courseMap = {};
+let courseKeys = [];
+function combos(gpas) {
+  courseMap = {};
+  courseKeys = gpas.map((gpa, i) => {
+    const key = `TEST ${i}`;
+    courseMap[key] = {_gpa:gpa, _genedLabels:[`Category ${i}`]};
+    return key;
+  });
+  return findCombos(new Map(gpas.map((_, i) => [`Category ${i}`, 1])));
+}
+const mixed = combos([3.94, 3.92, 3.84, null]);
+assert(mixed.length === 1 && mixed[0].courses.length === 4,
+  'A course without GPA must still satisfy its category');
+assert(mixed[0].avgGpa.toFixed(2) === '3.90',
+  'Average only the three known GPAs from the reported example');
+assert(combos([null, undefined])[0].avgGpa === null,
+  'An entirely ungraded combination must have no average');
+assert(combos([0, 4, null])[0].avgGpa === 2,
+  'A recorded zero GPA must count in the average');
+courseMap = {
+  unknown: {_gpa:null, _genedLabels:['A']},
+  zero: {_gpa:0, _genedLabels:['A']},
+  known: {_gpa:3.5, _genedLabels:['A']}
+};
+courseKeys = Object.keys(courseMap);
+assert(findCombos(new Map([['A', 1]])).map(c => c.avgGpa).join(',') === '3.5,0,',
+  'Sort known averages ahead of combinations with no GPA');
+(typeof print === 'function' ? print : console.log)('Planner GPA checks passed');
+'''
+        self.run_javascript(html[start:end] + '\n' + harness, 'Planner GPA checks passed')
+
     def test_syntax_and_catalog_loading(self):
         html = (ROOT / 'index.html').read_text()
         scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, re.S)

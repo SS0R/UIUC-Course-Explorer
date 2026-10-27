@@ -3314,14 +3314,17 @@
 
     // Score and sort: min courses first, then avg GPA desc
     const scored = results.map(keys => {
-      const courses = keys.map(k => ({ key: k, ...courseMap[k], gpa: courseMap[k]._gpa || 0 }));
-      const avgGpa = courses.reduce((s, c) => s + c.gpa, 0) / courses.length;
+      const courses = keys.map(k => ({ key: k, ...courseMap[k], gpa: courseMap[k]._gpa }));
+      const gradedCourses = courses.filter(c => Number.isFinite(c.gpa));
+      const avgGpa = gradedCourses.length
+        ? gradedCourses.reduce((s, c) => s + c.gpa, 0) / gradedCourses.length
+        : null;
       return { courses, avgGpa };
     });
     scored.sort((a, b) =>
       a.courses.length !== b.courses.length
         ? a.courses.length - b.courses.length
-        : b.avgGpa - a.avgGpa
+        : (b.avgGpa ?? -1) - (a.avgGpa ?? -1)
     );
 
     // Deduplicate equivalent course sets regardless of alias or order.
@@ -3367,8 +3370,8 @@
 
       let html = '';
       combos.forEach((combo, ci) => {
-        const avgGpaStr = combo.avgGpa > 0 ? combo.avgGpa.toFixed(2) : '—';
-        const gpaClass  = combo.avgGpa > 0 ? gpaColorClass(combo.avgGpa) : 'b-neutral';
+        const avgGpaStr = combo.avgGpa !== null ? combo.avgGpa.toFixed(2) : '—';
+        const gpaClass  = combo.avgGpa !== null ? gpaColorClass(combo.avgGpa) : 'b-neutral';
         html += `<div class="combo-card" style="animation-delay:${ci * 0.04}s">
           <div class="combo-card-header">
             <span class="combo-card-label">Combo ${ci + 1} &nbsp;·&nbsp; ${combo.courses.length} course${combo.courses.length !== 1 ? 's' : ''}</span>
