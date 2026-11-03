@@ -1786,7 +1786,7 @@
         .toUpperCase();
       c._isSeminar = /seminar/i.test(c.name);
       c._isInternship = /internship/i.test(c.name);
-      c._isIndependentStudy = /independent study/i.test(c.name);
+      c._isIndependentStudy = /(?:independent|individual) study/i.test(c.name);
       c._isStudyAbroad = /study abroad/i.test(c.name);
     });
 
