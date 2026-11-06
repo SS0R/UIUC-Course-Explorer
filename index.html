@@ -704,7 +704,7 @@
     .grade-avg {
       margin-top: 10px; font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 0.72rem; color: var(--text2);
-      display: flex; justify-content: space-between;
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px;
     }
 
     /* ── SECTION TOGGLE ── */
@@ -2961,6 +2961,7 @@
     const dist = gData.dist;
     const maxCount = Math.max(...GRADE_COLS.map(g => dist[g] || 0), 1);
     const total = GRADE_COLS.reduce((a, g) => a + (dist[g] || 0), 0);
+    const pctA = total > 0 ? (((dist['A+'] || 0) + (dist['A'] || 0)) / total * 100).toFixed(1) : '0.0';
 
     const bars = GRADE_COLS.map(g => {
       const n = dist[g] || 0;
@@ -2978,6 +2979,7 @@
       <div class="grade-bars">${bars}</div>
       <div class="grade-avg">
         <span>Avg GPA: <strong>${gData.gpa.toFixed(3)}</strong></span>
+        <span title="Percentage of graded students who earned an A or A+">4.0: <strong>${pctA}%</strong></span>
         <span>n = ${gData.students.toLocaleString()} students</span>
       </div>
     </div>`;
