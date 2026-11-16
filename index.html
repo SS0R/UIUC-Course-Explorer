@@ -3,133 +3,71 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script>
-    if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) {
-      document.documentElement.dataset.theme = 'dark';
-    }
-  </script>
   <title>UIUC Course Explorer</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <style>
-    /* ── UIUC COLOR TOKENS ── */
-    :root {
-      --orange:       #FF5F05;
-      --blue:         #13294B;
-      --orange-text:  #C84113;
-      --bg:           #0e1117;
-      --surface:      #161b26;
-      --surface2:     #1e2536;
-      --surface3:     #252d40;
-      --border:       rgba(255,255,255,0.07);
-      --border2:      rgba(255,255,255,0.12);
-      --text:         #e9ecf2;
-      --text2:        #b0b8c8;
-      --muted:        #5a6478;
-      --green:        #2ecc71;
-      --yellow:       #f39c12;
-      --red:          #e74c3c;
-      --lec:          #4a90d9;
-      --dis:          #27ae60;
-      --lab:          #e67e22;
-      --onl:          #8e44ad;
-      --other:        #7f8c8d;
-      --radius:       10px;
-      --radius-lg:    16px;
-      --shadow:       0 8px 32px rgba(0,0,0,0.5);
-      --shadow-sm:    0 2px 8px rgba(0,0,0,0.3);
-    }
-    [data-theme="light"] {
-      --bg:       #f0f2f5;
-      --surface:  #ffffff;
-      --surface2: #f4f6f9;
-      --surface3: #e8ecf2;
-      --border:   rgba(19,41,75,0.10);
-      --border2:  rgba(19,41,75,0.18);
-      --text:     #0e1117;
-      --text2:    #3a4560;
-      --muted:    #7a8499;
-      --shadow:   0 8px 32px rgba(19,41,75,0.12);
-      --shadow-sm:0 2px 8px rgba(19,41,75,0.08);
-    }
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
+    /* Illinois palette; original layout dimensions, square and flat surfaces. */
+    :root {
+      color-scheme: light;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      --orange: #FF5F05;
+      --blue: #13294B;
+      --orange-text: #C84113;
+      --bg: #F5F2EB;
+      --surface: #FCFAF6;
+      --surface2: #EEEAE1;
+      --surface3: #E5DFD3;
+      --border: #D1CABD;
+      --border2: #9A9285;
+      --text: #252525;
+      --text2: #505352;
+      --muted: #646766;
+      --heading: #13294B;
+      --green: #006230;
+      --yellow: #7D3E13;
+      --red: #5C0E41;
+      --lec: #1D58A7;
+      --dis: #006230;
+      --lab: #7D3E13;
+      --onl: #5C0E41;
+      --other: #707372;
+      --tag-blue-bg: #E8EEF6;
+      --tag-blue-text: #244C7A;
+    }
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #252525;
+      --surface: #2D2D2D;
+      --surface2: #353535;
+      --surface3: #424242;
+      --border: #555857;
+      --border2: #707372;
+      --text: #FFFFFF;
+      --text2: #C6C7C6;
+      --muted: #B3B5B4;
+      --heading: #FFFFFF;
+      --orange-text: #FF5F05;
+      --green: #90C0A7;
+      --yellow: #FCB316;
+      --red: #D5A0C2;
+      --lec: #89ACD6;
+      --dis: #90C0A7;
+      --lab: #D7B195;
+      --onl: #D5A0C2;
+      --other: #8E9090;
+      --tag-blue-bg: #29394B;
+      --tag-blue-text: #BCD0E8;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; border-radius: 0; }
+    html { }
     body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-family: var(--font);
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      transition: background 0.3s, color 0.3s;
     }
 
-    /* ── NAV ── */
-    nav {
-      position: sticky; top: 0; z-index: 100;
-      background: var(--blue);
-      padding: 0 28px;
-      height: 58px;
-      display: flex; align-items: center; justify-content: space-between;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.4);
-    }
-    .nav-logo {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.05rem; font-weight: 800;
-      color: #fff;
-      display: flex; align-items: center; gap: 10px;
-      position: relative; cursor: pointer; user-select: none;
-    }
-    .nav-logo .i-bar {
-      width: 3px; height: 22px;
-      background: var(--orange); border-radius: 2px;
-    }
-    .nav-logo .nav-caret {
-      font-size: 0.65rem; opacity: 0.6; margin-left: 2px; transition: transform 0.2s;
-    }
-    .nav-logo.open .nav-caret { transform: rotate(180deg); }
-    .nav-dropdown {
-      display: none;
-      position: absolute; top: calc(100% + 10px); left: 0;
-      background: var(--blue);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      min-width: 180px;
-      overflow: hidden;
-      z-index: 200;
-    }
-    .nav-logo.open .nav-dropdown { display: block; }
-    .nav-dropdown-item {
-      padding: 11px 16px;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 0.88rem; font-weight: 500;
-      color: rgba(255,255,255,0.85);
-      cursor: pointer;
-      display: flex; align-items: center; gap: 8px;
-      transition: background 0.15s, color 0.15s;
-    }
-    .nav-dropdown-item:hover { background: rgba(255,255,255,0.1); color: #fff; }
-    .nav-dropdown-divider {
-      height: 1px; background: rgba(255,255,255,0.1); margin: 0;
-    }
-    .nav-right { display: flex; align-items: center; gap: 10px; }
-    .nav-semester {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 0.7rem; color: rgba(255,255,255,0.5);
-      letter-spacing: 0.06em;
-    }
-    .theme-btn {
-      background: rgba(255,255,255,0.10);
-      border: 1px solid rgba(255,255,255,0.18);
-      color: #fff; border-radius: 8px;
-      padding: 6px 10px; font-size: 0.75rem;
-      font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer;
-      transition: background 0.2s;
-    }
-    .theme-btn:hover { background: rgba(255,255,255,0.18); }
-    [data-theme="light"] .theme-btn { color: #fff; }
     /* ── LAYOUT ── */
     .container { max-width: 1140px; margin: 0 auto; padding: 0 24px; }
 
@@ -138,18 +76,26 @@
       padding: 80px 0 36px;
       display: flex; flex-direction: column; align-items: center; text-align: center;
     }
-    #shared-header { padding: 120px 0 36px; }
+    #shared-header {
+      padding: 32px 0 16px; margin-bottom: 0;
+      flex-direction: row; align-items: center; justify-content: space-between;
+      gap: 24px; text-align: left;
+    }
+    .header-copy { min-width: 0; }
+    #shared-header .hero-kicker { margin-bottom: 8px; font-size: 0.65rem; letter-spacing: 0.06em; line-height: 1.5; color: var(--orange-text); }
+    #shared-header h1 { font-size: clamp(1.5rem, 3vw, 2rem); line-height: 1.2; margin-bottom: 8px; letter-spacing: -0.025em; }
+    #shared-header .hero-sub { max-width: none; font-size: 0.82rem; line-height: 1.5; margin-bottom: 0; }
     #main-view .hero,
-    #planner-view .hero { padding: 0 0 36px; }
+    #planner-view .hero { padding: 0 0 24px; }
     #main-view .filter-groups { margin-bottom: 0; }
     .hero-kicker {
-      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-family: var(--font);
       font-size: 0.68rem; letter-spacing: 0.2em;
       color: var(--orange-text); text-transform: uppercase; margin-bottom: 16px;
     }
     [data-theme="dark"] .hero-kicker { color: var(--orange); }
     .hero h1 {
-      font-family: 'Outfit', sans-serif;
+      font-family: var(--font);
       font-size: clamp(2rem, 5.5vw, 3.4rem);
       font-weight: 800; line-height: 1.1; margin-bottom: 14px;
     }
@@ -162,80 +108,44 @@
       display: inline-flex; align-items: center; gap: 9px;
       padding: 9px 15px;
       background: var(--surface); border: 1px solid var(--border2);
-      border-radius: 9px; box-shadow: var(--shadow-sm);
+      border-radius: 0;
       color: var(--text2); cursor: pointer;
-      font: 500 0.78rem 'Plus Jakarta Sans', sans-serif;
-      letter-spacing: 0.03em; transition: color 0.16s, border-color 0.16s, transform 0.16s, background 0.16s;
+      font: 500 0.78rem var(--font);
+      letter-spacing: 0.03em;
     }
     .view-nav-btn:hover {
       color: var(--orange); border-color: var(--orange);
-      background: var(--surface2); transform: translateY(-1px);
+      background: var(--surface2); 
     }
     .view-nav-btn:focus-visible { outline: 2px solid var(--orange); outline-offset: 3px; }
     .view-nav-arrow { color: var(--orange); font-size: 0.95rem; line-height: 1; }
 
     /* ── SEARCH ── */
-    .search-outer { min-width: 0; flex: 1; }
-    .search-row {
-      width: min(100%, 672px); min-height: 118px; display: flex; flex-direction: column;
-      gap: 12px; padding: 14px; margin: 0 auto 24px;
-      background: var(--surface); border: 1.5px solid var(--border2);
-      border-radius: 20px; overflow: visible; box-shadow: var(--shadow-sm);
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .search-row:focus-within {
-      border-color: rgba(255,95,5,0.7);
-      box-shadow: 0 0 0 3px rgba(255,95,5,0.12), var(--shadow-sm);
-    }
-    .search-toolbar {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 16px; min-height: 32px;
-    }
-    .search-toolbar-left,
-    .search-controls {
-      display: flex; align-items: center;
-    }
-    .search-toolbar-left { gap: 4px; }
-    .search-controls { justify-content: flex-end; gap: 8px; }
-    .prompt-action-btn {
-      height: 32px; display: inline-flex; align-items: center; gap: 6px;
-      padding: 0 12px; border: 1px solid transparent; border-radius: 8px;
-      background: transparent; color: var(--text2); cursor: pointer;
-      font: 400 14px/20px 'Plus Jakarta Sans', sans-serif;
-      transition: color 0.16s, background 0.16s, border-color 0.16s;
-    }
-    .prompt-action-btn:hover { color: var(--text); background: var(--surface2); }
-    .prompt-action-btn[aria-expanded="true"] {
-      color: var(--orange); background: var(--surface2); border-color: var(--border2);
-    }
-    .prompt-action-icon { width: 20px; height: 20px; color: var(--muted); }
-    .prompt-action-btn:hover .prompt-action-icon,
-    .prompt-action-btn[aria-expanded="true"] .prompt-action-icon { color: var(--orange); }
-    .prompt-planner-arrow { color: var(--orange); font-size: 0.9rem; }
-    .search-controls .theme-btn {
-      min-height: 48px;
-      background: transparent; border: 0; color: var(--text2);
-      border-radius: 0;
-    }
-    .search-controls .theme-btn {
-      width: 32px !important; min-height: 0; height: 32px;
-      display: grid; place-items: center; padding: 0;
-      justify-self: center; align-self: center; border-radius: 8px;
-      font-size: 20px; line-height: 1;
-    }
-    .search-controls .theme-btn:hover { background: var(--surface2); }
+    .header-controls { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; flex-shrink: 0; }
+    .header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .header-actions .view-nav-btn { min-height: 36px; padding: 7px 12px; letter-spacing: 0; }
+    .header-actions .theme-btn { display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 1px solid var(--border2); background: var(--surface); color: var(--text2); font: 20px/1 var(--font); cursor: pointer; }
+    .header-actions .theme-btn:hover { background: var(--surface2); }
+    .catalog-search { width: 100%; text-align: left; padding-top: 16px; border-top: 1px solid var(--border); }
+    .catalog-term { display: flex; align-items: center; gap: 8px; }
+    .term-field { display: flex; align-items: center; gap: 8px; }
+    .term-field label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+    .search-row { display: flex; align-items: stretch; gap: 8px; width: 100%; }
+    .prompt-action-btn { height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 0 14px; flex-shrink: 0; border: 1px solid var(--border2); background: var(--surface); color: var(--text2); cursor: pointer; font: 500 14px/20px var(--font); }
+    .prompt-action-btn:hover { background: var(--surface2); border-color: var(--orange-text); }
+    .prompt-action-btn[aria-expanded="true"] { background: var(--surface2); border-color: var(--orange-text); color: var(--orange-text); }
+    .prompt-action-icon { width: 16px; height: 16px; color: currentColor; }
     .native-select { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
     .custom-select {
-      position: relative; align-self: center; width: max-content; height: 32px;
-      font-family: 'Plus Jakarta Sans', sans-serif;
+      position: relative; align-self: center; width: max-content; height: 36px;
+      font-family: var(--font);
     }
     .custom-select-trigger {
       width: auto; min-width: 0; height: 100%; display: inline-flex; align-items: center;
       justify-content: flex-start; gap: 4px; padding: 0 8px 0 12px;
-      border: 1px solid transparent; border-radius: 8px;
-      background: transparent; color: var(--text2); cursor: pointer;
-      font: 430 14px/1.4 'Plus Jakarta Sans', sans-serif; text-align: left;
-      transition: background 0.16s, border-color 0.16s;
+      border: 1px solid var(--border2); border-radius: 0;
+      background: var(--surface); color: var(--text2); cursor: pointer;
+      font: 430 14px/1.4 var(--font); text-align: left;
     }
     .custom-select-trigger:hover { background: var(--surface2); }
     .custom-select.open .custom-select-trigger {
@@ -243,7 +153,7 @@
     }
     .custom-select-caret {
       width: 12px; height: 12px; display: inline-flex; align-items: center; justify-content: center;
-      color: var(--muted); transition: transform 0.18s;
+      color: var(--muted);
     }
     .custom-select-caret svg { width: 12px; height: 12px; display: block; }
     .custom-select.open .custom-select-caret { transform: rotate(180deg); }
@@ -253,73 +163,61 @@
       padding: 6px; overflow-y: auto; overscroll-behavior: contain;
       scrollbar-width: none;
       background: var(--surface); border: 1px solid var(--border2);
-      border-radius: 12px; box-shadow: var(--shadow);
+      border-radius: 0;
     }
     .custom-select-menu::-webkit-scrollbar { display: none; }
     #year-picker .custom-select-menu { min-width: 108px; }
-    .custom-select.open .custom-select-menu { display: block; animation: selectMenuIn 0.14s ease-out; }
+    .custom-select.open .custom-select-menu { display: block; }
     .custom-select-option {
       width: 100%; min-height: 36px; display: flex; align-items: center;
       justify-content: space-between; gap: 18px; padding: 8px 10px;
-      border: 0; border-radius: 8px; background: transparent;
+      border: 0; border-radius: 0; background: transparent;
       color: var(--text2); cursor: pointer; white-space: nowrap;
-      font: 400 0.88rem 'Plus Jakarta Sans', sans-serif; text-align: left;
+      font: 400 0.88rem var(--font); text-align: left;
     }
     .custom-select-option:hover,
     .custom-select-option:focus-visible { background: var(--surface2); color: var(--text); outline: none; }
     .custom-select-option.selected { color: var(--text); }
     .custom-select-option:disabled { opacity: 0.4; cursor: default; }
     .custom-select-option.selected::after { content: '\2713'; color: var(--orange); font-weight: 600; }
-    @keyframes selectMenuIn {
-      from { opacity: 0; transform: translateY(-4px) scale(0.98); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    .search-box { position: relative; }
-    #search-input {
-      width: 100%; height: 46px; min-height: 46px; max-height: 384px; display: block; resize: none;
-      background: transparent; border: 0; border-radius: 0;
-      color: var(--text);
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 15px; line-height: 20px; font-weight: 400;
-      padding: 6px 6px 0;
-      outline: none; scrollbar-width: none;
-    }
-    #search-input::-webkit-scrollbar { display: none; }
-    #search-input::placeholder { color: var(--muted); }
+    .search-box { position: relative; flex: 1; min-width: 0; }
+    .search-icon { position: absolute; left: 12px; top: 14px; width: 16px; height: 16px; color: var(--muted); pointer-events: none; }
+    #search-input { width: 100%; min-width: 0; height: 44px; display: block; padding: 0 12px 0 38px; border: 1px solid var(--border2); background: var(--surface); color: var(--text); font: 400 15px/normal var(--font); appearance: none; }
+    #search-input:focus-visible { outline: 2px solid var(--orange-text); outline-offset: 2px; }
+    #search-input::placeholder { color: var(--muted); opacity: 1; }
 
     /* ── FILTER MODAL ── */
     .filter-overlay {
       display: none; position: fixed; inset: 0; z-index: 204;
-      background: rgba(0,0,0,0.65); backdrop-filter: blur(3px);
+      background: rgba(0,0,0,0.65);
     }
     .filter-overlay.open { display: block; }
     .filter-panel {
       position: fixed; top: 50%; left: 50%; z-index: 205;
       width: min(760px, 92vw); max-height: 88vh;
       background: var(--surface); border: 1px solid var(--border2);
-      border-radius: 16px; box-shadow: var(--shadow); overflow: hidden;
+      border-radius: 0; overflow: hidden;
       opacity: 0; pointer-events: none;
-      transform: translate(-50%, -44%) scale(0.97);
-      transition: transform 0.24s cubic-bezier(0.4,0,0.2,1), opacity 0.24s cubic-bezier(0.4,0,0.2,1);
+      transform: translate(-50%, -50%);
     }
     .filter-panel.open {
-      opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1);
+      opacity: 1; pointer-events: auto; transform: translate(-50%, -50%);
     }
     .filter-panel-topbar {
       min-height: 58px; display: flex; align-items: center; justify-content: space-between;
       gap: 16px; padding: 13px 18px 13px 22px; background: var(--blue);
     }
     .filter-panel-title {
-      color: #fff; font: 600 0.88rem 'Plus Jakarta Sans', sans-serif;
+      color: #fff; font: 600 0.88rem var(--font);
       letter-spacing: 0.04em;
     }
     .filter-panel-actions { display: flex; align-items: center; gap: 8px; }
     .filter-reset {
       background: rgba(255,255,255,0.12);
       border: 1px solid rgba(255,255,255,0.2);
-      color: #fff; border-radius: 7px;
-      padding: 5px 12px; font: 0.75rem 'Plus Jakarta Sans', sans-serif;
-      cursor: pointer; transition: background 0.18s;
+      color: #fff; border-radius: 0;
+      padding: 5px 12px; font: 0.75rem var(--font);
+      cursor: pointer;
     }
     .filter-reset:hover { background: rgba(255,255,255,0.22); }
     .filter-panel-body {
@@ -341,7 +239,7 @@
       display: flex; flex-direction: column;
       gap: 8px; align-items: stretch; width: 100%;
       background: var(--surface2); border: 1px solid var(--border2);
-      border-radius: var(--radius); padding: 12px;
+      border-radius: 0; padding: 12px;
     }
     #planner-view .filter-groups { align-self: stretch; }
     #planner-gened-chips {
@@ -349,7 +247,7 @@
       align-items: stretch; justify-content: flex-start;
       width: min(100%, 684px); max-width: 684px;
       background: var(--surface2); border: 1px solid var(--border2);
-      border-radius: var(--radius); padding: 12px;
+      border-radius: 0; padding: 12px;
     }
     #filter-left, #filter-right {
       display: contents;
@@ -380,11 +278,10 @@
     .chip {
       background: var(--surface);
       border: 1px solid var(--border2);
-      border-radius: 20px;
+      border-radius: 0;
       color: var(--text2);
-      font-size: 0.76rem; font-family: 'Plus Jakarta Sans', sans-serif;
-      padding: 5px 14px; cursor: pointer;
-      transition: all 0.16s; user-select: none;
+      font-size: 0.76rem; font-family: var(--font);
+      padding: 5px 14px; cursor: pointer; user-select: none;
       position: relative; white-space: nowrap;
     }
     .chip:hover { border-color: var(--orange); color: var(--orange); }
@@ -396,7 +293,7 @@
       bottom: calc(100% + 6px);
       left: 50%; transform: translateX(-50%);
       background: #222; color: #fff;
-      padding: 4px 10px; border-radius: 6px;
+      padding: 4px 10px; border-radius: 0;
       white-space: nowrap; font-size: 0.7rem;
       pointer-events: none; z-index: 10;
     }
@@ -404,28 +301,25 @@
     /* ── LOADING BAR ── */
     #load-bar {
       position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 99;
-      background: linear-gradient(90deg, var(--orange), var(--orange-text));
+      background: var(--orange);
       transform-origin: left; transform: scaleX(0);
-      transition: transform 0.4s ease;
     }
     #load-status {
       text-align: center; padding: 60px 20px;
-      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.8rem; color: var(--muted);
+      font-family: var(--font); font-size: 0.8rem; color: var(--muted);
     }
 
     /* ── RESULTS BAR ── */
-    .results-bar {
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 8px 12px;
-      margin-bottom: 18px;
-    }
-    .results-label {
-      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.72rem;
-      text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted);
-    }
-    .results-count {
-      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.72rem; color: var(--muted);
-    }
+    .results-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 20px; margin-bottom: 14px; }
+    .results-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 20px; }
+    .results-label, .results-count { color: var(--text2); font: 0.75rem var(--font); }
+    .results-controls .results-count { color: var(--heading); font-weight: 500; }
+    .results-sort { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 0.7rem; }
+    #sort-picker { height: 30px; }
+    #sort-picker .custom-select-trigger { padding: 0 8px 0 10px; gap: 10px; border-color: var(--border); font-size: 0.7rem; }
+    #sort-picker .custom-select-menu { min-width: 100%; }
+    #sort-picker .custom-select-option { min-height: 32px; font-size: 0.75rem; }
+    #catalog-freshness { color: var(--muted); font-size: 0.65rem; }
 
     /* ── GRID ── */
     .courses-grid {
@@ -435,80 +329,69 @@
     }
 
     .course-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px 20px;
-      cursor: pointer;
-      transition: border-color 0.18s, transform 0.18s, box-shadow 0.18s;
-      position: relative; overflow: hidden;
-      animation: fadeUp 0.3s ease both;
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 18px 20px; cursor: pointer; position: relative; overflow: hidden; display: flex; flex-direction: column;
     }
-    .course-card:hover {
-      border-color: rgba(255,95,5,0.4);
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-sm);
-    }
-    .course-card::after {
-      content: '';
-      position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, var(--orange), transparent);
-      opacity: 0; transition: opacity 0.18s;
-    }
-    .course-card:hover::after { opacity: 1; }
-
-    .card-code {
-      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem;
-      color: var(--orange-text); margin-bottom: 5px; letter-spacing: 0.04em;
-    }
-    [data-theme="dark"] .card-code { color: var(--orange); }
-    .card-name {
-      font-size: 0.93rem; font-weight: 600; line-height: 1.3; margin-bottom: 7px;
-    }
+    .course-card:hover { border-color: var(--orange); }
+    .course-card:focus-visible { outline: 2px solid var(--orange-text); outline-offset: 3px; }
+    .card-topline { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 7px; }
+    .card-identifiers { display: flex; align-items: center; flex-wrap: wrap; gap: 5px 8px; min-width: 0; }
+    .card-credits { color: var(--muted); font-size: 0.7rem; white-space: nowrap; flex-shrink: 0; }
+    .card-code { color: var(--orange-text); font-family: var(--font); font-size: 0.7rem; font-weight: 500; letter-spacing: 0.04em; }
+    .card-name { font-size: 0.93rem; font-weight: 600; line-height: 1.3; margin-bottom: 7px; }
     .card-desc {
       font-size: 0.78rem; color: var(--text2); line-height: 1.55;
       display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2;
-      -webkit-box-orient: vertical; overflow: hidden;
-      margin-bottom: 12px;
+      -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 12px;
     }
-    .card-footer { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .card-match { margin-bottom: 7px; color: var(--orange-text); font-size: 0.73rem; line-height: 1.5; }
+    .card-bottom { margin-top: auto; }
+    .card-grade-summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; color: var(--muted); font-size: 0.7rem; line-height: 1.5; }
+    .card-metric { display: inline-flex; gap: 4px; align-items: baseline; }
+    .card-metric-value { font-weight: 600; font-variant-numeric: tabular-nums; color: var(--text2); }
+    .card-metric-value.b-green { background: transparent; color: var(--green); }
+    .card-metric-value.b-yellow { background: transparent; color: var(--yellow); }
+    .card-metric-value.b-red { background: transparent; color: var(--red); }
+    .card-stat-divider { color: var(--border2); }
+    .card-no-history { color: var(--muted); font-size: 0.7rem; }
+    .card-footer { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; margin-top: 9px; }
+    .card-footer .badge { white-space: normal; }
 
     /* ── BADGES ── */
     .badge {
-      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.66rem;
-      padding: 3px 8px; border-radius: 5px; font-weight: 500;
+      font-family: var(--font); font-size: 0.66rem;
+      padding: 3px 8px; border-radius: 0; font-weight: 500;
       white-space: nowrap;
     }
-    .b-green    { background: rgba(46,204,113,0.13); color: #2ecc71; }
-    .b-yellow   { background: rgba(243,156,18,0.13); color: #f39c12; }
-    .b-red      { background: rgba(231,76,60,0.13);  color: #e74c3c; }
-    .b-neutral  { background: var(--surface2); color: var(--text2); }
-    .b-blue     { background: rgba(74,144,217,0.13); color: #4a90d9; }
-    .b-orange   { background: rgba(255,95,5,0.12); color: var(--orange-text); }
+    .b-green    { background: var(--surface2); color: var(--green); }
+    .b-yellow   { background: var(--surface2); color: var(--yellow); }
+    .b-red      { background: var(--surface2); color: var(--red); }
+    .b-neutral  { background: var(--surface2); color: var(--muted); }
+    .b-blue     { background: var(--tag-blue-bg); color: var(--tag-blue-text); }
+    .b-orange   { background: var(--surface2); color: var(--orange-text); }
     [data-theme="dark"] .b-orange { color: var(--orange); }
     .b-section-count { background: var(--surface3); color: var(--muted); }
 
     /* ── DETAIL PANEL ── */
     .overlay {
       display: none; position: fixed; inset: 0; z-index: 200;
-      background: rgba(0,0,0,0.65); backdrop-filter: blur(3px);
+      background: rgba(0,0,0,0.65);
     }
     .overlay.open { display: block; }
     .detail-panel {
       position: fixed;
       top: 50%; left: 50%;
-      width: min(680px, 92vw);
+      width: min(800px, 92vw);
       max-height: 88vh;
       background: var(--surface);
       border: 1px solid var(--border2);
-      border-radius: 16px;
+      border-radius: 0;
       z-index: 201; overflow-y: auto; scrollbar-width: none;
-      transform: translate(-50%, -44%) scale(0.97);
+      transform: translate(-50%, -50%);
       opacity: 0; pointer-events: none;
-      transition: transform 0.28s cubic-bezier(0.4,0,0.2,1), opacity 0.28s cubic-bezier(0.4,0,0.2,1);
     }
     .detail-panel.open {
-      transform: translate(-50%, -50%) scale(1);
+      transform: translate(-50%, -50%);
       opacity: 1; pointer-events: auto;
     }
     .detail-panel::-webkit-scrollbar { display: none; }
@@ -517,54 +400,53 @@
       position: sticky; top: 0; z-index: 5;
       background: var(--blue);
       padding: 16px 24px;
-      border-radius: 15px 15px 0 0;
+      border-radius: 0;
       display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: nowrap; gap: 16px;
     }
+    .panel-topbar > div { flex-wrap: nowrap; }
+    .panel-topbar button, .panel-topbar a, .panel-code-label { white-space: nowrap; }
     .panel-code-label {
-      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.72rem;
+      font-family: var(--font); font-size: 0.72rem;
       color: rgba(255,255,255,0.7); letter-spacing: 0.06em;
     }
     .panel-close {
       background: rgba(255,255,255,0.12);
       border: 1px solid rgba(255,255,255,0.2);
-      color: #fff; border-radius: 7px;
+      color: #fff; border-radius: 0;
       padding: 5px 12px; font-size: 0.75rem; cursor: pointer;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      transition: background 0.18s;
+      font-family: var(--font);
     }
     .panel-close:hover { background: rgba(255,255,255,0.22); }
     .panel-ce-link {
       background: rgba(255,255,255,0.12);
       border: 1px solid rgba(255,255,255,0.2);
-      color: #fff; border-radius: 7px;
-      padding: 5px 12px; font: 0.75rem 'Plus Jakarta Sans', sans-serif;
-      text-decoration: none; transition: background 0.18s;
+      color: #fff; border-radius: 0;
+      padding: 5px 12px; font: 0.75rem var(--font);
+      text-decoration: none;
     }
     .panel-ce-link:hover { background: rgba(255,255,255,0.22); }
     .panel-back {
       background: none; border: none;
       color: rgba(255,255,255,0.6); font-size: 0.72rem; cursor: pointer;
-      font-family: 'Plus Jakarta Sans', sans-serif; padding: 0;
-      transition: color 0.15s;
+      font-family: var(--font); padding: 0;
     }
     .panel-back:hover { color: #fff; }
 
     /* ── GEN ED PLANNER (full-screen view) ── */
     #planner-view { display: none; }
     .find-combos-btn {
-      background: var(--orange); border: none; border-radius: 8px;
-      color: #fff; font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--orange); border: none; border-radius: 0;
+      color: #fff; font-family: var(--font);
       font-size: 0.78rem; font-weight: 500;
       padding: 10px 28px; cursor: pointer;
-      transition: opacity 0.2s, transform 0.15s;
       letter-spacing: 0.06em;
     }
-    .find-combos-btn:hover { opacity: 0.88; transform: scale(1.04); }
+    .find-combos-btn:hover { opacity: 0.88;  }
     .back-link {
       background: none; border: none;
-      color: var(--muted); font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--muted); font-family: var(--font);
       font-size: 0.75rem; cursor: pointer; padding: 0;
-      transition: color 0.15s;
     }
     .back-link:hover { color: var(--text); }
 
@@ -572,34 +454,26 @@
     .combo-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: 0;
       overflow: hidden;
-      animation: fadeUp 0.3s ease both;
-      transition: border-color 0.18s, box-shadow 0.18s;
       position: relative;
     }
-    .combo-card::after {
-      content: '';
-      position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, var(--orange), transparent);
-      opacity: 0; transition: opacity 0.18s;
-    }
-    .combo-card:hover { border-color: rgba(255,95,5,0.4); box-shadow: var(--shadow-sm); }
-    .combo-card:hover::after { opacity: 1; }
+
+    .combo-card:hover { border-color: var(--orange); }
+
     .combo-card-header {
       padding: 14px 18px 12px;
       border-bottom: 1px solid var(--border);
       display: flex; justify-content: space-between; align-items: center;
     }
     .combo-card-label {
-      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.68rem;
+      font-family: var(--font); font-size: 0.68rem;
       text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted);
     }
     .combo-course-row {
       padding: 12px 18px;
       border-bottom: 1px solid var(--border);
       cursor: pointer;
-      transition: background 0.15s;
     }
     .combo-course-row:last-child { border-bottom: none; }
     .combo-course-row:hover { background: var(--surface2); }
@@ -607,7 +481,7 @@
       display: flex; gap: 10px; align-items: baseline; margin-bottom: 4px;
     }
     .combo-course-code {
-      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem;
+      font-family: var(--font); font-size: 0.7rem;
       color: var(--orange-text); white-space: nowrap;
     }
     [data-theme="dark"] .combo-course-code { color: var(--orange); }
@@ -621,7 +495,7 @@
       border-bottom: 1px solid var(--border);
     }
     .panel-title {
-      font-family: 'Outfit', sans-serif;
+      font-family: var(--font);
       font-size: 1.35rem; font-weight: 800; line-height: 1.25; margin-bottom: 10px;
     }
     .panel-meta { display: flex; gap: 7px; flex-wrap: wrap; }
@@ -629,22 +503,33 @@
     .panel-section { padding: 20px 24px; border-bottom: 1px solid var(--border); }
     .panel-section:last-child { border-bottom: none; }
     .psec-label {
-      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.64rem;
+      font-family: var(--font); font-size: 0.64rem;
       letter-spacing: 0.14em; text-transform: uppercase;
       color: var(--muted); margin-bottom: 12px;
     }
     .panel-desc { font-size: 0.86rem; color: var(--text2); line-height: 1.7; }
     .crossref {
-      color: #C84113;
+      color: var(--orange-text);
       font: inherit;
     }
-    [data-theme="dark"] .crossref { color: #C84113; }
+    [data-theme="dark"] .crossref { color: var(--orange-text); }
+
+    .offered-terms[hidden] { display: none; }
+    .detail-panel.show-offered-terms .panel-body > :not(#panel-offered-terms) { display: none; }
+    .detail-panel.show-offered-terms .offered-terms-list { max-height: none; overflow-y: visible; }
+    #offered-terms-status { color: var(--muted); font-size: 0.75rem; line-height: 1.5; }
+    .offered-terms-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 7px; max-height: 240px; overflow-y: auto; margin-top: 12px; padding: 3px; }
+    .offered-terms-list:empty { display: none; }
+    .offered-term { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 3px; min-height: 38px; padding: 8px 10px; border: 1px solid var(--border2); background: var(--surface); color: var(--text2); font: 0.75rem var(--font); text-align: left; cursor: pointer; }
+    .offered-term:hover { border-color: var(--orange-text); color: var(--orange-text); background: var(--surface2); }
+    .offered-term[aria-current="true"] { border-color: var(--heading); color: var(--heading); background: var(--surface2); }
+    .offered-term-current { font-size: 0.6rem; color: var(--muted); }
 
     /* ── INSTRUCTOR TABLE ── */
     .instr-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
     .instr-table thead th {
       text-align: left; padding: 7px 12px;
-      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.62rem;
+      font-family: var(--font); font-size: 0.62rem;
       letter-spacing: 0.09em; color: var(--muted);
       border-bottom: 1px solid var(--border2);
       background: var(--surface2);
@@ -656,17 +541,16 @@
     .instr-table tbody tr:last-child td { border-bottom: none; }
     .instr-name { font-weight: 500; }
     .gpa-clickable {
-      font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer;
+      font-family: var(--font); cursor: pointer;
       display: inline-flex; align-items: center; gap: 5px;
     }
     .gpa-clickable:hover { text-decoration: underline; }
     .gpa-students { font-size: 0.65rem; color: var(--muted); }
     .rmp-btn {
-      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.65rem;
+      font-family: var(--font); font-size: 0.65rem;
       color: var(--text2); background: var(--surface2);
-      border: 1px solid var(--border2); border-radius: 5px;
-      padding: 3px 8px; text-decoration: none;
-      transition: all 0.15s; white-space: nowrap;
+      border: 1px solid var(--border2); border-radius: 0;
+      padding: 3px 8px; text-decoration: none; white-space: nowrap;
     }
     .rmp-btn:hover { background: var(--surface3); color: var(--text); }
 
@@ -675,12 +559,12 @@
       display: none;
       background: var(--surface2);
       border: 1px solid var(--border2);
-      border-radius: var(--radius);
+      border-radius: 0;
       padding: 16px; margin-top: 12px;
     }
     .grade-sheet.open { display: block; }
     .grade-sheet-title {
-      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.68rem;
+      font-family: var(--font); font-size: 0.68rem;
       color: var(--muted); margin-bottom: 12px; letter-spacing: 0.08em;
     }
     .grade-bars { display: flex; gap: 4px; align-items: flex-end; height: 60px; }
@@ -690,19 +574,18 @@
       display: none; position: absolute; bottom: calc(100% - 16px);
       left: 50%; transform: translateX(-50%);
       background: var(--text); color: var(--surface);
-      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.6rem;
-      padding: 3px 6px; border-radius: 4px; white-space: nowrap;
+      font-family: var(--font); font-size: 0.6rem;
+      padding: 3px 6px; border-radius: 0; white-space: nowrap;
       pointer-events: none; z-index: 10;
     }
     .grade-bar {
-      width: 100%; min-height: 2px; border-radius: 3px 3px 0 0;
+      width: 100%; min-height: 2px; border-radius: 0;
       background: var(--orange); opacity: 0.85;
-      transition: height 0.4s ease;
     }
     .grade-bar-wrap:hover .grade-bar { opacity: 1; }
-    .grade-lbl { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.56rem; color: var(--muted); }
+    .grade-lbl { font-family: var(--font); font-size: 0.56rem; color: var(--muted); }
     .grade-avg {
-      margin-top: 10px; font-family: 'Plus Jakarta Sans', sans-serif;
+      margin-top: 10px; font-family: var(--font);
       font-size: 0.72rem; color: var(--text2);
       display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px;
     }
@@ -711,26 +594,30 @@
     .view-toggle {
       display: inline-flex; background: var(--surface2);
       border: 1px solid var(--border2);
-      border-radius: 8px; padding: 3px; gap: 2px; margin-bottom: 14px;
+      border-radius: 0; padding: 3px; gap: 2px; margin-bottom: 14px;
     }
     .vtbtn {
       background: none; border: none; color: var(--muted);
-      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.7rem;
-      padding: 5px 14px; border-radius: 6px; cursor: pointer;
-      transition: all 0.16s; letter-spacing: 0.04em;
+      font-family: var(--font); font-size: 0.7rem;
+      padding: 5px 14px; border-radius: 0; cursor: pointer; letter-spacing: 0.04em;
     }
-    .vtbtn.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+    .vtbtn.active { background: var(--surface); color: var(--text); }
 
     /* ── SECTION ROWS ── */
+    .section-note { margin-bottom: 12px; color: var(--muted); font-size: 0.72rem; line-height: 1.5; }
     .sec-row {
       display: flex; align-items: center; gap: 10px;
-      padding: 9px 10px; border-radius: 8px;
+      padding: 9px 10px; border-radius: 0;
       border: 1px solid var(--border); margin-bottom: 6px;
-      font-size: 0.8rem; transition: background 0.15s;
+      font-size: 0.8rem;
     }
     .sec-row:hover { background: var(--surface2); }
+    .sec-row[role="button"] { cursor: pointer; }
+    .sec-row:focus-visible { outline: 2px solid var(--orange-text); outline-offset: 2px; }
+    .sec-copy-feedback { color: var(--orange-text); }
+    .sec-copy-feedback:empty { display: none; }
     .sec-row.sec-closed { opacity: 0.38; }
-    .sec-dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+    .sec-dot { width: 9px; height: 9px; border-radius: 0; flex-shrink: 0; }
     .sdot-LEC { background: var(--lec); }
     .sdot-DIS { background: var(--dis); }
     .sdot-LAB { background: var(--lab); }
@@ -739,53 +626,45 @@
     .sdot-OTH { background: var(--other); }
     .sec-info { flex: 1; min-width: 0; }
     .sec-type-num {
-      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.65rem; color: var(--muted);
+      font-family: var(--font); font-size: 0.65rem; color: var(--muted);
     }
     .sec-time { font-weight: 500; font-size: 0.81rem; }
     .sec-room { color: var(--text2); font-size: 0.76rem; }
     .sec-instr { color: var(--muted); font-size: 0.73rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
     .sec-status {
-      width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0;
-      background: #b8b8b8; box-shadow: 0 0 0 1px rgba(0,0,0,0.08) inset;
-      transition: background 0.2s;
+      width: 11px; height: 11px; border-radius: 0; flex-shrink: 0;
+      background: var(--other);
     }
-    .sec-status-open       { background: #2ecc71; }
-    .sec-status-restricted { background: #f1c40f; }
-    .sec-status-closed     { background: #e74c3c; }
-    .sec-status-unknown    { background: #b8b8b8; }
-    .sec-status-loading    { background: #b8b8b8; animation: secStatusPulse 1.1s ease-in-out infinite; }
-    @keyframes secStatusPulse { 0%,100% { opacity: 0.35; } 50% { opacity: 1; } }
-
-    /* ── PREREQ TREE MODAL ── */
+    .sec-status-open       { background: var(--green); }
+    .sec-status-restricted { background: var(--yellow); }
+    .sec-status-closed     { background: var(--red); }
+    .sec-status-unknown    { background: var(--other); }
+    .sec-status-loading    { background: var(--other); }
+/* ── PREREQ TREE MODAL ── */
     .panel-prereq-btn {
       background: rgba(255,255,255,0.12);
       border: 1px solid rgba(255,255,255,0.2);
-      color: #fff; border-radius: 7px;
+      color: #fff; border-radius: 0;
       padding: 5px 12px; font-size: 0.75rem; cursor: pointer;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      transition: background 0.18s;
+      font-family: var(--font);
     }
     .panel-prereq-btn:hover { background: rgba(255,255,255,0.22); }
     .prereq-modal {
       position: fixed;
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      width: min(680px, 92vw);
+      width: min(800px, 92vw);
       height: 88vh; /* fallback; JS matches the open detail panel's actual height */
       z-index: 203;
-      border-radius: 16px;
+      border-radius: 0;
       overflow: hidden;
-      /* Transparent strip at top so the detail-panel topbar shows through. */
-      background: linear-gradient(
-        to bottom,
-        transparent var(--prereq-header-height, 56px),
-        var(--bg) var(--prereq-header-height, 56px)
-      );
+      background: transparent;
       display: flex; flex-direction: column;
       padding-top: var(--prereq-header-height, 56px);
       pointer-events: none;
     }
     .prereq-canvas {
+      background: var(--surface);
       flex: 1; overflow: auto; padding: 40px 20px 60px;
       pointer-events: auto;
     }
@@ -817,9 +696,9 @@
     .tree li:first-child::before, .tree li:last-child::after { border: 0 none; }
     .tree li:last-child::before {
       border-right: 2px solid var(--border);
-      border-radius: 0 4px 0 0;
+      border-radius: 0;
     }
-    .tree li:first-child::after { border-radius: 4px 0 0 0; }
+    .tree li:first-child::after { border-radius: 0; }
     /* Vertical connector from a parent down to its children */
     .tree ul ul::before {
       content: ''; position: absolute; top: 0; left: 50%;
@@ -829,14 +708,13 @@
     /* Tree cards */
     .tree-card {
       display: inline-block; padding: 8px 12px;
-      border: 1px solid var(--border); border-radius: 8px;
+      border: 1px solid var(--border); border-radius: 0;
       background: var(--surface);
-      font-family: 'Plus Jakarta Sans', sans-serif; text-align: center;
+      font-family: var(--font); text-align: center;
       min-width: 90px; max-width: 180px;
-      transition: background 0.15s, border-color 0.15s, transform 0.15s;
     }
     .tree-card-course { cursor: pointer; }
-    .tree-card-course:hover { background: var(--surface2); border-color: var(--orange); transform: translateY(-1px); }
+    .tree-card-course:hover { background: var(--surface2); border-color: var(--orange);  }
     .tree-card-code { font-size: 0.78rem; font-weight: 700; color: var(--text); }
     [data-theme="dark"] .tree-card-code { color: var(--orange); }
     .tree-card-name {
@@ -849,8 +727,8 @@
     .tree-card-meta { font-size: 0.6rem; color: var(--muted); margin-top: 4px; font-style: italic; }
     .tree-card-requirement {
       display: inline-block; margin-top: 6px; padding: 2px 6px;
-      border-radius: 999px; border: 1px solid rgba(46, 204, 113, 0.38);
-      background: rgba(46, 204, 113, 0.1); color: var(--green);
+      border-radius: 0; border: 1px solid var(--border2);
+      background: var(--surface2); color: var(--green);
       font-size: 0.56rem; font-weight: 700; line-height: 1.25;
       letter-spacing: 0.02em; white-space: normal;
     }
@@ -871,28 +749,44 @@
       padding: 40px 20px; text-align: center;
     }
     .spill {
-      font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.6rem;
-      padding: 2px 8px; border-radius: 20px; white-space: nowrap;
+      font-family: var(--font); font-size: 0.6rem;
+      padding: 2px 8px; border-radius: 0; white-space: nowrap;
     }
-    .spill-open     { background: rgba(46,204,113,0.12); color: var(--green); }
-    .spill-closed   { background: rgba(231,76,60,0.12);  color: var(--red); }
-    .spill-waitlist { background: rgba(243,156,18,0.12); color: var(--yellow); }
+    .spill-open     { background: var(--surface2); color: var(--green); }
+    .spill-closed   { background: var(--surface2);  color: var(--red); }
+    .spill-waitlist { background: var(--surface2); color: var(--yellow); }
 
-    /* ── CALENDAR STUB ── */
-    .cal-stub {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 28px;
-      text-align: center; color: var(--muted); font-size: 0.82rem; line-height: 1.6;
-    }
-    .cal-stub strong {
-      display: block; font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 0.68rem; color: var(--text); margin-bottom: 6px; letter-spacing: 0.08em;
-    }
+    .copy-crn-btn { flex-shrink: 0; padding: 5px 7px; border: 1px solid var(--border2); background: var(--surface); color: var(--text2); font: 0.65rem var(--font); white-space: nowrap; cursor: pointer; }
+    .copy-crn-btn:hover { border-color: var(--orange-text); color: var(--orange-text); }
+    .copy-crn-btn:disabled { opacity: 0.6; cursor: wait; }
+    .calendar-meeting .copy-crn-btn { align-self: flex-start; }
+
+    /* Weekly section calendar */
+    .calendar-note { color: var(--muted); font-size: 0.7rem; line-height: 1.5; margin: 10px 0; }
+    .calendar-scroll { max-height: 440px; overflow: auto; border: 1px solid var(--border); overscroll-behavior: contain; }
+    .calendar-scroll:focus-visible { outline: 2px solid var(--orange-text); outline-offset: 2px; }
+    .calendar-grid { display: grid; width: 100%; background: var(--surface); }
+    .calendar-heading { position: sticky; top: 0; z-index: 3; padding: 10px 4px; background: var(--blue); color: #FFFFFF; border-right: 1px solid rgb(255 255 255 / 20%); font-size: 0.7rem; font-weight: 600; text-align: center; }
+    .calendar-corner { left: 0; z-index: 5; }
+    .calendar-axis { position: sticky; left: 0; z-index: 2; background: var(--surface2); border-right: 1px solid var(--border); }
+    .calendar-axis span { position: absolute; right: 5px; padding-top: 3px; color: var(--muted); font-size: 0.6rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .calendar-day { position: relative; border-right: 1px solid var(--border); }
+    .calendar-hour { position: absolute; left: 0; right: 0; border-top: 1px solid var(--border); }
+    .calendar-event { position: absolute; z-index: 1; overflow: hidden; padding: 3px 5px; border: 1px solid var(--border2); border-left-width: 3px; background: var(--surface2); color: var(--heading); text-align: left; cursor: pointer; font: 0.65rem/1.3 var(--font); }
+    .calendar-event:hover, .calendar-event:focus-visible { z-index: 2; background: var(--surface3); border-color: var(--orange-text); }
+    .calendar-event strong, .calendar-event span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .calendar-event strong { font-weight: 600; }
+    .calendar-event span { color: var(--text2); font-size: 0.6rem; }
+    .calendar-meeting { display: flex; flex-direction: column; gap: 4px; margin: 10px 0; padding: 12px; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); font-size: 0.75rem; line-height: 1.4; overflow-wrap: anywhere; }
+    .calendar-meeting[hidden] { display: none; }
+    .calendar-meeting strong { color: var(--heading); }
+    .calendar-unscheduled { margin-top: 20px; }
+    .calendar-empty { color: var(--muted); font-size: 0.8rem; padding: 20px 0; }
 
     /* ── TYPE LEGEND ── */
     .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
     .leg-item { display: flex; align-items: center; gap: 5px; font-size: 0.72rem; color: var(--muted); }
-    .leg-dot { width: 8px; height: 8px; border-radius: 2px; }
+    .leg-dot { width: 8px; height: 8px; border-radius: 0; }
 
     /* ── EMPTY / ERROR ── */
     .state-msg { text-align: center; padding: 64px 20px; color: var(--muted); }
@@ -901,12 +795,7 @@
     .state-msg p { font-size: 0.86rem; line-height: 1.6; }
 
     /* ── ANIMATIONS ── */
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(14px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ── RESPONSIVE ── */
+/* ── RESPONSIVE ── */
     @media (max-width: 600px) {
       .hero { padding: 52px 0 26px; }
       .courses-grid { grid-template-columns: 1fr; }
@@ -916,13 +805,41 @@
       .filter-panel-body { max-height: calc(92vh - 58px); padding: 12px; }
       #gened-filter-group .filter-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       #format-filter-group .filter-options { --chip-count: 2 !important; }
-      #sort-filter-group .filter-options { --chip-count: 2 !important; }
     }
     @media (max-width: 520px) {
-      .search-row { min-height: 0; gap: 8px; padding: 10px; }
-      .search-toolbar { flex-wrap: wrap; gap: 6px; }
-      .search-toolbar-left, .search-controls { width: 100%; justify-content: space-between; }
-      .search-controls { padding-top: 6px; border-top: 1px solid var(--border); }
+      #search-input { font-size: 16px; }
+      .prompt-action-btn { padding: 0 10px; }
+      #catalog-freshness { flex-basis: 100%; }
+    }
+    @media (max-width: 680px) {
+      #shared-header { padding: 24px 0 16px; flex-wrap: wrap; gap: 16px; margin-bottom: 0; }
+      .header-copy { flex-basis: 100%; }
+      .header-controls { align-items: flex-start; max-width: 100%; }
+      .catalog-term { flex-wrap: wrap; gap: 8px; }
+    }
+  
+    /* Flat Illinois treatment; these rules do not change component dimensions. */
+    .hero h1, .card-name, .panel-title { color: var(--heading); }
+    .hero h1, .panel-title { font-weight: 600; }
+    .chip.active { background: var(--blue); border-color: var(--blue); color: #FFFFFF; }
+    [data-theme="dark"] .chip.active { background: var(--orange); border-color: var(--orange); color: var(--blue); }
+    .find-combos-btn { background: var(--orange); color: var(--blue); }
+    .prompt-action-btn[aria-expanded="true"], .prompt-action-btn:hover,
+    .custom-select-option.selected::after { color: var(--orange-text); }
+    .prompt-action-btn:hover .prompt-action-icon,
+    .prompt-action-btn[aria-expanded="true"] .prompt-action-icon { color: var(--orange-text); }
+    .view-nav-btn:hover, .chip:hover { color: var(--orange-text); }
+    .view-nav-arrow, .prompt-planner-arrow { color: var(--orange-text); }
+    .panel-topbar, .filter-panel-topbar { background: var(--blue); }
+    .grade-bar { background: var(--blue); }
+    [data-theme="dark"] .grade-bar { background: var(--orange); }
+    .vtbtn.active { background: var(--blue); color: #FFFFFF; }
+    .custom-select-option:focus-visible { outline: 2px solid var(--orange-text); outline-offset: -2px; }
+    button:focus-visible, a:focus-visible { outline: 2px solid var(--orange-text); outline-offset: 3px; }
+    .panel-section { overflow-x: auto; }
+    @media (max-width: 840px) {
+      .panel-topbar { flex-wrap: wrap; gap: 10px; }
+      .panel-topbar > div { flex-wrap: wrap; }
     }
   </style>
 </head>
@@ -933,12 +850,50 @@
 
   <main class="container">
     <section class="hero" id="shared-header">
-      <div class="hero-kicker">University of Illinois Urbana-Champaign</div>
-      <h1 id="shared-view-title">Course Data Explorer</h1>
-      <p class="hero-sub" id="shared-view-subtitle">Includes GPA history from real grade data.</p>
-      <button class="view-nav-btn" id="shared-view-button" type="button" onclick="openPlanner()" style="display:none">
-        <span id="shared-view-button-label">Gen Ed Planner</span><span class="view-nav-arrow" id="shared-view-button-arrow">→</span>
-      </button>
+      <div class="header-copy">
+        <div class="hero-kicker">University of Illinois Urbana-Champaign</div>
+        <h1 id="shared-view-title">Course Data Explorer</h1>
+        <p class="hero-sub" id="shared-view-subtitle">Includes GPA history from real grade data.</p>
+      </div>
+      <div class="header-controls">
+      <div class="header-actions">
+        <button class="view-nav-btn" id="shared-view-button" type="button" onclick="openPlanner()">
+          <span id="shared-view-button-label">Gen Ed Planner</span><span class="view-nav-arrow" id="shared-view-button-arrow">→</span>
+        </button>
+        <button class="theme-btn" id="theme-btn" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">☀</button>
+      </div>
+        <div class="catalog-term">
+          <div class="term-field">
+            <label id="semester-label" for="semester-trigger">Semester</label>
+            <div class="custom-select" id="sem-picker">
+              <select class="native-select" id="sem-select" tabindex="-1" aria-hidden="true">
+                <option value="sp">Spring</option>
+                <option value="su">Summer</option>
+                <option value="fa">Fall</option>
+                <option value="wi">Winter</option>
+              </select>
+              <button class="custom-select-trigger" id="semester-trigger" type="button" aria-labelledby="semester-label semester-value" aria-haspopup="listbox" aria-expanded="false"
+                      onclick="toggleCustomSelect('sem-picker', event)" onkeydown="handleSelectTriggerKeydown(event, 'sem-picker')">
+                <span class="custom-select-value" id="semester-value"></span>
+                <span class="custom-select-caret" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              </button>
+              <div class="custom-select-menu" role="listbox" aria-label="Semester"></div>
+            </div>
+          </div>
+          <div class="term-field">
+            <label id="year-label" for="year-trigger">Year</label>
+            <div class="custom-select" id="year-picker">
+              <select class="native-select" id="year-select" tabindex="-1" aria-hidden="true"></select>
+              <button class="custom-select-trigger" id="year-trigger" type="button" aria-labelledby="year-label year-value" aria-haspopup="listbox" aria-expanded="false"
+                      onclick="toggleCustomSelect('year-picker', event)" onkeydown="handleSelectTriggerKeydown(event, 'year-picker')">
+                <span class="custom-select-value" id="year-value"></span>
+                <span class="custom-select-caret" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              </button>
+              <div class="custom-select-menu" role="listbox" aria-label="Year"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -980,6 +935,7 @@
       </div>
       <div style="display:flex;gap:10px;align-items:center">
         <a class="panel-ce-link" id="panel-ce-link" href="#" target="_blank" rel="noopener">Open in Course Explorer</a>
+        <button id="panel-offered-btn" class="panel-prereq-btn" type="button" aria-controls="panel-offered-terms" aria-expanded="false" onclick="toggleOfferedTerms()">Offered terms</button>
         <button id="panel-prereq-btn" class="panel-prereq-btn" onclick="togglePrereqTree()" style="display:none">Prerequisite Tree</button>
         <button class="panel-close" onclick="closePanel()">✕ Close</button>
       </div>
@@ -990,6 +946,12 @@
         <div class="panel-title" id="panel-title"></div>
         <div class="panel-meta" id="panel-meta"></div>
       </div>
+
+      <section class="panel-section offered-terms" id="panel-offered-terms" aria-labelledby="offered-terms-heading" hidden>
+        <h2 class="psec-label" id="offered-terms-heading">Offered terms</h2>
+        <p id="offered-terms-status" role="status"></p>
+        <div class="offered-terms-list" id="offered-terms-list"></div>
+      </section>
 
       <div class="panel-section">
         <div class="psec-label">Description</div>
@@ -1037,50 +999,16 @@
   <main class="container" id="main-view">
 
     <section class="hero">
-      <div class="search-row">
-        <div class="search-outer">
+      <div class="catalog-search">
+        <div class="search-row" role="search" aria-label="Course catalog">
           <div class="search-box">
-            <textarea id="search-input" rows="2" placeholder="Search by subject, course, keyword, or professor…" autocomplete="off" spellcheck="false"></textarea>
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg>
+            <input type="search" id="search-input" aria-label="Search courses or instructors" placeholder="Search courses or instructors" autocomplete="off" spellcheck="false" />
           </div>
-        </div>
-        <div class="search-toolbar">
-          <div class="search-toolbar-left">
-            <button class="prompt-action-btn" id="filter-toggle" type="button" aria-controls="filter-panel" aria-expanded="false" onclick="toggleFilters()">
-              <svg class="prompt-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <path d="M4 6h16M7 12h10M10 18h4"/>
-              </svg>
-              <span>Filters</span>
-            </button>
-            <button class="prompt-action-btn" type="button" onclick="openPlanner()">
-              <span>Gen Ed Planner</span><span class="prompt-planner-arrow">→</span>
-            </button>
-          </div>
-          <div class="search-controls">
-            <div class="custom-select" id="sem-picker">
-              <select class="native-select" id="sem-select" tabindex="-1" aria-hidden="true">
-                <option value="sp">Spring</option>
-                <option value="su">Summer</option>
-                <option value="fa">Fall</option>
-                <option value="wi">Winter</option>
-              </select>
-              <button class="custom-select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false"
-                      onclick="toggleCustomSelect('sem-picker', event)" onkeydown="handleSelectTriggerKeydown(event, 'sem-picker')">
-                <span class="custom-select-value"></span>
-                <span class="custom-select-caret" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-              </button>
-              <div class="custom-select-menu" role="listbox" aria-label="Semester"></div>
-            </div>
-            <div class="custom-select" id="year-picker">
-              <select class="native-select" id="year-select" tabindex="-1" aria-hidden="true"></select>
-              <button class="custom-select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false"
-                      onclick="toggleCustomSelect('year-picker', event)" onkeydown="handleSelectTriggerKeydown(event, 'year-picker')">
-                <span class="custom-select-value"></span>
-                <span class="custom-select-caret" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-              </button>
-              <div class="custom-select-menu" role="listbox" aria-label="Year"></div>
-            </div>
-            <button class="theme-btn" id="theme-btn" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">☀</button>
-          </div>
+          <button class="prompt-action-btn" id="filter-toggle" type="button" aria-controls="filter-panel" aria-expanded="false" onclick="toggleFilters()">
+            <svg class="prompt-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+            <span>Filters</span>
+          </button>
         </div>
       </div>
 
@@ -1113,17 +1041,6 @@
             <span class="filter-label">Other</span>
             <div class="filter-options"></div>
           </div>
-          <div class="filter-group" id="sort-filter-group">
-            <span class="filter-label">Sort</span>
-            <div class="filter-options" style="--chip-count:6">
-            <span class="chip active" id="sort-alpha"    onclick="setSort('alpha')">A→Z</span>
-            <span class="chip"        id="sort-gpa"      onclick="setSort('gpa')">Avg GPA ↓</span>
-            <span class="chip"        id="sort-gpa_asc"  onclick="setSort('gpa_asc')">Avg GPA ↑</span>
-            <span class="chip"        id="sort-pct_a"    onclick="setSort('pct_a')">% 4.0 ↓</span>
-            <span class="chip"        id="sort-pct_a_asc" onclick="setSort('pct_a_asc')">% 4.0 ↑</span>
-            <span class="chip"        id="sort-random"   onclick="setSort('random')">Random</span>
-            </div>
-          </div>
         </div>
         <div id="filter-right">
           <div class="filter-group" id="level-filter-group">
@@ -1148,9 +1065,29 @@
     </section>
 
     <div class="results-bar">
-      <span class="results-label">Results</span>
-      <span id="catalog-freshness" style="font-size:0.75rem;color:var(--muted)"></span>
-      <span class="results-count" id="results-count"></span>
+      <div class="results-controls">
+        <span class="results-count" id="results-count" aria-live="polite"></span>
+        <div class="results-sort">
+          <span id="results-sort-label">Sort by</span>
+          <div class="custom-select" id="sort-picker">
+          <select class="native-select" id="results-sort" tabindex="-1" aria-hidden="true" onchange="setSort(this.value)">
+            <option value="alpha">Course code (A–Z)</option>
+            <option value="gpa">GPA (high to low)</option>
+            <option value="gpa_asc">GPA (low to high)</option>
+            <option value="pct_a">% earning 4.0 (high to low)</option>
+            <option value="pct_a_asc">% earning 4.0 (low to high)</option>
+            <option value="random">Random</option>
+          </select>
+          <button class="custom-select-trigger" type="button" aria-labelledby="results-sort-label results-sort-value" aria-haspopup="listbox" aria-expanded="false"
+                  onclick="toggleCustomSelect('sort-picker', event)" onkeydown="handleSelectTriggerKeydown(event, 'sort-picker')">
+            <span class="custom-select-value" id="results-sort-value"></span>
+            <span class="custom-select-caret" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </button>
+          <div class="custom-select-menu" role="listbox" aria-label="Sort courses"></div>
+          </div>
+        </div>
+      </div>
+      <span id="catalog-freshness"></span>
     </div>
 
     <div id="load-status">Loading course data…</div>
@@ -1306,10 +1243,10 @@
     activeLevels.clear(); activeGeneds.clear(); activeCredits.clear(); activeOther.clear(); activeFormats.clear(); activeTerm.clear();
     activeSortVal = 'alpha';
     document.getElementById('search-input').value = '';
-    resizeSearchInput();
+
     document.querySelectorAll('#chip-l1,#chip-l2,#chip-l3,#chip-l4,#chip-l5,#chip-l6').forEach(c => c.classList.remove('active'));
-    document.querySelectorAll('[id^="sort-"]').forEach(c => c.classList.remove('active'));
-    document.getElementById('sort-alpha').classList.add('active');
+    document.getElementById('results-sort').value = 'alpha';
+    syncCustomSelect(document.getElementById('results-sort'));
     document.getElementById('gened-filter-group').innerHTML  = '<span class="filter-label">Gen Ed</span><div class="filter-options"></div>';
     document.getElementById('credit-filter-group').innerHTML = '<span class="filter-label">Credit Hours</span><div class="filter-options"></div>';
     document.getElementById('other-filter-group').innerHTML  = '<span class="filter-label">Other</span><div class="filter-options"></div>';
@@ -1319,12 +1256,12 @@
     document.getElementById('load-status').style.display = '';
     document.getElementById('load-status').textContent = 'Loading course data…';
     const loaded = await loadData();
-    if (!loaded) return;
+    if (!loaded) return false;
     if (pendingSemesterViewState === saved) pendingSemesterViewState = null;
 
     // Restore filter state
     document.getElementById('search-input').value = saved.search;
-    resizeSearchInput();
+
 
     saved.levels.forEach(l => {
       activeLevels.add(l);
@@ -1366,13 +1303,13 @@
 
     if (saved.sort !== 'alpha') {
       activeSortVal = saved.sort;
-      document.querySelectorAll('[id^="sort-"]').forEach(c => c.classList.remove('active'));
-      const sortChip = document.getElementById(`sort-${saved.sort}`);
-      if (sortChip) sortChip.classList.add('active');
+      document.getElementById('results-sort').value = saved.sort;
+      syncCustomSelect(document.getElementById('results-sort'));
     }
 
     applyFilter();
     if (saved.plannerWasVisible && plannerNeeded.size > 0) runPlanner();
+    return true;
   }
 
   // Custom semester/year menus. The hidden selects remain the source of truth
@@ -1469,6 +1406,7 @@
 
   buildCustomSelect(semSelect);
   buildCustomSelect(yearSelect);
+  buildCustomSelect(document.getElementById('results-sort'));
 
   semSelect.addEventListener('change', () => { syncCustomSelect(semSelect); onSemesterChange(); });
   yearSelect.addEventListener('change', () => { syncCustomSelect(yearSelect); onSemesterChange(); });
@@ -2129,6 +2067,7 @@
 
   function openPrereqTree() {
     if (!activePanelCourse) return;
+    resetOfferedTerms();
     const tree = buildPrereqTree(activePanelCourse);
     const root = document.getElementById('prereq-tree-root');
     if (!tree.children || tree.children.length === 0) {
@@ -2191,10 +2130,6 @@
   // SEARCH & FILTER
   // ─────────────────────────────────────────────────────────────────────────
   const searchInput = document.getElementById('search-input');
-  function resizeSearchInput() {
-    searchInput.style.height = '46px';
-    searchInput.style.height = `${Math.min(Math.max(searchInput.scrollHeight, 46), 384)}px`;
-  }
 
   searchInput.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.isComposing) {
@@ -2204,7 +2139,7 @@
   });
   let searchDebounce;
   searchInput.addEventListener('input', () => {
-    resizeSearchInput();
+
     clearTimeout(searchDebounce);
     searchDebounce = setTimeout(doSearch, 180);
   });
@@ -2252,8 +2187,8 @@
 
   function setSort(val) {
     activeSortVal = val;
-    document.querySelectorAll('[id^="sort-"]').forEach(c => c.classList.remove('active'));
-    document.getElementById('sort-' + val).classList.add('active');
+    document.getElementById('results-sort').value = val;
+    syncCustomSelect(document.getElementById('results-sort'));
     applyFilter();
   }
 
@@ -2300,8 +2235,8 @@
     document.getElementById('chip-inperson').classList.remove('active');
     document.getElementById('chip-term-a').classList.remove('active');
     document.getElementById('chip-term-b').classList.remove('active');
-    document.querySelectorAll('[id^="sort-"]').forEach(c => c.classList.remove('active'));
-    document.getElementById('sort-alpha').classList.add('active');
+    document.getElementById('results-sort').value = 'alpha';
+    syncCustomSelect(document.getElementById('results-sort'));
     updateHalfChipState();
     updateChipAllState();
     applyFilter();
@@ -2732,11 +2667,12 @@
 
   function renderCourseCard(key, i) {
     const c = courseMap[key];
-    const gpaStr = c._gpa !== null ? c._gpa.toFixed(2) : '—';
     const gpaClass = gpaColorClass(c._gpa);
-    const pctAStr = c._pctA !== null ? (c._pctA * 100).toFixed(1) + '%' : '—';
-    const credBadge = c.credits ? `<span class="badge b-neutral">${escapeHtml(c.credits)} hr</span>` : '';
-    const sectionCount = c.sections.length;
+    const metrics = [];
+    if (Number.isFinite(c._gpa)) metrics.push(`<span class="card-metric">GPA <strong class="card-metric-value ${gpaClass}">${c._gpa.toFixed(2)}</strong></span>`);
+    if (Number.isFinite(c._pctA)) metrics.push(`<span class="card-metric"><strong class="card-metric-value">${(c._pctA * 100).toFixed(1)}%</strong> earned 4.0</span>`);
+    const gradeSummary = metrics.length ? metrics.join('<span class="card-stat-divider" aria-hidden="true">·</span>') : '<span class="card-no-history">No grade history</span>';
+    const credits = c.credits ? `<span class="card-credits">${escapeHtml(c.credits)} hr</span>` : '';
 
     const genedBadges = c._genedLabels.map(label => `<span class="badge b-blue">${escapeHtml(label)}</span>`).join('');
     const query = document.getElementById('search-input').value.trim().replace(/\s+/g, ' ').toUpperCase();
@@ -2745,20 +2681,22 @@
       ? [...new Set(c.sections.flatMap(s => s.instructors))].filter(name => name.toUpperCase().includes(query))
       : [];
     const matchNote = instructorMatches.length > 0
-      ? `<div class="card-desc">Instructor match: ${escapeHtml(instructorMatches.join('; '))}</div>`
+      ? `<div class="card-match">Instructor match: ${escapeHtml(instructorMatches.join('; '))}</div>`
       : '';
 
-    return `<div class="course-card" style="animation-delay:${Math.min(i,30)*0.025}s" onclick="openPanel('${key}')">
-      <div class="card-code">${escapeHtml(c.subject)} ${escapeHtml(c.number)}</div>
-      <div class="card-name">${escapeHtml(c.name)}</div>
+    return `<div class="course-card" role="button" tabindex="0" aria-label="View ${escapeHtml(c.subject)} ${escapeHtml(c.number)}: ${escapeHtml(c.name)}" onclick="openPanel('${key}')" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); this.click(); }">
+      <div class="card-topline">
+        <div class="card-identifiers">
+          <div class="card-code">${escapeHtml(c.subject)} ${escapeHtml(c.number)}</div>
+        </div>
+        ${credits}
+      </div>
+      <h2 class="card-name">${escapeHtml(c.name)}</h2>
       ${matchNote}
       <div class="card-desc">${escapeHtml(c.desc || 'No description available.')}</div>
-      <div class="card-footer">
-        <span class="badge ${gpaClass}">GPA ${gpaStr}</span>
-        <span class="badge b-neutral">4.0: ${pctAStr}</span>
-        ${credBadge}
-        <span class="badge b-section-count">${sectionCount} section${sectionCount !== 1 ? 's' : ''}</span>
-        ${genedBadges}
+      <div class="card-bottom">
+        <div class="card-grade-summary">${gradeSummary}</div>
+        ${genedBadges ? `<div class="card-footer" aria-label="General education requirements">${genedBadges}</div>` : ''}
       </div>
     </div>`;
   }
@@ -2823,6 +2761,8 @@
   }
 
   function renderPanel(key) {
+    ++courseTermNavigation;
+    resetOfferedTerms();
     const c = courseMap[key];
     activePanelCourse = key;
     openGpaRow = null;
@@ -2833,7 +2773,7 @@
     document.body.style.overflow = 'hidden';
 
     if (!c) {
-      document.getElementById('panel-code').textContent  = key;
+      document.getElementById('panel-code').textContent = `${key} · ${offeredTermLabel(`${yearSelect.value}-${semSelect.value}`)}`;
       document.getElementById('panel-title').textContent = 'Not offered this semester';
       document.getElementById('panel-meta').innerHTML    = '';
       document.getElementById('panel-desc').innerHTML    =
@@ -2849,7 +2789,7 @@
     document.getElementById('panel-section-instr').style.display    = '';
     document.getElementById('panel-section-sections').style.display = '';
     document.getElementById('panel-prereq-btn').style.display       = '';
-    document.getElementById('panel-code').textContent  = `${c.subject} ${c.number}`;
+    document.getElementById('panel-code').textContent = `${c.subject} ${c.number} · ${offeredTermLabel(`${yearSelect.value}-${semSelect.value}`)}`;
     document.getElementById('panel-title').textContent = c.name;
     // meta
     const gpaStr = c._gpa !== null ? c._gpa.toFixed(2) : '—';
@@ -2877,6 +2817,8 @@
   }
 
   function closePanel() {
+    ++courseTermNavigation;
+    resetOfferedTerms();
     ++statusFetchVersion;
     document.getElementById('prereq-modal').style.display = 'none';
     document.getElementById('overlay').classList.remove('open');
@@ -2888,10 +2830,151 @@
     panelHistory = [];
   }
 
+  // OFFERED TERMS
+  let courseOfferingsPromise = null;
+  let offeredTermsVersion = 0;
+  let courseTermNavigation = 0;
+
+  function offeredTermLabel(termKey) {
+    const match = String(termKey).match(/^(\d{4})-(wi|sp|su|fa)$/);
+    if (!match) return '';
+    const names = { wi: 'Winter', sp: 'Spring', su: 'Summer', fa: 'Fall' };
+    return `${names[match[2]]} ${match[1]}`;
+  }
+
+  async function getCourseOfferings() {
+    const entry = catalogManifest.courseOfferings;
+    if (!entry?.file) throw new Error('Offered-term history is unavailable');
+    if (!courseOfferingsPromise) {
+      courseOfferingsPromise = fetch(new URL(entry.file, CATALOG_BASE))
+        .then(response => {
+          if (!response.ok) throw new Error(`HTTP ${response.status} loading offered terms`);
+          return response.json();
+        })
+        .then(history => {
+          if (history.schemaVersion !== 1 || !history.offeredTerms || !history.sourceSnapshots ||
+              typeof history.offeredTerms !== 'object' || typeof history.sourceSnapshots !== 'object' ||
+              Array.isArray(history.offeredTerms) || Array.isArray(history.sourceSnapshots)) {
+            throw new Error('Invalid offered-term history');
+          }
+          return history;
+        })
+        .catch(error => {
+          courseOfferingsPromise = null;
+          throw error;
+        });
+    }
+    return courseOfferingsPromise;
+  }
+
+  function offeredTermsForCourse(key, history) {
+    const recorded = history.offeredTerms[key];
+    const terms = new Set((Array.isArray(recorded) ? recorded : []).filter(term => {
+      if (typeof term !== 'string' || !offeredTermLabel(term)) return false;
+      const entry = catalogManifest.terms[term];
+      return Boolean(entry?.file && entry.sha256 && history.sourceSnapshots[term] === entry.sha256);
+    }));
+    // The open snapshot is authoritative even if the history index lags a refresh.
+    const current = `${yearSelect.value}-${semSelect.value}`;
+    if (courseMap[key] && catalogManifest.terms[current]) terms.add(current);
+    const order = { wi: 0, sp: 1, su: 2, fa: 3 };
+    return [...terms].sort((a, b) => Number(b.slice(0, 4)) - Number(a.slice(0, 4)) ||
+      order[b.slice(5)] - order[a.slice(5)]);
+  }
+
+  function resetOfferedTerms() {
+    ++offeredTermsVersion;
+    document.getElementById('detail-panel').classList.remove('show-offered-terms');
+    document.getElementById('panel-offered-terms').hidden = true;
+    document.getElementById('panel-offered-btn').setAttribute('aria-expanded', 'false');
+    document.getElementById('offered-terms-list').innerHTML = '';
+    document.getElementById('offered-terms-status').textContent = '';
+  }
+
+  async function toggleOfferedTerms() {
+    const region = document.getElementById('panel-offered-terms');
+    if (!region.hidden) {
+      resetOfferedTerms();
+      return;
+    }
+    if (!activePanelCourse) return;
+    closePrereqTree();
+    document.getElementById('detail-panel').classList.add('show-offered-terms');
+    region.hidden = false;
+    document.getElementById('panel-offered-btn').setAttribute('aria-expanded', 'true');
+    region.scrollIntoView({ block: 'nearest' });
+    await loadOfferedTerms();
+  }
+
+  async function loadOfferedTerms() {
+    const version = ++offeredTermsVersion;
+    const key = activePanelCourse;
+    const status = document.getElementById('offered-terms-status');
+    const list = document.getElementById('offered-terms-list');
+    status.textContent = 'Loading offered terms…';
+    list.innerHTML = '';
+    try {
+      const history = await getCourseOfferings();
+      if (version !== offeredTermsVersion || key !== activePanelCourse) return;
+      const terms = offeredTermsForCourse(key, history);
+      const current = `${yearSelect.value}-${semSelect.value}`;
+      const start = offeredTermLabel(history.coverageStart);
+      status.textContent = terms.length
+        ? `${terms.length} recorded term${terms.length === 1 ? '' : 's'}${start ? ` · History starts in ${start}` : ''}. Select a term to open this course.`
+        : 'No offerings found in the collected catalog history.';
+      list.innerHTML = terms.map(term => `<button type="button" class="offered-term" onclick="openCourseInTerm('${term}')"${term === current ? ' aria-current="true"' : ''}>
+        ${escapeHtml(offeredTermLabel(term))}${term === current ? '<span class="offered-term-current">Current</span>' : ''}
+      </button>`).join('');
+    } catch (_) {
+      if (version !== offeredTermsVersion || key !== activePanelCourse) return;
+      status.textContent = 'Could not load offered-term history. Your course details are still available.';
+      list.innerHTML = '<button type="button" class="offered-term" onclick="loadOfferedTerms()">Try again</button>';
+    }
+  }
+
+  async function openCourseInTerm(termKey) {
+    const key = activePanelCourse;
+    if (!key || !offeredTermLabel(termKey) || !catalogManifest.terms[termKey]?.file) return false;
+    if (`${yearSelect.value}-${semSelect.value}` === termKey) {
+      resetOfferedTerms();
+      return true;
+    }
+    const [year, semester] = termKey.split('-');
+    yearSelect.value = year;
+    semSelect.value = semester;
+    syncCustomSelect(yearSelect);
+    const loading = onSemesterChange();
+    const navigation = courseTermNavigation;
+    const loaded = await loading;
+    if (!loaded || navigation !== courseTermNavigation ||
+        yearSelect.value !== year || semSelect.value !== semester) return false;
+    if (!courseMap[key]) {
+      setStatus(`${key} was not found in the ${offeredTermLabel(termKey)} snapshot.`);
+      return false;
+    }
+    openPanel(key);
+    return true;
+  }
+
   // ─────────────────────────────────────────────────────────────────────────
   // INSTRUCTOR TABLE
   // ─────────────────────────────────────────────────────────────────────────
   const LECTURE_TYPES = new Set(['LEC', 'LCD', 'ONL', 'OLC', 'PKG']);
+
+  function rmpSearchUrl(displayName) {
+    const name = String(displayName || '').trim().replace(/\s+/g, ' ');
+    const comma = name.indexOf(',');
+    let query = name;
+    if (comma !== -1) {
+      const surname = name.slice(0, comma).trim();
+      // Catalog names usually contain just a given-name initial ("Kang, S").
+      // Keep actual given names when available, without searching for initials.
+      const givenNames = name.slice(comma + 1).split(/[\s.]+/).filter(part => [...part].length > 1);
+      query = [...givenNames, surname].filter(Boolean).join(' ');
+    }
+    const schoolSearch = 'https://www.ratemyprofessors.com/search/professors/1112';
+    return query ? `${schoolSearch}?q=${encodeURIComponent(query)}` : schoolSearch;
+  }
 
   function buildInstrTable(c) {
     // Collect unique instructor names from lecture-type sections only (exclude DIS/LAB TAs)
@@ -2930,14 +3013,13 @@
         studCell = `<span class="gpa-students">—</span>`;
       }
 
-      const rmpQuery = encodeURIComponent(displayName.replace(/,\s*/,' ') + ' UIUC');
-      const rmpUrl = `https://www.ratemyprofessors.com/search/professors?q=${rmpQuery}`;
+      const rmpUrl = rmpSearchUrl(displayName);
 
       return `<tr>
         <td class="instr-name">${escapeHtml(displayName)}</td>
         <td>${gpaCell}</td>
         <td>${studCell}</td>
-        <td><a class="rmp-btn" href="${rmpUrl}" target="_blank" rel="noopener">RMP ↗</a></td>
+        <td><a class="rmp-btn" href="${escapeHtml(rmpUrl)}" target="_blank" rel="noopener" title="Search UIUC instructors on Rate My Professors">Search RMP ↗</a></td>
       </tr>`;
     }).join('');
   }
@@ -3067,6 +3149,229 @@
     });
   }
 
+  // WEEKLY SECTION CALENDAR
+  function sectionCrnButton(section) {
+    const crn = String(section.crn || '');
+    if (!/^\d+$/.test(crn)) return '';
+    return `<button type="button" class="copy-crn-btn" data-crn="${escapeHtml(crn)}" onclick="copySectionCrn(this)" aria-label="Copy CRN ${escapeHtml(crn)}" title="Copy CRN ${escapeHtml(crn)}" aria-live="polite">Copy CRN</button>`;
+  }
+
+  async function writeCrnToClipboard(crn) {
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(crn);
+        return;
+      } catch (_) { /* Try the selection-based fallback for local-file previews. */ }
+    }
+    const previousFocus = document.activeElement;
+    const input = document.createElement('textarea');
+    input.value = crn;
+    input.readOnly = true;
+    input.style.cssText = 'position:fixed;left:0;top:0;opacity:0;pointer-events:none;';
+    document.body.appendChild(input);
+    try {
+      input.focus();
+      input.select();
+      if (!document.execCommand('copy')) throw new Error('Clipboard unavailable');
+    } finally {
+      input.remove();
+      previousFocus?.focus({ preventScroll: true });
+    }
+  }
+
+  async function copySectionCrn(button) {
+    const crn = button.dataset.crn;
+    if (!/^\d+$/.test(crn || '') || button.disabled) return;
+    button.disabled = true;
+    try {
+      await writeCrnToClipboard(crn);
+      button.textContent = 'Copied!';
+      button.setAttribute('aria-label', `Copied CRN ${crn}`);
+    } catch (_) {
+      button.textContent = 'Copy failed';
+      button.setAttribute('aria-label', `Copy failed. CRN ${crn}`);
+      button.title = `Copy manually: ${crn}`;
+    } finally {
+      button.disabled = false;
+    }
+    setTimeout(() => {
+      if (!button.isConnected) return;
+      button.textContent = 'Copy CRN';
+      button.setAttribute('aria-label', `Copy CRN ${crn}`);
+      button.title = `Copy CRN ${crn}`;
+    }, 2000);
+  }
+
+  async function copySectionRow(row) {
+    const crn = row.dataset.crn;
+    if (!/^\d+$/.test(crn || '') || row.dataset.copying === 'true') return;
+    const feedback = row.querySelector('.sec-copy-feedback');
+    const version = String(Number(row.dataset.copyVersion || 0) + 1);
+    row.dataset.copyVersion = version;
+    row.dataset.copying = 'true';
+    row.setAttribute('aria-busy', 'true');
+    try {
+      await writeCrnToClipboard(crn);
+      feedback.textContent = ' · Copied!';
+    } catch (_) {
+      feedback.textContent = ' · Copy failed';
+      row.title = `Copy manually: ${crn}`;
+    } finally {
+      row.dataset.copying = 'false';
+      row.setAttribute('aria-busy', 'false');
+    }
+    setTimeout(() => {
+      if (!row.isConnected || row.dataset.copyVersion !== version) return;
+      feedback.textContent = '';
+      row.title = `Click to copy CRN ${crn}`;
+    }, 2000);
+  }
+
+  function calendarTimeMinutes(value) {
+    const match = String(value || '').trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+    if (!match) return null;
+    let hour = Number(match[1]);
+    const minute = Number(match[2]);
+    if (minute > 59) return null;
+    if (match[3]) {
+      if (hour < 1 || hour > 12) return null;
+      hour = hour % 12 + (match[3].toUpperCase() === 'PM' ? 12 : 0);
+    } else if (hour > 23) return null;
+    return hour * 60 + minute;
+  }
+
+  function calendarDays(value) {
+    const text = String(value || '').trim().toUpperCase();
+    if (/^[MTWRFSU\s,]+$/.test(text)) {
+      return [...new Set([...text].filter(day => 'MTWRFSU'.includes(day)))];
+    }
+    const names = { MON:'M', TUE:'T', WED:'W', THU:'R', FRI:'F', SAT:'S', SUN:'U' };
+    return [...new Set((text.match(/MON(?:DAY)?|TUE(?:SDAY)?|WED(?:NESDAY)?|THU(?:RSDAY)?|FRI(?:DAY)?|SAT(?:URDAY)?|SUN(?:DAY)?/g) || []).map(day => names[day.slice(0, 3)]))];
+  }
+
+  function calendarTimeLabel(minutes) {
+    if (minutes === 1440) return '12:00 AM';
+    const hour = Math.floor(minutes / 60);
+    return `${hour % 12 || 12}:${String(minutes % 60).padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`;
+  }
+
+  function layoutCalendarDay(events) {
+    // Give each connected group of overlapping meetings its own side-by-side lanes.
+    const sorted = events.map(event => ({ ...event, visualEnd: Math.min(1440, Math.max(event.end, event.start + 32)) }))
+      .sort((a, b) => a.start - b.start || a.end - b.end || a.index - b.index);
+    let group = [], groupEnd = -1;
+    const finishGroup = () => {
+      const laneEnds = [];
+      group.forEach(event => {
+        let lane = laneEnds.findIndex(end => end <= event.start);
+        if (lane === -1) lane = laneEnds.length;
+        laneEnds[lane] = event.visualEnd;
+        event.lane = lane;
+      });
+      group.forEach(event => { event.lanes = laneEnds.length; });
+    };
+    sorted.forEach(event => {
+      if (group.length && event.start >= groupEnd) {
+        finishGroup(); group = []; groupEnd = -1;
+      }
+      group.push(event);
+      groupEnd = Math.max(groupEnd, event.visualEnd);
+    });
+    finishGroup();
+    return sorted;
+  }
+
+  function buildCalendarModel(course) {
+    const week = 'MTWRFSU';
+    const events = [], unscheduled = [];
+    course.sections.forEach((section, index) => {
+      const start = calendarTimeMinutes(section.startTime);
+      const end = calendarTimeMinutes(section.endTime);
+      const days = calendarDays(section.days);
+      if (section.isTBA || start === null || end === null || start === end || !days.length) {
+        unscheduled.push({ section, index });
+        return;
+      }
+      days.forEach(day => {
+        if (end > start) events.push({ section, index, day, start, end });
+        else {
+          // Overnight meetings occupy both dates in the recurring week.
+          events.push({ section, index, day, start, end: 1440 });
+          if (end > 0) events.push({ section, index, day: week[(week.indexOf(day) + 1) % 7], start: 0, end });
+        }
+      });
+    });
+    const days = [...'MTWRF', ...['S', 'U'].filter(day => events.some(event => event.day === day))];
+    const byDay = Object.fromEntries(days.map(day => [day, layoutCalendarDay(events.filter(event => event.day === day))]));
+    const start = events.length ? Math.floor(Math.min(...events.map(event => event.start)) / 60) * 60 : 8 * 60;
+    const end = events.length ? Math.min(1440, Math.ceil(Math.max(...Object.values(byDay).flat().map(event => event.visualEnd)) / 60) * 60) : 18 * 60;
+    return { days, byDay, start, end, unscheduled, hasEvents: events.length > 0 };
+  }
+
+  function calendarMeetingDetails(section) {
+    const location = [section.room, section.building].filter(Boolean).join(' ');
+    const instructors = (section.instructors || []).join('; ');
+    const time = section.startTime && section.startTime !== 'ARRANGED'
+      ? `${section.days || ''} · ${section.startTime}–${section.endTime || 'TBA'}` : 'Arranged / TBA';
+    return `<strong>${escapeHtml(section.typeName || section.typeCode || 'Section')} ${escapeHtml(section.section || '')}</strong>
+      <span>${escapeHtml(time)}</span>
+      ${location ? `<span>${escapeHtml(location)}</span>` : ''}
+      ${instructors ? `<span>${escapeHtml(instructors)}</span>` : ''}
+      <span>${section.crn ? `CRN ${escapeHtml(section.crn)}` : 'No CRN listed'}${section.partOfTerm && section.partOfTerm !== '1' ? ` · Part of term ${escapeHtml(section.partOfTerm)}` : ''}</span>
+      ${sectionCrnButton(section)}`;
+  }
+
+  function calendarGridHtml(course) {
+    const model = buildCalendarModel(course);
+    const dayNames = { M:'Monday', T:'Tuesday', W:'Wednesday', R:'Thursday', F:'Friday', S:'Saturday', U:'Sunday' };
+    const colors = { LEC:'var(--lec)', LCD:'var(--lec)', DIS:'var(--dis)', LAB:'var(--lab)', ONL:'var(--onl)' };
+    let html = '';
+    if (model.hasEvents) {
+      const height = model.end - model.start; // one pixel per minute
+      const widths = model.days.map(day => Math.max(100, ...model.byDay[day].map(event => event.lanes * 100)));
+      const hours = [];
+      for (let time = model.start; time < model.end; time += 60) hours.push(time);
+      const lines = hours.map(time => `<div class="calendar-hour" style="top:${time - model.start}px" aria-hidden="true"></div>`).join('');
+      html += `<div class="calendar-scroll" tabindex="0" role="region" aria-label="Weekly section times. Scroll to see all days and overlapping sections.">
+        <div class="calendar-grid" style="min-width:${56 + widths.reduce((sum, width) => sum + width, 0)}px;grid-template-columns:56px ${widths.map(width => `minmax(${width}px, 1fr)`).join(' ')}">
+          <div class="calendar-heading calendar-corner">Time</div>
+          ${model.days.map(day => `<div class="calendar-heading">${dayNames[day]}</div>`).join('')}
+          <div class="calendar-axis" style="height:${height}px">${hours.map(time => `<span style="top:${time - model.start}px">${calendarTimeLabel(time)}</span>`).join('')}</div>
+          ${model.days.map(day => `<div class="calendar-day" style="height:${height}px">${lines}${model.byDay[day].map(event => {
+            const s = event.section;
+            const details = `${s.typeCode || 'Section'} ${s.section || ''} · ${dayNames[day]} ${calendarTimeLabel(event.start)}–${calendarTimeLabel(event.end)}${s.crn ? ` · CRN ${s.crn}` : ''}`;
+            return `<button type="button" class="calendar-event" style="top:${event.start - model.start}px;height:${event.visualEnd - event.start}px;left:calc(${event.lane / event.lanes * 100}% + 2px);width:calc(${100 / event.lanes}% - 4px);border-left-color:${colors[s.typeCode] || 'var(--other)'}" onclick="showCalendarMeeting(${event.index})" title="${escapeHtml(details)}" aria-label="${escapeHtml(details)}. Show meeting details.">
+              <strong>${escapeHtml(s.typeCode || 'Section')} ${escapeHtml(s.section || '')}</strong>
+              <span>${escapeHtml(calendarTimeLabel(event.start))}–${escapeHtml(calendarTimeLabel(event.end))}</span>
+            </button>`;
+          }).join('')}</div>`).join('')}
+        </div>
+      </div>`;
+    } else {
+      html += `<p class="calendar-empty">${model.unscheduled.length ? 'No fixed weekly times for these sections.' : 'No sections found.'}</p>`;
+    }
+    if (model.unscheduled.length) {
+      html += `<div class="calendar-unscheduled"><div class="psec-label">Arranged / TBA / Other meeting times</div>
+        ${model.unscheduled.map(({ section }) => `<div class="calendar-meeting">${calendarMeetingDetails(section)}</div>`).join('')}</div>`;
+    }
+    return html;
+  }
+
+  function renderCourseCalendar(course) {
+    document.getElementById('view-cal').innerHTML = `<p class="calendar-note">Weekly section options · Campus local time. Select a block for details.</p>
+    <div id="calendar-meeting-details" class="calendar-meeting" aria-live="polite" hidden></div>
+    <div id="calendar-output">${calendarGridHtml(course)}</div>`;
+  }
+
+  function showCalendarMeeting(index) {
+    const section = courseMap[activePanelCourse]?.sections[index];
+    if (!section) return;
+    const details = document.getElementById('calendar-meeting-details');
+    details.innerHTML = calendarMeetingDetails(section);
+    details.hidden = false;
+    details.scrollIntoView({ block: 'nearest' });
+  }
+
   function renderSections(c) {
     // Legend — unique type codes
     const typeSeen = {};
@@ -3076,10 +3381,10 @@
       `<div class="leg-item"><div class="leg-dot" style="background:${typeColors[code]||'var(--other)'}"></div>${escapeHtml(name || code)}</div>`
     ).join('');
     const statusLegend =
-      `<div class="leg-item"><div class="leg-dot" style="background:#2ecc71;border-radius:50%"></div>Open</div>` +
-      `<div class="leg-item"><div class="leg-dot" style="background:#f1c40f;border-radius:50%"></div>Restricted</div>` +
-      `<div class="leg-item"><div class="leg-dot" style="background:#e74c3c;border-radius:50%"></div>Closed / Waitlisted</div>` +
-      `<div class="leg-item"><div class="leg-dot" style="background:#b8b8b8;border-radius:50%"></div>Unknown</div>`;
+      `<div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div>Open</div>` +
+      `<div class="leg-item"><div class="leg-dot" style="background:var(--yellow)"></div>Restricted</div>` +
+      `<div class="leg-item"><div class="leg-dot" style="background:var(--red)"></div>Closed / Waitlisted</div>` +
+      `<div class="leg-item"><div class="leg-dot" style="background:var(--other)"></div>Unknown</div>`;
     document.getElementById('sec-legend').innerHTML = typeLegend + statusLegend;
 
     // List view
@@ -3092,11 +3397,14 @@
       const roomStr = s.building
         ? `${s.room} ${s.building}`.trim() : (s.room || '');
       const instrStr = s.instructors.slice(0,2).join('; ') + (s.instructors.length > 2 ? ' +more' : '');
+      const copyAttrs = /^\d+$/.test(String(s.crn || ''))
+        ? ` role="button" tabindex="0" data-crn="${escapeHtml(s.crn)}" title="Click to copy CRN ${escapeHtml(s.crn)}" aria-label="Copy CRN ${escapeHtml(s.crn)} for section ${escapeHtml(s.section)}" onclick="copySectionRow(this)" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); this.click(); }"`
+        : '';
 
-      return `<div class="sec-row">
+      return `<div class="sec-row"${copyAttrs}>
         <div class="sec-dot ${dotClass(s.typeCode)}"></div>
         <div class="sec-info">
-          <div class="sec-type-num">${escapeHtml(s.typeCode)} · ${escapeHtml(s.section)}</div>
+          <div class="sec-type-num">${escapeHtml(s.typeCode)} · ${escapeHtml(s.section)}${s.crn ? ` · CRN ${escapeHtml(s.crn)}` : ''}<span class="sec-copy-feedback" aria-live="polite"></span></div>
           <div class="sec-time">${escapeHtml(timeStr)}</div>
           ${roomStr ? `<div class="sec-room">${escapeHtml(roomStr)}</div>` : ''}
         </div>
@@ -3111,15 +3419,13 @@
       html += tba.map(makeRow).join('');
     }
 
-    document.getElementById('view-list').innerHTML = html || '<p style="color:var(--muted);font-size:0.82rem">No sections found.</p>';
+    document.getElementById('view-list').innerHTML = html
+      ? `<p class="section-note">Click a section to copy its CRN.</p>${html}`
+      : '<p style="color:var(--muted);font-size:0.82rem">No sections found.</p>';
 
     loadSectionStatuses(c);
 
-    document.getElementById('view-cal').innerHTML = `<div class="cal-stub">
-      <strong>CALENDAR VIEW</strong>
-      The weekly grid view will be built here in a future update.
-      All sections are available in List view above.
-    </div>`;
+    renderCourseCalendar(c);
 
     switchView('list');
   }
@@ -3187,7 +3493,7 @@
     document.getElementById('shared-view-button-label').textContent = 'Gen Ed Planner';
     document.getElementById('shared-view-button-arrow').textContent = '→';
     document.getElementById('shared-view-button').onclick = openPlanner;
-    document.getElementById('shared-view-button').style.display = 'none';
+    document.getElementById('shared-view-button').style.display = 'inline-flex';
     resetViewScroll();
   }
 

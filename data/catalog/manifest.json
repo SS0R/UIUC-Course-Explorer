@@ -2,16 +2,16 @@
   "schemaVersion": 1,
   "terms": {
     "2027-sp": {
-      "file": "2027-sp-76123c002c9bb1d0.json",
-      "sha256": "76123c002c9bb1d0711d176abd2e2907111a042bb031b03ebd01872795a5597b",
-      "updatedAt": "2026-11-07T08:21:11+00:00",
-      "fullRefreshedAt": "2026-11-07T08:04:56+00:00",
-      "fetchStartedAt": "2026-11-07T08:04:56+00:00",
-      "fetchFinishedAt": "2026-11-07T08:21:11+00:00",
+      "file": "2027-sp-ead0b7b28311d691.json",
+      "sha256": "ead0b7b28311d691747e8fc0d00c52a44d593779eafa807e072d073a33deac82",
+      "updatedAt": "2026-11-16T06:48:40+00:00",
+      "fullRefreshedAt": "2026-11-16T06:32:28+00:00",
+      "fetchStartedAt": "2026-11-16T06:32:28+00:00",
+      "fetchFinishedAt": "2026-11-16T06:48:40+00:00",
       "year": 2027,
       "term": "spring",
-      "courses": 4527,
-      "sections": 11830
+      "courses": 4532,
+      "sections": 11874
     },
     "2026-fa": {
       "file": "2026-fa-2a5f727a4d1aac51.json",
@@ -1706,13 +1706,13 @@
     }
   ],
   "courseHistory": {
-    "file": "course-history-f651be15eb23938b.json",
-    "sha256": "f651be15eb23938b422465e81b8e447fa0d27e353a12c929123ce179b03720af",
+    "file": "course-history-57725aff4c263e91.json",
+    "sha256": "57725aff4c263e91c22701f4868028ce7235a7f99ea37d986ef249ea741c7a56",
     "coverageStart": "2004-fa"
   },
   "courseOfferings": {
-    "file": "course-offerings-54eafcceb0f52209.json",
-    "sha256": "54eafcceb0f52209d8e16b3728c46d86a935a7cb0a73bf01346b088a4335e7f3",
+    "file": "course-offerings-c03fa701120a2e58.json",
+    "sha256": "c03fa701120a2e58461113780099d6120c528833e804b3889136da2beb35684d",
     "coverageStart": "2004-fa"
   }
 }

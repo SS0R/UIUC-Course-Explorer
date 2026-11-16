@@ -206,7 +206,8 @@ const document = {
   body: {style: {}},
   getElementById(id) {
     return elements[id] || (elements[id] = {
-      innerHTML: '', style: {}, classList: {add() {}, remove() {}}
+      innerHTML: '', style: {}, classList: {add() {}, remove() {}},
+      setAttribute(name, value) { this[name] = value; }
     });
   }
 };
